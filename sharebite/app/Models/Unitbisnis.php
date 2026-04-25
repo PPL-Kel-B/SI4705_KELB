@@ -17,6 +17,9 @@ class UnitBisnis extends Model
         'Email',
         'Password',
         'AdminID',
+        'NIB_File',
+        'Latitude',
+        'Longitude'
     ];
 
     protected $hidden = ['Password'];
