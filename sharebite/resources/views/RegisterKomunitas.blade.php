@@ -2,18 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Register</title>
-    @vite('resources/css/app.css')
+    <title>Register Komunitas</title>
 
-    <!-- Alpine.js -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
+
 <body class="bg-gray-100 font-sans">
 
-<div 
-    x-data="{ tab: 'Komunitas', showPassword: false }"
-    class="min-h-screen flex flex-col md:flex-row"
->
+<div x-data="{ showPassword: false }" class="min-h-screen flex flex-col md:flex-row">
 
     <!-- LEFT -->
     <div class="w-full md:w-1/3 bg-green-700 text-white p-8 md:p-16 flex flex-col justify-between">
@@ -26,7 +24,7 @@
             </div>
 
             <h1 class="text-4xl font-bold leading-tight mb-6">
-                Bergabunglah sebagai <span x-text="tab"></span>
+                Bergabunglah sebagai <span class="text-orange-500">Komunitas</span>
             </h1>
 
             <p class="text-green-100 text-lg">
@@ -49,71 +47,84 @@
 
         <!-- TAB -->
         <div class="flex bg-gray-100 p-1 rounded-lg mb-8 max-w-lg">
-            <template x-for="item in ['Unit Bisnis', 'Komunitas', 'Individu']" :key="item">
-                <button 
-                    @click="tab = item"
-                    :class="tab === item 
-                        ? 'bg-green-500 text-white shadow-sm' 
-                        : 'text-gray-500 hover:text-gray-700'"
-                    class="flex-1 py-2 text-sm font-medium rounded-md transition-all"
-                    x-text="item"
-                ></button>
-            </template>
+            <button disabled class="flex-1 py-2 text-sm text-gray-400 opacity-50">
+                Unit Bisnis
+            </button>
+            <button class="flex-1 py-2 text-sm bg-green-500 text-white rounded-md">
+                Komunitas
+            </button>
+            <button disabled class="flex-1 py-2 text-sm text-gray-400 opacity-50">
+                Individu
+            </button>
         </div>
 
         <!-- HEADER -->
         <div class="flex items-center gap-3 mb-6">
             <span class="text-green-600">👤</span>
             <h2 class="text-xl font-bold text-gray-800">
-                Identitas <span x-text="tab"></span>
+                Identitas Komunitas
             </h2>
         </div>
 
         <!-- FORM -->
-        <form method="POST" action="#" class="space-y-5 max-w-2xl">
-            @csrf
+        <form method="POST" action="{{ route('register.store') }}" class="space-y-5 max-w-2xl">
+        @csrf
 
-            <!-- Nama -->
+            <!-- Nama Komunitas -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Nama
+                <label class="block text-sm font-medium mb-2">
+                    Nama Komunitas
                 </label>
-                <input type="text"
-                    :placeholder="
-                        tab === 'Komunitas' ? 'Komunitas Hijau Lestari' :
-                        tab === 'Unit Bisnis' ? 'PT Maju Jaya' :
-                        'Nama Anda'
-                    "
+                <input type="text" name="nama_komunitas" required
+                    placeholder="Nama Komunitas"
                     class="w-full p-3 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-green-500">
             </div>
 
-            <!-- CONDITIONAL -->
-            <div x-show="tab === 'Komunitas'" class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <input type="text" placeholder="Penanggung Jawab" class="p-3 rounded-lg border bg-gray-50">
-                <input type="number" placeholder="Jumlah Anggota" class="p-3 rounded-lg border bg-gray-50">
+            <!-- Penanggung Jawab + Jumlah -->
+            <div class="grid md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Penanggung Jawab</label>
+                    <input type="text" name="penanggung_jawab" required
+                        placeholder="Nama Penanggung Jawab"
+                        class="w-full p-3 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-green-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium mb-2">Jumlah Anggota</label>
+                    <input type="number" name="jumlah_anggota" required min="1"
+                        placeholder="Jumlah Anggota"
+                        class="w-full p-3 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-green-500">
+                </div>
             </div>
 
-            <div x-show="tab === 'Individu'">
-                <input type="text" placeholder="Nama Lengkap" class="w-full p-3 rounded-lg border bg-gray-50">
-            </div>
+            <!-- HP + Email -->
+            <div class="grid md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Nomor HP</label>
+                    <input type="tel" name="no_hp" required
+                        placeholder="081234567890"
+                        class="w-full p-3 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-green-500">
+                </div>
 
-            <div x-show="tab === 'Unit Bisnis'">
-                <input type="text" placeholder="Nama Perusahaan" class="w-full p-3 rounded-lg border bg-gray-50">
-            </div>
-
-            <!-- Kontak -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <input type="text" placeholder="Nomor HP" class="p-3 rounded-lg border bg-gray-50">
-                <input type="email" placeholder="Email" class="p-3 rounded-lg border bg-gray-50">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Email</label>
+                    <input type="email" name="email" required
+                        placeholder="komunitas@gmail.com"
+                        class="w-full p-3 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-green-500">
+                </div>
             </div>
 
             <!-- PASSWORD -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Kata Sandi</label>
+                <label class="block text-sm font-medium mb-2">Kata Sandi</label>
                 <div class="relative">
                     <input 
                         :type="showPassword ? 'text' : 'password'"
-                        class="w-full p-3 rounded-lg border bg-gray-50"
+                        name="password"
+                        required
+                        minlength="6"
+                        placeholder="Minimal 6 karakter"
+                        class="w-full p-3 rounded-lg border bg-gray-50 focus:ring-2 focus:ring-green-500"
                     >
                     <span 
                         @click="showPassword = !showPassword"
@@ -126,18 +137,33 @@
 
             <!-- Checkbox -->
             <div class="flex items-start gap-3">
-                <input type="checkbox" class="mt-1">
+                <input type="checkbox" required class="mt-1">
                 <p class="text-sm text-gray-600">
-                    Saya setuju dengan syarat dan ketentuan ShareBite
+                    Saya setuju dengan 
+                    <span class="font-medium text-gray-800">
+                        syarat dan ketentuan
+                    </span>
                 </p>
             </div>
 
             <!-- BUTTON -->
-            <button class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700">
-                Daftar sebagai <span x-text="tab"></span>
+            <button type="submit"
+                class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition">
+                Daftar Komunitas
             </button>
 
+            <!-- LOGIN -->
+            <div class="text-center pt-4">
+                <p class="text-sm text-gray-600">
+                    Sudah punya akun?
+                    <a href="/login" class="text-green-600 font-medium">
+                        Login
+                    </a>
+                </p>
+            </div>
+
         </form>
+
     </div>
 
 </div>
