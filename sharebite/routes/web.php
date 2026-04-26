@@ -12,3 +12,8 @@ Route::get('/register', function () {
 });
 
 Route::post('/register/store', [KomunitasController::class, 'store'])->name('register.store');
+
+// Admin Dashboard Routes
+Route::get('/admin/kelola-menu-makanan', function () {
+    return view('KelolaMenuMakanan');
+})->name('admin.kelola-menu-makanan');
