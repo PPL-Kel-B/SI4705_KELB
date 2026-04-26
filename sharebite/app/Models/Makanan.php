@@ -11,6 +11,8 @@ class Makanan extends Model
 
     protected $fillable = [
         'Nama_Makanan',
+        'Kategori',
+        'Berat',
         'Jumlah_porsi',
         'Batas_waktu_pengambilan',
         'Harga',
@@ -21,7 +23,8 @@ class Makanan extends Model
 
     protected $casts = [
         'Batas_waktu_pengambilan' => 'date',
-        'Harga' => 'double',
+        'Harga'                   => 'double',
+        'Berat'                   => 'decimal:2',
     ];
 
     // Relasi ke UnitBisnis (dijual oleh)
