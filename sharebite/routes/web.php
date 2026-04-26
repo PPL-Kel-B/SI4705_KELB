@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RegistUnitBisnisController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController; 
 
@@ -8,6 +9,8 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/register/unit-bisnis', [RegistUnitBisnisController::class, 'create'])->name('unit-bisnis.create');
+Route::post('/register/unit-bisnis', [RegistUnitBisnisController::class, 'store'])->name('unit-bisnis.store');
 Route::get('/login',  [LoginController::class, 'index'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');  
 
