@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TambahMenuController;
 use App\Http\Controllers\ManajemenUserController;
 use App\Http\Controllers\RegistUnitBisnisController;
 use App\Http\Controllers\LoginController;
@@ -26,3 +27,8 @@ Route::get('/register', function () {
 });
 
 Route::post('/register/store', [KomunitasController::class, 'store'])->name('register.store');
+
+Route::get('/tambah-menu', function () {
+    return view('TambahMenuAktif'); 
+});
+Route::post('/tambah-menu/store', [TambahMenuController::class, 'store'])->name('makanan.store');
