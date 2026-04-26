@@ -7,8 +7,6 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/register', function () {
-    return view('RegisterKomunitas');
-});
-
-Route::post('/register/store', [KomunitasController::class, 'store'])->name('register.store');
+Route::resource('registerkomunitas', KomunitasController::class)->names([
+    'index' => 'registerkomunitas',
+]);
