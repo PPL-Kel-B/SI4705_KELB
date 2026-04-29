@@ -5,23 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Pengambilan extends Model
+class IndividuProfile extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'pesanan_id',
         'user_id',
-        'tanggal',
-        'jumlah_porsi',
-        'kode_unik',
-        'status',
+        'total_berat_diselamatkan',
+        'total_makanan_dibeli',
     ];
 
     protected function casts(): array
     {
         return [
-            'tanggal' => 'date',
+            'total_berat_diselamatkan' => 'decimal:2',
+            'total_makanan_dibeli' => 'integer',
         ];
     }
 
@@ -29,12 +27,6 @@ class Pengambilan extends Model
     // Relations
     // -------------------------------------------------------
 
-    public function pesanan()
-    {
-        return $this->belongsTo(Pesanan::class);
-    }
-
-    // User yang mengambil (individu atau komunitas)
     public function user()
     {
         return $this->belongsTo(User::class);

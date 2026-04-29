@@ -5,23 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Pengambilan extends Model
+class Pembayaran extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'pesanan_id',
-        'user_id',
-        'tanggal',
-        'jumlah_porsi',
-        'kode_unik',
         'status',
+        'qrcode',
+        'tanggal_bayar',
     ];
 
     protected function casts(): array
     {
         return [
-            'tanggal' => 'date',
+            'tanggal_bayar' => 'datetime',
         ];
     }
 
@@ -34,9 +32,12 @@ class Pengambilan extends Model
         return $this->belongsTo(Pesanan::class);
     }
 
-    // User yang mengambil (individu atau komunitas)
-    public function user()
+    // -------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------
+
+    public function isBerhasil(): bool
     {
-        return $this->belongsTo(User::class);
+        return $this->status === 'berhasil';
     }
 }

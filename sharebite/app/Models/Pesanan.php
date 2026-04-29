@@ -2,56 +2,82 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Pesanan extends Model
 {
-    protected $table = 'pesanans';
-    protected $primaryKey = 'PesananID';
+    use HasFactory;
 
     protected $fillable = [
-        'Jumlah_porsi',
-        'Total_Harga',
-        'Status',
-        'Waktu_pesan',
-        'Waktu_diambil',
-        'MakananID',
-        'UnitBisnisID',
+        'menu_aktif_id',
+        'unit_bisnis_id',
+        'user_id',
+        'jumlah_porsi',
+        'total_harga',
+        'catatan',
+        'status',
+        'kode_unik',
+        'waktu_pesan',
+        'waktu_diambil',
     ];
 
-    protected $casts = [
-        'Waktu_pesan' => 'datetime',
-        'Waktu_diambil' => 'date',
-        'Total_Harga' => 'double',
-    ];
-
-    // Relasi ke Makanan
-    public function makanan()
+    protected function casts(): array
     {
-        return $this->belongsTo(Makanan::class, 'MakananID', 'MakananID');
+        return [
+            'waktu_pesan' => 'datetime',
+            'waktu_diambil' => 'date',
+            'total_harga' => 'decimal:2',
+            'jumlah_porsi' => 'integer',
+        ];
     }
 
-    // Relasi ke UnitBisnis
+    // -------------------------------------------------------
+    // Relations
+    // -------------------------------------------------------
+
+    public function menuAktif()
+    {
+        return $this->belongsTo(MenuAktif::class, 'menu_aktif_id');
+    }
+
     public function unitBisnis()
     {
-        return $this->belongsTo(UnitBisnis::class, 'UnitBisnisID', 'UnitBisnisID');
+        return $this->belongsTo(UnitBisnisProfile::class, 'unit_bisnis_id');
     }
 
-    // Relasi ke Bukti (mempunyai)
-    public function buktis()
+    // User yang memesan (individu atau komunitas)
+    public function user()
     {
-        return $this->hasMany(Bukti::class, 'PesananID', 'PesananID');
+        return $this->belongsTo(User::class);
     }
 
-    // Relasi ke Transaksi (membayar)
-    public function transaksis()
+    public function pembayaran()
     {
-        return $this->hasMany(Transaksi::class, 'PesananID', 'PesananID');
+        return $this->hasOne(Pembayaran::class);
     }
 
-    // Relasi ke Pengambilan (memiliki)
     public function pengambilans()
     {
-        return $this->hasMany(Pengambilan::class, 'PesananID', 'PesananID');
+        return $this->hasMany(Pengambilan::class);
+    }
+
+    public function buktiDonasis()
+    {
+        return $this->hasMany(BuktiDonasi::class);
+    }
+
+    // -------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------
+
+    public function isSudahDibayar(): bool
+    {
+        return in_array($this->status, ['dibayar', 'siap_diambil', 'selesai']);
+    }
+
+    public function isSelesai(): bool
+    {
+        return $this->status === 'selesai';
     }
 }

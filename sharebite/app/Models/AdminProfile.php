@@ -5,36 +5,30 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Rating extends Model
+class AdminProfile extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'unit_bisnis_id',
-        'nilai',
-        'komentar',
     ];
-
-    protected function casts(): array
-    {
-        return [
-            'nilai' => 'integer',
-        ];
-    }
 
     // -------------------------------------------------------
     // Relations
     // -------------------------------------------------------
 
-    // User yang memberi rating (individu atau komunitas)
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function unitBisnis()
+    public function verifikasis()
     {
-        return $this->belongsTo(UnitBisnisProfile::class, 'unit_bisnis_id');
+        return $this->hasMany(Verifikasi::class, 'admin_id');
+    }
+
+    public function laporans()
+    {
+        return $this->hasMany(Laporan::class, 'admin_id');
     }
 }
