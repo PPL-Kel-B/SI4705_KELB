@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TambahMenuController;
 use App\Http\Controllers\ManajemenUserController;
@@ -10,6 +11,23 @@ use App\Http\Controllers\KomunitasController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+Route::resource('registerkomunitas', KomunitasController::class)->names([
+    'index' => 'registerkomunitas',
+]);
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    // Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';
+
 
 // Route::get('/manajemen-user', function () {
 //     return view('manajemen_user');
