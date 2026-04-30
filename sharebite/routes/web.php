@@ -6,7 +6,9 @@ use App\Http\Controllers\TambahMenuController;
 use App\Http\Controllers\ManajemenUserController;
 use App\Http\Controllers\RegistUnitBisnisController;
 use App\Http\Controllers\LoginController;
-use App\Http\Controllers\KomunitasController; 
+use App\Http\Controllers\KomunitasController;
+use App\Http\Controllers\KelolaMasterDataController;
+use App\Http\Controllers\FoodController; 
 
 Route::get('/', function () {
     return view('welcome');
@@ -37,9 +39,7 @@ Route::resource('manajemen-user', ManajemenUserController::class);
 Route::get('/register/unit-bisnis', [RegistUnitBisnisController::class, 'create'])->name('unit-bisnis.create');
 Route::post('/register/unit-bisnis', [RegistUnitBisnisController::class, 'store'])->name('unit-bisnis.store');
 Route::get('/login',  [LoginController::class, 'index'])->name('login');
-Route::post('/login', [LoginController::class, 'login'])->name('login.post');  
-
-Route::view('/login', 'login');
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 Route::get('/register', function () {
     return view('RegisterKomunitas');
 });
@@ -50,3 +50,10 @@ Route::get('/tambah-menu', function () {
     return view('TambahMenuAktif'); 
 });
 Route::post('/tambah-menu/store', [TambahMenuController::class, 'store'])->name('makanan.store');
+
+Route::resource('kelola-master-data', KelolaMasterDataController::class)
+    ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+
+// Food Management Routes (New Structure)
+Route::resource('foods', FoodController::class)
+    ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);

@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User; // Asumsi menggunakan satu tabel User dengan kolom 'role' dan 'type'
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ManajemenUserController extends Controller
 {
@@ -12,28 +13,73 @@ class ManajemenUserController extends Controller
         // Ambil parameter tab dari URL, default ke 'unit_bisnis'
         $tab = $request->query('tab', 'unit_bisnis');
 
-        // Statistik (Card Atas) - Mengambil langsung dari tabel masing-masing
-        // Kita pakai DB facade agar lebih mudah karena tabelnya terpisah
+        // Statistik (Card Atas) - query ke tabel yang benar sesuai migrasi
         $stats = [
-            'total_bisnis' => \DB::table('unit_bisnis')->count(),
-            'pending_verifikasi' => 42, 
-            // Jumlahkan komunitas + individu agar hasilnya 2
-            'aktif_komunitas' => \DB::table('komunitas')->count() + \DB::table('individus')->count(),
+            'total_bisnis'       => DB::table('unit_bisnis_profiles')->count(),
+            'pending_verifikasi' => DB::table('unit_bisnis_profiles')
+                                      ->where('status_verifikasi', 'pending')
+                                      ->count(),
+            // Alias untuk view yang menggunakan 'pending_verifikasi' label lama
+
+            'aktif_komunitas'    => DB::table('komunitas_profiles')->count()
+                                    + DB::table('individu_profiles')->count(),
         ];
 
         // Logika Filter Tabel berdasarkan Tab
         if ($tab == 'komunitas') {
-            // Menggabungkan data Komunitas dan Individu
-            $komunitas = \DB::table('komunitas')->select('KomunitasID as id', 'Nama as name', \DB::raw("'Komunitas' as type"), 'Email', 'created_at')->get();
-            $individu = \DB::table('individus')->select('IndividuID as id', 'Nama as name', \DB::raw("'Individu' as type"), 'Email', 'created_at')->get();
-            
+            // Data komunitas dari komunitas_profiles join users
+            $komunitas = DB::table('komunitas_profiles')
+                ->join('users', 'komunitas_profiles.user_id', '=', 'users.id')
+                ->select(
+                    'komunitas_profiles.id',
+                    'komunitas_profiles.nama_komunitas as name',
+                    DB::raw("'Komunitas' as type"),
+                    'users.email as Email',
+                    'komunitas_profiles.created_at'
+                )->get();
+
+            // Data individu dari individu_profiles join users
+            $individu = DB::table('individu_profiles')
+                ->join('users', 'individu_profiles.user_id', '=', 'users.id')
+                ->select(
+                    'individu_profiles.id',
+                    'users.name',
+                    DB::raw("'Individu' as type"),
+                    'users.email as Email',
+                    'individu_profiles.created_at'
+                )->get();
+
             $users = $komunitas->merge($individu);
         } else {
             // Default: Unit Bisnis
-            $users = \DB::table('unit_bisnis')->select('UnitBisnisID as id', 'Nama_Usaha as name', 'Jenis_Usaha as type', 'Email', 'created_at')->get();
+            $users = DB::table('unit_bisnis_profiles')
+                ->join('users', 'unit_bisnis_profiles.user_id', '=', 'users.id')
+                ->select(
+                    'unit_bisnis_profiles.id',
+                    'unit_bisnis_profiles.nama_usaha as name',
+                    'unit_bisnis_profiles.jenis_usaha as type',
+                    'users.email as Email',
+                    'unit_bisnis_profiles.status_verifikasi',
+                    'unit_bisnis_profiles.created_at'
+                )->get();
         }
 
         return view('manajemen_user', compact('users', 'stats', 'tab'));
+    }
+
+    public function create()
+    {
+        return redirect()->route('manajemen-user.index');
+    }
+
+    public function store(Request $request)
+    {
+        return redirect()->route('manajemen-user.index');
+    }
+
+    public function show($id)
+    {
+        return redirect()->route('manajemen-user.index');
     }
 
     public function edit($id)
@@ -45,7 +91,7 @@ class ManajemenUserController extends Controller
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        $user->update($request->only(['name', 'type', 'status'])); // Admin hanya edit info dasar & status
+        $user->update($request->only(['name', 'email']));
 
         return redirect()->route('manajemen-user.index', ['tab' => $request->tab])
                          ->with('success', 'Data berhasil diperbarui');

@@ -162,7 +162,7 @@
                             <label class="inline-flex items-center px-5 py-2.5 bg-white border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition">
                                 <svg class="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                 Unggah NIB
-                                <input type="file" id="NIB_File" name="NIB_File" class="hidden" accept=".pdf,.jpg,.jpeg" required>
+                                <input type="file" id="NIB_File" name="NIB_File" class="hidden" accept=".pdf,.jpg,.jpeg">
                             </label>
                         </div>
                         <p id="err-nib" class="text-xs text-red-500 mt-1 hidden">Harap unggah dokumen NIB.</p>
@@ -454,14 +454,11 @@
         function checkFormValidity() {
             // Check if terms checked
             const isTermsChecked = termsCheckbox.checked;
-            
-            // Ensure location is selected
-            const isLocationSelected = latInput.value !== "" && lngInput.value !== "";
 
-            // Check if file is uploaded
-            const isFileUploaded = fileInput.files.length > 0;
+            // NIB file: opsional (tidak wajib untuk mengaktifkan tombol)
+            // Lokasi: opsional juga
 
-            if(isTermsChecked && isLocationSelected && isFileUploaded && isPasswordValid) {
+            if(isTermsChecked && isPasswordValid) {
                 submitBtn.disabled = false;
                 submitBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
                 submitBtn.classList.add('hover:bg-[#19a55a]', 'bg-[#1cb764]');
