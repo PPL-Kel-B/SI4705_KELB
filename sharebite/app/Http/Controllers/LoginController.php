@@ -12,35 +12,19 @@ class LoginController extends Controller
     // Tampilkan halaman login
     public function index()
     {
-        return view('login');
+        return view('auth.login_custom');
     }
 
     // Proses login
     public function login(Request $request)
     {
         $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required',
         ]);
 
-        $email    = $request->email;
+        $email = $request->email;
         $password = $request->password;
-
-        // Login Admin
-        if ($email === 'admin@sharebite.com') {
-            if ($password !== 'Admin@2024!') {
-                return back()->withErrors([
-                    'password' => 'Password salah.',
-                ])->withInput();
-            }
-
-            $request->session()->regenerate();
-            session([
-                'user_role'  => 'admin',
-                'user_email' => $email,
-            ]);
-            return redirect('/dashboard');
-        }
 
         // Cek User di Database
         $user = User::where('email', $email)->first();
@@ -59,6 +43,16 @@ class LoginController extends Controller
             ])->withInput();
         }
 
+        // Cek verifikasi untuk Unit Bisnis
+        if ($user->role === 'unit_bisnis') {
+            $profile = $user->unitBisnisProfile;
+            if ($profile && $profile->status_verifikasi === 'pending') {
+                return back()->withErrors([
+                    'email' => 'Akun mu belum terverifikasi, harap cek secara berkala.',
+                ])->withInput();
+            }
+        }
+
         // Login Berhasil
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
@@ -67,9 +61,11 @@ class LoginController extends Controller
         if ($user->role == 'unit_bisnis') {
             return redirect('/unit/dashboard');
         } elseif ($user->role == 'komunitas') {
-            return redirect('/komunitas/dashboard');
+            return redirect('/user/dashboard');
         } elseif ($user->role == 'individu') {
-            return redirect('/individu/dashboard');
+            return redirect('/user/dashboard');
+        } elseif ($user->role == 'admin') {
+            return redirect('/admin/dashboard');
         }
 
         return redirect('/');

@@ -15,11 +15,36 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Create Admin Account
+        User::updateOrCreate(
+            ['email' => 'admin@sharebite.com'],
+            [
+                'name' => 'Admin ShareBite',
+                'password' => bcrypt('Admin@2024!'),
+                'role' => 'admin',
+                'no_hp' => '08123456789',
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Create example users for each role
+        User::updateOrCreate(
+            ['email' => 'unit@sharebite.com'],
+            [
+                'name' => 'Lestari Food',
+                'password' => bcrypt('password'),
+                'role' => 'unit_bisnis',
+                'no_hp' => '08123456780',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'komunitas@sharebite.com'],
+            [
+                'name' => 'Komunitas Berbagi',
+                'password' => bcrypt('password'),
+                'role' => 'komunitas',
+                'no_hp' => '08123456781',
+            ]
+        );
     }
 }

@@ -31,10 +31,12 @@ class ManajemenUserController extends Controller
             $komunitas = DB::table('komunitas_profiles')
                 ->join('users', 'komunitas_profiles.user_id', '=', 'users.id')
                 ->select(
-                    'komunitas_profiles.id',
+                    'users.id',
                     'komunitas_profiles.nama_komunitas as name',
                     DB::raw("'Komunitas' as type"),
                     'users.email as Email',
+                    'users.alamat',
+                    'users.foto_profil',
                     'komunitas_profiles.created_at'
                 )->get();
 
@@ -42,10 +44,12 @@ class ManajemenUserController extends Controller
             $individu = DB::table('individu_profiles')
                 ->join('users', 'individu_profiles.user_id', '=', 'users.id')
                 ->select(
-                    'individu_profiles.id',
-                    'users.name',
+                    'users.id',
+                    'users.name as name',
                     DB::raw("'Individu' as type"),
                     'users.email as Email',
+                    'users.alamat',
+                    'users.foto_profil',
                     'individu_profiles.created_at'
                 )->get();
 
@@ -55,16 +59,18 @@ class ManajemenUserController extends Controller
             $users = DB::table('unit_bisnis_profiles')
                 ->join('users', 'unit_bisnis_profiles.user_id', '=', 'users.id')
                 ->select(
-                    'unit_bisnis_profiles.id',
+                    'users.id',
                     'unit_bisnis_profiles.nama_usaha as name',
                     'unit_bisnis_profiles.jenis_usaha as type',
                     'users.email as Email',
+                    'users.alamat',
+                    'users.foto_profil',
                     'unit_bisnis_profiles.status_verifikasi',
                     'unit_bisnis_profiles.created_at'
                 )->get();
         }
 
-        return view('manajemen_user', compact('users', 'stats', 'tab'));
+        return view('admin.manajemen_user', compact('users', 'stats', 'tab'));
     }
 
     public function create()
@@ -85,15 +91,35 @@ class ManajemenUserController extends Controller
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        return view('manajemen_user_edit', compact('user'));
+        return view('admin.manajemen_user_edit', compact('user'));
     }
 
     public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
-        $user->update($request->only(['name', 'email']));
+        
+        $dataToUpdate = $request->only(['email', 'alamat']);
+        
+        if ($request->has('name')) {
+            if ($user->role == 'unit_bisnis') {
+                $user->unitBisnisProfile()->update([
+                    'nama_usaha' => $request->name
+                ]);
+            } elseif ($user->role == 'komunitas') {
+                $user->komunitasProfile()->update(['nama_komunitas' => $request->name]);
+            } else {
+                $dataToUpdate['name'] = $request->name;
+            }
+        }
 
-        return redirect()->route('manajemen-user.index', ['tab' => $request->tab])
+        if ($request->hasFile('foto_profil')) {
+            $path = $request->file('foto_profil')->store('profiles', 'public');
+            $dataToUpdate['foto_profil'] = $path;
+        }
+
+        $user->update($dataToUpdate);
+
+        return redirect()->route('admin.manajemen_pengguna', ['tab' => $request->tab])
                          ->with('success', 'Data berhasil diperbarui');
     }
 
@@ -102,6 +128,6 @@ class ManajemenUserController extends Controller
         $user = User::findOrFail($id);
         $user->delete();
 
-        return redirect()->back()->with('success', 'Data berhasil dihapus');
+        return redirect()->route('admin.manajemen_pengguna')->with('success', 'Data berhasil dihapus');
     }
 }
