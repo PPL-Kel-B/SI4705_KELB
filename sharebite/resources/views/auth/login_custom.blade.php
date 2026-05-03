@@ -459,6 +459,21 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        @if(session('rejection_message'))
+            Swal.fire({
+                title: 'Verifikasi Ditolak',
+                text: "{{ session('rejection_message') }} \n\n Catatan: {{ session('rejection_notes') }}",
+                icon: 'error',
+                confirmButtonColor: '#22c55e',
+                confirmButtonText: 'Saya Mengerti',
+                background: '#ffffff',
+                customClass: {
+                    popup: 'rounded-[2rem]',
+                    confirmButton: 'rounded-full px-8 py-3 font-bold'
+                }
+            });
+        @endif
+
         const toggleBtn = document.getElementById('togglePassword');
         const input   = document.getElementById('passwordInput');
         const iconHide = document.getElementById('iconHide');
