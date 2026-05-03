@@ -67,7 +67,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', function () { return view('user.dashboard'); })->name('dashboard');
         Route::get('/riwayat', function () { return view('user.riwayat'); })->name('riwayat');
         Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
-        Route::get('/pengaturan', function () { return view('user.pengaturan'); })->name('pengaturan');
+        Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');
+        Route::get('/pengaturan/kebijakan/{type}', [\App\Http\Controllers\SettingsController::class, 'policy'])->name('pengaturan.policy');
+        Route::delete('/pengaturan/session/{id}', [\App\Http\Controllers\SettingsController::class, 'logoutSession'])->name('pengaturan.logout_session');
     });
 
     // Unit Bisnis Dashboard Routes
