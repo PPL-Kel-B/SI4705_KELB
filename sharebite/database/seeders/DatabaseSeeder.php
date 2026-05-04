@@ -15,11 +15,66 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Create Admin Account
+        User::updateOrCreate(
+            ['email' => 'admin@sharebite.com'],
+            [
+                'name' => 'Admin ShareBite',
+                'password' => bcrypt('Admin@2024!'),
+                'role' => 'admin',
+                'no_hp' => '08123456789',
+            ]
+        );
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Create example users for each role
+        $unit = User::updateOrCreate(
+            ['email' => 'unit@sharebite.com'],
+            [
+                'name' => 'Lestari Food',
+                'password' => bcrypt('password'),
+                'role' => 'unit_bisnis',
+                'no_hp' => '08123456780',
+            ]
+        );
+
+        \App\Models\UnitBisnisProfile::updateOrCreate(
+            ['user_id' => $unit->id],
+            [
+                'nama_usaha' => 'Lestari Food',
+                'jenis_usaha' => 'Restoran',
+                'status_verifikasi' => 'terverifikasi'
+            ]
+        );
+
+        // Rejected Unit Bisnis for testing
+        $rejectedUnit = User::updateOrCreate(
+            ['email' => 'rejected@sharebite.com'],
+            [
+                'name' => 'Warung Ditolak',
+                'password' => bcrypt('password'),
+                'role' => 'unit_bisnis',
+                'no_hp' => '08123456782',
+            ]
+        );
+
+        \App\Models\UnitBisnisProfile::updateOrCreate(
+            ['user_id' => $rejectedUnit->id],
+            [
+                'nama_usaha' => 'Warung Ditolak',
+                'jenis_usaha' => 'Warung Makan',
+                'status_verifikasi' => 'ditolak',
+                'reviewer_notes' => 'Dokumen NIB yang Anda unggah sudah kadaluarsa dan tidak terbaca dengan jelas. Silakan unggah dokumen yang baru.'
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'komunitas@sharebite.com'],
+            [
+                'name' => 'Komunitas Berbagi',
+                'password' => bcrypt('password'),
+                'role' => 'komunitas',
+                'no_hp' => '08123456781',
+            ]
+        );
     }
 }

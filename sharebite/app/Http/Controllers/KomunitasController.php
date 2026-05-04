@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Komunitas;
+use App\Models\KomunitasProfile;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
@@ -14,7 +15,7 @@ class KomunitasController extends Controller
      */
     public function index()
     {
-        return view('RegisterKomunitas');
+        return view('auth.register_komunitas');
     }
 
     /**
@@ -22,7 +23,7 @@ class KomunitasController extends Controller
      */
     public function create()
     {
-        return view('RegisterKomunitas');
+        return view('auth.register_komunitas');
     }
 
     /**
@@ -33,25 +34,28 @@ class KomunitasController extends Controller
         // 1. Validation
         $validated = $request->validate([
             'nama_komunitas'   => 'required|string|max:255',
-            'penanggung_jawab' => 'required|string|max:255',
-            'jumlah_anggota'   => 'required|integer',
+            'penanggung_jawab' => ['required', 'string', 'max:255', 'regex:/^[\pL\s]+$/u'],
+            'jumlah_anggota'   => 'required|integer|min:1',
             'no_hp'            => 'required|numeric|digits_between:10,14',
-            'email'            => 'required|email|unique:komunitas,Email',
-            'password'         => ['required', Password::min(8)->mixedCase()->numbers()->symbols()],
+            'email'            => 'required|email|unique:users,email',
+            'password'         => ['required', Password::min(8)],
         ]);
 
-        // 2. Mapping to database columns
-        $dataToSave = [
-            'Nama'                  => $validated['nama_komunitas'],
-            'Nama_penanggung_jawab' => $validated['penanggung_jawab'],
-            'Jumlah_anggota'        => $validated['jumlah_anggota'],
-            'Nomor_hp'              => $validated['no_hp'],
-            'Email'                 => $validated['email'],
-            'Password'              => Hash::make($validated['password']),
-        ];
+        // 2. Buat user terlebih dahulu
+        $user = User::create([
+            'name'     => $validated['nama_komunitas'],
+            'email'    => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role'     => 'komunitas',
+            'no_hp'    => $validated['no_hp'],
+        ]);
 
-        // 3. Save to database
-        Komunitas::create($dataToSave);
+        // 3. Buat komunitas profile
+        KomunitasProfile::create([
+            'user_id'        => $user->id,
+            'nama_komunitas' => $validated['nama_komunitas'],
+            'jumlah_anggota' => $validated['jumlah_anggota'],
+        ]);
 
         return redirect()->back()->with('success', 'Registrasi Komunitas berhasil!');
     }
@@ -59,7 +63,7 @@ class KomunitasController extends Controller
     /**
      * Display the specified community.
      */
-    public function show(Komunitas $register)
+    public function show($id)
     {
         return redirect()->route('registerkomunitas');
     }
@@ -67,7 +71,7 @@ class KomunitasController extends Controller
     /**
      * Show the form for editing the specified community.
      */
-    public function edit(Komunitas $register)
+    public function edit($id)
     {
         return redirect()->route('registerkomunitas');
     }
@@ -75,7 +79,7 @@ class KomunitasController extends Controller
     /**
      * Update the specified community in storage.
      */
-    public function update(Request $request, Komunitas $register)
+    public function update(Request $request, $id)
     {
         return redirect()->route('registerkomunitas');
     }
@@ -83,7 +87,7 @@ class KomunitasController extends Controller
     /**
      * Remove the specified community from storage.
      */
-    public function destroy(Komunitas $register)
+    public function destroy($id)
     {
         return redirect()->route('registerkomunitas');
     }

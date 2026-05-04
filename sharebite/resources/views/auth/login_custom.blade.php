@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login – ShareBite</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -417,15 +418,14 @@
                             autocomplete="current-password"
                             class="input-field {{ $errors->has('password') ? 'error' : '' }}"
                         >
-                        <button type="button" class="toggle-pass" onclick="togglePassword()" tabindex="-1">
+                        <button type="button" class="toggle-pass" id="togglePassword" tabindex="-1">
                             {{-- Eye slash (default) --}}
                             <svg id="iconHide" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
                             {{-- Eye (saat tampil) --}}
                             <svg id="iconShow" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="display:none">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.29 3.29m0 0a9.972 9.972 0 013.29-1.56m0 0L12 5.5l1.42 1.42m0 0A3 3 0 0115 12"></path>
                             </svg>
                         </button>
                     </div>
@@ -440,18 +440,17 @@
                         <input type="checkbox" name="remember" class="remember-check">
                         <span class="remember-text">Ingat Saya</span>
                     </label>
-                    <a href="#" class="forgot-link">Lupa Sandi?</a>
+                    <a href="{{ route('password.request') }}" class="forgot-link">Lupa Sandi?</a>
                 </div>
 
                 {{-- TOMBOL LOGIN --}}
-                <button type="submit" class="btn-login">Masuk Sekarang</button>
+                <button type="submit" class="btn-login" id="loginBtn">Masuk Sekarang</button>
 
                 {{-- DAFTAR --}}
                 <p class="register-text">
                     Baru di ShareBite?&nbsp;
-                    <a href="#" class="register-link">Buat Akun Baru</a>
+                    <a href="{{ route('registerkomunitas') }}" class="register-link">Buat Akun Baru</a>
                 </p>
-
             </form>
         </div>
     </div>
@@ -459,16 +458,59 @@
 </div>
 
 <script>
-    function togglePassword() {
+    document.addEventListener("DOMContentLoaded", function() {
+        @if(session('rejection_message'))
+            Swal.fire({
+                title: 'Verifikasi Ditolak',
+                html: `{!! session('rejection_message') !!}<br><br><div class="text-left bg-red-50 p-5 rounded-2xl border border-red-100"><p class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Catatan Admin:</p><p class="text-sm text-red-600 font-bold italic">"${ {!! json_encode(session('rejection_notes')) !!} }"</p></div>`,
+                icon: 'error',
+                confirmButtonColor: '#22c55e',
+                confirmButtonText: 'Saya Mengerti',
+                background: '#ffffff',
+                customClass: {
+                    popup: 'rounded-[2.5rem] p-8',
+                    confirmButton: 'rounded-full px-10 py-3.5 font-bold text-sm tracking-wide'
+                }
+            });
+        @endif
+
+        const toggleBtn = document.getElementById('togglePassword');
         const input   = document.getElementById('passwordInput');
         const iconHide = document.getElementById('iconHide');
         const iconShow = document.getElementById('iconShow');
-        const isHidden = input.type === 'password';
 
-        input.type          = isHidden ? 'text' : 'password';
-        iconHide.style.display = isHidden ? 'none'  : '';
-        iconShow.style.display = isHidden ? ''     : 'none';
-    }
+        if(toggleBtn) {
+            toggleBtn.addEventListener('click', function() {
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                iconHide.style.display = isHidden ? 'none'  : '';
+                iconShow.style.display = isHidden ? ''     : 'none';
+            });
+        }
+
+        const emailInput = document.querySelector('input[name="email"]');
+        const loginBtn = document.getElementById('loginBtn');
+
+        function checkLoginValidity() {
+            if(emailInput.value.trim() !== '' && input.value.trim() !== '') {
+                loginBtn.disabled = false;
+                loginBtn.style.opacity = '1';
+                loginBtn.style.cursor = 'pointer';
+            } else {
+                loginBtn.disabled = true;
+                loginBtn.style.opacity = '0.5';
+                loginBtn.style.cursor = 'not-allowed';
+            }
+        }
+
+        if(emailInput && input) {
+            emailInput.addEventListener('input', checkLoginValidity);
+            input.addEventListener('input', checkLoginValidity);
+            
+            // Trigger check on load for autofill
+            checkLoginValidity();
+        }
+    });
 </script>
 
 </body>

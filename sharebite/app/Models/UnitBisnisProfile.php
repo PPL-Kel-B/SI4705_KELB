@@ -13,9 +13,9 @@ class UnitBisnisProfile extends Model
         'user_id',
         'nama_usaha',
         'jenis_usaha',
-        'alamat',
         'nib_file',
         'status_verifikasi',
+        'reviewer_notes',
         'total_makanan_terjual',
         'total_berat_terjual',
     ];

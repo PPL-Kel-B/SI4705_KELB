@@ -17,6 +17,8 @@ class KomunitasProfile extends Model
         'total_makanan_dibeli',
     ];
 
+    protected $appends = ['jumlah_komunitas'];
+
     protected function casts(): array
     {
         return [
@@ -26,9 +28,12 @@ class KomunitasProfile extends Model
         ];
     }
 
-    // -------------------------------------------------------
-    // Relations
-    // -------------------------------------------------------
+    // Di dalam class KomunitasProfile
+    public function getJumlahKomunitasAttribute()
+    {
+        // Dummy: Menghasilkan angka antara 5 - 25
+        return rand(5, 25);
+    }
 
     public function user()
     {
