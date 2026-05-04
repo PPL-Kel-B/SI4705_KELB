@@ -8,6 +8,7 @@ use App\Http\Controllers\ManajemenUserController;
 use App\Http\Controllers\RegistUnitBisnisController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController;
+use App\Http\Controllers\RegistIndividuController;
 use App\Http\Controllers\MasterMakananController;
 
 /*
@@ -44,6 +45,10 @@ Route::prefix('register')->group(function () {
     // Unit Bisnis
     Route::get('/unit-bisnis', [RegistUnitBisnisController::class, 'create'])->name('unit-bisnis.create');
     Route::post('/unit-bisnis', [RegistUnitBisnisController::class, 'store'])->name('unit-bisnis.store');
+
+    // Individu
+    Route::get('/individu', [RegistIndividuController::class, 'create'])->name('individu.create');
+    Route::post('/individu', [RegistIndividuController::class, 'store'])->name('individu.store');
 });
 
 Route::resource('registerkomunitas', KomunitasController::class)->names([
