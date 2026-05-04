@@ -76,6 +76,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/riwayat', function () {
             return view('user.riwayat');
         })->name('riwayat');
+        Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
         Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
       
         Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');
@@ -131,7 +133,6 @@ Route::middleware('auth')->group(function () {
             return view('admin.chat');
         })->name('chat');
     });
-
 });
 
 // ==========================================
