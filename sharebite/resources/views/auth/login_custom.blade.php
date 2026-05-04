@@ -575,6 +575,21 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            @if(session('success'))
+                Swal.fire({
+                    title: 'Registrasi Berhasil',
+                    text: "{{ session('success') }}",
+                    icon: 'success',
+                    confirmButtonColor: '#22c55e',
+                    confirmButtonText: 'Lanjutkan',
+                    background: '#ffffff',
+                    customClass: {
+                        popup: 'rounded-[2.5rem] p-8',
+                        confirmButton: 'rounded-full px-10 py-3.5 font-bold text-sm tracking-wide'
+                    }
+                });
+            @endif
+
             @if(session('rejection_message'))
                 Swal.fire({
                     title: 'Verifikasi Ditolak',

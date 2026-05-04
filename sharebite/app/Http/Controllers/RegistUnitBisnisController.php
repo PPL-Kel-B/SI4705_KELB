@@ -31,7 +31,7 @@ class RegistUnitBisnisController extends Controller
             'Jenis_Usaha' => 'required|string|max:100',
             'Alamat'      => 'required|string|max:255',
             'NIB_File'    => 'nullable|file|mimes:pdf,jpg,jpeg|max:5120',
-            'Nomor_hp'    => ['required', 'string', 'regex:/^(\+62|0)[0-9]{9,13}$/'],
+            'Nomor_hp'    => ['required', 'string', 'regex:/^(\+62|0)[0-9]{9,13}$/', 'unique:users,no_hp'],
             'Email'       => 'required|email|max:100|unique:users,email',
             'Password'    => 'required|string|min:8',
             'Latitude'    => 'nullable|string',
@@ -64,7 +64,7 @@ class RegistUnitBisnisController extends Controller
             'status_verifikasi' => 'pending',
         ]);
 
-        return redirect()->route('unit-bisnis.create')
+        return redirect()->route('login')
                          ->with('success', 'Pendaftaran Unit Bisnis berhasil! Akun Anda sedang dalam proses verifikasi.');
     }
 }

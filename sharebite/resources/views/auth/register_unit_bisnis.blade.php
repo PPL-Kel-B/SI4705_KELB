@@ -403,22 +403,7 @@
                             <!-- The Map Container -->
                             <div id="map" class="absolute inset-0 z-0"></div>
 
-                            <!-- Overlay when map is not set yet -->
-                            <div id="map-overlay"
-                                class="absolute inset-0 bg-[#d8ddd3]/50 flex flex-col items-center justify-center z-10 transition-opacity">
-                                <button type="button" id="btn-lokasi"
-                                    class="flex items-center bg-white px-5 py-2.5 rounded-full shadow-md text-sm font-bold text-gray-800 hover:bg-gray-50 hover:scale-105 transition transform">
-                                    <svg class="w-4 h-4 mr-2 text-red-500" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
-                                        </path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    </svg>
-                                    Tentukan Lokasi Anda
-                                </button>
-                            </div>
+
 
                             <!-- Hidden inputs for Lat/Lng -->
                             <input type="hidden" id="Latitude" name="Latitude" value="">
@@ -430,9 +415,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <p>Cari lokasi melalui kolom pencarian atau klik "Tentukan Lokasi Anda" untuk menggunakan
-                                GPS.
-                                Anda dapat menggeser pin lokasi (marker) jika titik kurang tepat.</p>
+                            <p>Cari lokasi melalui kolom pencarian dan sesuaikan posisi pin (marker) pada peta agar tepat pada lokasi usaha Anda.</p>
                         </div>
                         <p id="err-lokasi" class="text-xs text-red-500 mt-1 hidden">Lokasi harus ditentukan dari peta.
                         </p>
@@ -540,7 +523,21 @@
 
             fileInput.addEventListener('change', function (e) {
                 if (e.target.files.length > 0) {
-                    const fileName = e.target.files[0].name;
+                    const file = e.target.files[0];
+                    const fileSize = file.size / 1024 / 1024; // size in MB
+
+                    if (fileSize > 5) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Terlalu Besar',
+                            text: 'Ukuran file NIB tidak boleh melebihi 5MB.',
+                            confirmButtonColor: '#1cb764'
+                        });
+                        fileInput.value = ''; // Reset input
+                        return;
+                    }
+
+                    const fileName = file.name;
                     fileNameDisplay.textContent = fileName;
 
                     uploadZone.classList.add('hidden');
@@ -560,18 +557,14 @@
             // 4. Map and Location Handling (Leaflet.js)
             let map;
             let marker;
-            const btnLokasi = document.getElementById('btn-lokasi');
             const latInput = document.getElementById('Latitude');
             const lngInput = document.getElementById('Longitude');
-            const mapOverlay = document.getElementById('map-overlay');
 
             function initMap(lat, lng, zoom) {
                 if (map) {
                     map.setView([lat, lng], zoom);
                     marker.setLatLng([lat, lng]);
                 } else {
-                    mapOverlay.classList.add('opacity-0');
-                    setTimeout(() => { mapOverlay.classList.add('hidden'); }, 300);
                     map = L.map('map').setView([lat, lng], zoom);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                         attribution: '&copy; OpenStreetMap contributors'
@@ -589,16 +582,11 @@
                 document.getElementById('err-lokasi').classList.add('hidden');
             }
 
-            btnLokasi.addEventListener('click', function () {
+            // Auto-initialize map
+            window.addEventListener('load', function() {
                 const defaultLat = -6.200000;
                 const defaultLng = 106.816666;
                 initMap(defaultLat, defaultLng, 13);
-
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition((pos) => {
-                        initMap(pos.coords.latitude, pos.coords.longitude, 15);
-                    });
-                }
             });
 
             // 4b. Location Search (Nominatim / OpenStreetMap)

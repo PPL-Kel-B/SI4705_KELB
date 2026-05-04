@@ -36,7 +36,7 @@ class RegistIndividuController extends Controller
             'total_makanan_dibeli'     => 0,
         ]);
 
-        return redirect()->route('individu.create')
+        return redirect()->route('login')
                          ->with('success', 'Pendaftaran sebagai Individu/Relawan berhasil!');
     }
 }

@@ -40,7 +40,8 @@ class MenuAktifController extends Controller
 
         $query = MenuAktif::with('masterMakanan')
             ->where('unit_bisnis_id', $profile->id)
-            ->where('status', 'aktif');
+            ->where('status', 'aktif')
+            ->where('batas_pengambilan', '>=', Carbon::now());
 
         // Search
         if ($request->filled('search')) {
@@ -79,6 +80,7 @@ class MenuAktifController extends Controller
         // Calculate stats
         $totalMenuAktif = MenuAktif::where('unit_bisnis_id', $profile->id)
             ->where('status', 'aktif')
+            ->where('batas_pengambilan', '>=', Carbon::now())
             ->count();
             
         $totalMenuHabisHariIni = MenuAktif::where('unit_bisnis_id', $profile->id)

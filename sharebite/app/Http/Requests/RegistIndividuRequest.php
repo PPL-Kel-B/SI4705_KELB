@@ -23,7 +23,7 @@ class RegistIndividuRequest extends FormRequest
     {
         return [
             'nama_lengkap' => ['required', 'string', 'max:100', 'regex:/^[\pL\s]+$/u'],
-            'no_hp' => ['required', 'numeric', 'digits_between:10,14'],
+            'no_hp' => ['required', 'numeric', 'digits_between:10,14', 'unique:users,no_hp'],
             'email'        => 'required|email|max:100|unique:users,email',
             'password'     => 'required|string|min:8',
         ];
