@@ -42,7 +42,8 @@
         @click="sidebarOpen = false"></div>
 
     <!-- Sidebar -->
-    <aside :class="{
+    <aside
+        :class="{
             'translate-x-0': sidebarOpen,
             '-translate-x-full': !sidebarOpen,
             'w-64': !sidebarMinimized,
@@ -137,12 +138,13 @@
 
     <!-- Main Content Wrapper -->
     <div :class="{
-            'lg:ml-64': !sidebarMinimized,
-            'lg:ml-20': sidebarMinimized
-        }" class="transition-all duration-300 min-h-screen flex flex-col">
+        'lg:ml-64': !sidebarMinimized,
+        'lg:ml-20': sidebarMinimized
+    }"
+        class="transition-all duration-300 min-h-screen flex flex-col">
 
         <!-- Header -->
-        <header class="h-24 flex items-center justify-between px-6 lg:px-10">
+        <header class="h-20 flex items-center justify-between px-6 lg:px-10">
             <!-- Left Side (Mobile Toggle & Search) -->
             <div class="flex items-center gap-4">
                 <!-- Hamburger for mobile -->
@@ -212,56 +214,51 @@
         </header>
 
         <!-- Main Content Area -->
-        <main class="flex-1 px-6 lg:px-10 pb-10 mt-2">
+        <main class="flex-1 px-6 lg:px-10 pb-6 mt-2">
             @yield('content')
         </main>
     </div>
 
     <!-- Logout Confirmation Modal -->
-    <div x-show="showLogoutModal" 
-         class="fixed inset-0 z-50 flex items-center justify-center p-4"
-         x-cloak>
+    <div x-show="showLogoutModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" x-cloak>
         <!-- Backdrop -->
-        <div x-show="showLogoutModal" 
-             x-transition:enter="ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             @click="showLogoutModal = false"
-             class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+        <div x-show="showLogoutModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
+            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+            @click="showLogoutModal = false" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
 
         <!-- Modal Content -->
-        <div x-show="showLogoutModal"
-             x-transition:enter="ease-out duration-300"
-             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-             x-transition:leave="ease-in duration-200"
-             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-             class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 overflow-hidden z-10">
-            
-            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-[#eefcf4] rounded-full blur-3xl opacity-50"></div>
-            
+        <div x-show="showLogoutModal" x-transition:enter="ease-out duration-300"
+            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200"
+            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            class="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 overflow-hidden z-10">
+
+            <div class="absolute top-0 right-0 -mr-16 -mt-16 w-32 h-32 bg-[#eefcf4] rounded-full blur-3xl opacity-50">
+            </div>
+
             <div class="text-center">
-                <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-red-50 text-red-500 mb-6">
+                <div
+                    class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-red-50 text-red-500 mb-6">
                     <svg class="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                     </svg>
                 </div>
                 <h3 class="text-2xl font-black text-gray-900 mb-2">Konfirmasi Logout</h3>
-                <p class="text-gray-500 font-medium mb-8 leading-relaxed">Apakah Anda yakin ingin keluar dari akun ShareBite Anda sekarang?</p>
-                
+                <p class="text-gray-500 font-medium mb-8 leading-relaxed">Apakah Anda yakin ingin keluar dari akun
+                    ShareBite Anda sekarang?</p>
+
                 <div class="flex flex-col sm:flex-row gap-3">
-                    <button @click="showLogoutModal = false" 
-                            class="flex-1 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-all">
+                    <button @click="showLogoutModal = false"
+                        class="flex-1 px-6 py-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl transition-all">
                         Batal
                     </button>
                     <form action="{{ route('logout') }}" method="POST" class="flex-1">
                         @csrf
-                        <button type="submit" 
-                                class="w-full px-6 py-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-red-100 hover:shadow-red-200">
+                        <button type="submit"
+                            class="w-full px-6 py-4 bg-red-500 hover:bg-red-600 text-white font-bold rounded-2xl transition-all shadow-lg shadow-red-100 hover:shadow-red-200">
                             Ya, Logout
                         </button>
                     </form>
@@ -271,4 +268,5 @@
     </div>
 
 </body>
+
 </html>

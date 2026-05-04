@@ -8,8 +8,8 @@ use App\Http\Controllers\ManajemenUserController;
 use App\Http\Controllers\RegistUnitBisnisController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController;
+use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\RegistIndividuController;
-use App\Http\Controllers\MasterMakananController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +76,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/riwayat', function () {
             return view('user.riwayat');
         })->name('riwayat');
+        Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
         Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
       
         Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');
@@ -93,8 +95,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/kelola-makanan', [\App\Http\Controllers\MenuAktifController::class, 'index'])->name('kelola_makanan');
         Route::get('/kelola-makanan/tambah', [\App\Http\Controllers\MenuAktifController::class, 'create'])->name('menu_aktif.create');
         Route::post('/kelola-makanan/tambah', [\App\Http\Controllers\MenuAktifController::class, 'store'])->name('menu_aktif.store');
-        // Master Data (placeholder)
-        Route::get('/kelola-master-data', function () { return view('unit_bisnis.dashboard'); })->name('master_data.index');
+        Route::get('/kelola-makanan/{menuAktif}/edit', [\App\Http\Controllers\MenuAktifController::class, 'edit'])->name('menu_aktif.edit');
+        Route::put('/kelola-makanan/{menuAktif}', [\App\Http\Controllers\MenuAktifController::class, 'update'])->name('menu_aktif.update');
+        Route::delete('/kelola-makanan/{menuAktif}', [\App\Http\Controllers\MenuAktifController::class, 'destroy'])->name('menu_aktif.destroy');
+        
+         Route::get('/kelola-master-data', function () { return view('unit_bisnis.dashboard'); })->name('master_data.index');
         // Master Data
         Route::resource('kelola-master-data', \App\Http\Controllers\MasterDataController::class)->names([
             'index' => 'master_data.index',
@@ -104,7 +109,7 @@ Route::middleware('auth')->group(function () {
             'update' => 'master_data.update',
             'destroy' => 'master_data.destroy',
         ])->parameters(['kelola-master-data' => 'master_datum']);
-
+  
         Route::get('/pesanan', function () {
             return view('unit_bisnis.pesanan');
         })->name('pesanan');
@@ -125,14 +130,14 @@ Route::middleware('auth')->group(function () {
             return view('admin.dashboard');
         })->name('dashboard');
         Route::get('/manajemen-pengguna', [ManajemenUserController::class, 'index'])->name('manajemen_pengguna');
+        Route::get('/manajemen-pengguna/verifikasi/{id}', [ManajemenUserController::class, 'reviewNib'])->name('manajemen_pengguna.review_nib');
+        Route::post('/manajemen-pengguna/verifikasi/{id}', [ManajemenUserController::class, 'processNib'])->name('manajemen_pengguna.process_nib');
         Route::put('/manajemen-pengguna/{id}', [ManajemenUserController::class, 'update'])->name('manajemen_pengguna.update');
         Route::delete('/manajemen-pengguna/{id}', [ManajemenUserController::class, 'destroy'])->name('manajemen_pengguna.destroy');
         Route::get('/chat', function () {
             return view('admin.chat');
         })->name('chat');
     });
-
-        
 });
 
 // ==========================================

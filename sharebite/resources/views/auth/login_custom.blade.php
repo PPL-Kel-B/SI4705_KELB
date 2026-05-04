@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login – ShareBite</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -458,6 +459,21 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        @if(session('rejection_message'))
+            Swal.fire({
+                title: 'Verifikasi Ditolak',
+                html: `{!! session('rejection_message') !!}<br><br><div class="text-left bg-red-50 p-5 rounded-2xl border border-red-100"><p class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Catatan Admin:</p><p class="text-sm text-red-600 font-bold italic">"${ {!! json_encode(session('rejection_notes')) !!} }"</p></div>`,
+                icon: 'error',
+                confirmButtonColor: '#22c55e',
+                confirmButtonText: 'Saya Mengerti',
+                background: '#ffffff',
+                customClass: {
+                    popup: 'rounded-[2.5rem] p-8',
+                    confirmButton: 'rounded-full px-10 py-3.5 font-bold text-sm tracking-wide'
+                }
+            });
+        @endif
+
         const toggleBtn = document.getElementById('togglePassword');
         const input   = document.getElementById('passwordInput');
         const iconHide = document.getElementById('iconHide');
