@@ -7,6 +7,7 @@
     <title>Pendaftaran Komunitas - ShareBite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @vite(['resources/js/firebase-otp.js'])
 
     <style>
         /* Menghilangkan icon mata bawaan browser (Edge/Chrome) */
@@ -18,8 +19,96 @@
 </head>
 
 <body class="bg-white">
+    <!-- RECAPTCHA CONTAINER -->
+    <div id="recaptcha-container"></div>
 
-    <div class="flex min-h-screen bg-white">
+    <!-- OTP SECTION (Hidden by default) -->
+    <div id="otp-section" class="hidden fixed inset-0 bg-[#f7fbf8] z-50 flex flex-col">
+        <!-- Header -->
+        <div class="flex justify-between items-center px-10 py-6">
+            <div class="bg-white rounded-full px-4 py-1.5 inline-flex items-center shadow-sm">
+                <img src="{{ asset('images/logo.png') }}" alt="ShareBite Logo" class="h-6 object-contain"
+                    onerror="this.outerHTML='<span class=\'text-[#1cb764] font-bold text-lg\'>ShareBite</span>'">
+            </div>
+            <button type="button" id="btn-back-to-number"
+                class="flex items-center text-gray-600 hover:text-gray-900 font-medium text-sm transition">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Kembali ke pengaturan nomor
+            </button>
+        </div>
+
+        <!-- OTP Card -->
+        <div class="flex-1 flex flex-col items-center justify-center px-4 pb-20">
+            <div class="bg-white p-10 rounded-[2rem] shadow-sm w-full max-w-md text-center">
+                <!-- Icon -->
+                <div class="bg-[#e9eeeb] w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-8 h-8 text-[#1cb764]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                        </path>
+                    </svg>
+                </div>
+
+                <h2 class="text-2xl font-extrabold text-[#1cb764] mb-3">Verifikasi Nomor HP</h2>
+                <p class="text-sm text-gray-500 mb-8 px-4">
+                    Masukkan kode OTP yang dikirimkan ke nomor Anda untuk melanjutkan langkah keamanan.
+                </p>
+
+                <!-- 6 OTP Inputs for Firebase -->
+                <div class="flex justify-center gap-2 mb-6" id="otp-inputs">
+                    <input type="text" maxlength="1"
+                        class="w-12 h-14 text-center text-xl font-bold bg-[#e9eeeb] rounded-xl outline-none focus:ring-2 focus:ring-[#1cb764] transition">
+                    <input type="text" maxlength="1"
+                        class="w-12 h-14 text-center text-xl font-bold bg-[#e9eeeb] rounded-xl outline-none focus:ring-2 focus:ring-[#1cb764] transition">
+                    <input type="text" maxlength="1"
+                        class="w-12 h-14 text-center text-xl font-bold bg-[#e9eeeb] rounded-xl outline-none focus:ring-2 focus:ring-[#1cb764] transition">
+                    <input type="text" maxlength="1"
+                        class="w-12 h-14 text-center text-xl font-bold bg-[#e9eeeb] rounded-xl outline-none focus:ring-2 focus:ring-[#1cb764] transition">
+                    <input type="text" maxlength="1"
+                        class="w-12 h-14 text-center text-xl font-bold bg-[#e9eeeb] rounded-xl outline-none focus:ring-2 focus:ring-[#1cb764] transition">
+                    <input type="text" maxlength="1"
+                        class="w-12 h-14 text-center text-xl font-bold bg-[#e9eeeb] rounded-xl outline-none focus:ring-2 focus:ring-[#1cb764] transition">
+                </div>
+
+                <div class="text-sm text-gray-600 font-medium mb-8 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Kirim Ulang Kode dalam <span id="otp-timer" class="text-[#1cb764] font-bold">01:59</span>
+                </div>
+
+                <button type="button" id="btn-confirm-otp"
+                    class="w-full bg-[#22c55e] hover:bg-[#1cb764] text-white py-4 rounded-xl font-bold shadow-md hover:scale-[1.01] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Konfirmasi
+                </button>
+
+                <div class="mt-8 pt-6 border-t border-gray-100">
+                    <p class="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-2">Punya Masalah?</p>
+                    <a href="#"
+                        class="text-sm font-bold text-[#b47a32] hover:underline flex items-center justify-center gap-1">
+                        Butuh bantuan? Hubungi CS
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z">
+                            </path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-8 text-sm text-gray-500 font-medium">
+                Tidak menerima kode? <button type="button" id="btn-resend-otp"
+                    class="text-[#1cb764] font-bold hover:underline disabled:opacity-50" disabled>Kirim Ulang</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REGISTRATION SECTION -->
+    <div id="registration-section" class="flex min-h-screen bg-white">
         <div
             class="hidden lg:flex lg:w-4/12 bg-[#1cb764] flex-col justify-between px-10 py-10 text-white relative overflow-hidden">
 
