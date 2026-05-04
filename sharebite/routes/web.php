@@ -8,8 +8,8 @@ use App\Http\Controllers\ManajemenUserController;
 use App\Http\Controllers\RegistUnitBisnisController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController;
+use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\RegistIndividuController;
-use App\Http\Controllers\MasterMakananController;
 
 /*
 |--------------------------------------------------------------------------
@@ -93,11 +93,15 @@ Route::middleware('auth')->group(function () {
         Route::get('/kelola-makanan', [\App\Http\Controllers\MenuAktifController::class, 'index'])->name('kelola_makanan');
         Route::get('/kelola-makanan/tambah', [\App\Http\Controllers\MenuAktifController::class, 'create'])->name('menu_aktif.create');
         Route::post('/kelola-makanan/tambah', [\App\Http\Controllers\MenuAktifController::class, 'store'])->name('menu_aktif.store');
-
+        Route::get('/kelola-makanan/{menuAktif}/edit', [\App\Http\Controllers\MenuAktifController::class, 'edit'])->name('menu_aktif.edit');
+        Route::put('/kelola-makanan/{menuAktif}', [\App\Http\Controllers\MenuAktifController::class, 'update'])->name('menu_aktif.update');
+        Route::delete('/kelola-makanan/{menuAktif}', [\App\Http\Controllers\MenuAktifController::class, 'destroy'])->name('menu_aktif.destroy');
+        
+        
         // Master Data
-        Route::get('/kelola-master-data', [MasterMakananController::class, 'index'])->name('master_data.index');
-        Route::get('/kelola-master-data/tambah', [MasterMakananController::class, 'create'])->name('master_data.create');
-        Route::post('/kelola-master-data/tambah', [MasterMakananController::class, 'store'])->name('master_data.store');
+        Route::get('/kelola-master-data', [MasterDataController::class, 'index'])->name('master_data.index');
+        Route::get('/kelola-master-data/tambah', [MasterDataController::class, 'create'])->name('master_data.create');
+        Route::post('/kelola-master-data/tambah', [MasterDataController::class, 'store'])->name('master_data.store');
 
         Route::get('/pesanan', function () {
             return view('unit_bisnis.pesanan');
