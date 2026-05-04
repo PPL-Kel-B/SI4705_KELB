@@ -9,6 +9,7 @@ use App\Http\Controllers\RegistUnitBisnisController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController;
 use App\Http\Controllers\MasterDataController;
+use App\Http\Controllers\RegistIndividuController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +45,10 @@ Route::prefix('register')->group(function () {
     // Unit Bisnis
     Route::get('/unit-bisnis', [RegistUnitBisnisController::class, 'create'])->name('unit-bisnis.create');
     Route::post('/unit-bisnis', [RegistUnitBisnisController::class, 'store'])->name('unit-bisnis.store');
+
+    // Individu
+    Route::get('/individu', [RegistIndividuController::class, 'create'])->name('individu.create');
+    Route::post('/individu', [RegistIndividuController::class, 'store'])->name('individu.store');
 });
 
 Route::resource('registerkomunitas', KomunitasController::class)->names([
@@ -72,9 +77,10 @@ Route::middleware('auth')->group(function () {
             return view('user.riwayat');
         })->name('riwayat');
         Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
-        Route::get('/pengaturan', function () {
-            return view('user.pengaturan');
-        })->name('pengaturan');
+      
+        Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');
+        Route::get('/pengaturan/kebijakan/{type}', [\App\Http\Controllers\SettingsController::class, 'policy'])->name('pengaturan.policy');
+        Route::delete('/pengaturan/session/{id}', [\App\Http\Controllers\SettingsController::class, 'logoutSession'])->name('pengaturan.logout_session');
     });
 
     // Unit Bisnis Dashboard Routes
@@ -117,6 +123,8 @@ Route::middleware('auth')->group(function () {
             return view('admin.dashboard');
         })->name('dashboard');
         Route::get('/manajemen-pengguna', [ManajemenUserController::class, 'index'])->name('manajemen_pengguna');
+        Route::get('/manajemen-pengguna/verifikasi/{id}', [ManajemenUserController::class, 'reviewNib'])->name('manajemen_pengguna.review_nib');
+        Route::post('/manajemen-pengguna/verifikasi/{id}', [ManajemenUserController::class, 'processNib'])->name('manajemen_pengguna.process_nib');
         Route::put('/manajemen-pengguna/{id}', [ManajemenUserController::class, 'update'])->name('manajemen_pengguna.update');
         Route::delete('/manajemen-pengguna/{id}', [ManajemenUserController::class, 'destroy'])->name('manajemen_pengguna.destroy');
         Route::get('/chat', function () {
