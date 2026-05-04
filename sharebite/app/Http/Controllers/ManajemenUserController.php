@@ -54,6 +54,20 @@ class ManajemenUserController extends Controller
                 )->get();
 
             $users = $komunitas->merge($individu);
+        } elseif ($tab == 'verifikasi_nib') {
+            $users = DB::table('unit_bisnis_profiles')
+                ->join('users', 'unit_bisnis_profiles.user_id', '=', 'users.id')
+                ->where('unit_bisnis_profiles.status_verifikasi', 'pending')
+                ->select(
+                    'users.id',
+                    'unit_bisnis_profiles.nama_usaha as name',
+                    'unit_bisnis_profiles.jenis_usaha as type',
+                    'users.email as Email',
+                    'users.alamat',
+                    'users.foto_profil',
+                    'unit_bisnis_profiles.status_verifikasi',
+                    'unit_bisnis_profiles.created_at'
+                )->get();
         } else {
             // Default: Unit Bisnis
             $users = DB::table('unit_bisnis_profiles')
@@ -129,5 +143,31 @@ class ManajemenUserController extends Controller
         $user->delete();
 
         return redirect()->route('admin.manajemen_pengguna')->with('success', 'Data berhasil dihapus');
+    }
+
+    public function reviewNib($id)
+    {
+        $profile = \App\Models\UnitBisnisProfile::where('user_id', $id)->firstOrFail();
+        return view('admin.review_nib', compact('profile'));
+    }
+
+    public function processNib(Request $request, $id)
+    {
+        $profile = \App\Models\UnitBisnisProfile::where('user_id', $id)->firstOrFail();
+        
+        $request->validate([
+            'status' => 'required|in:terverifikasi,ditolak',
+            'reviewer_notes' => 'nullable|string'
+        ]);
+
+        $profile->update([
+            'status_verifikasi' => $request->status,
+            'reviewer_notes' => $request->status == 'ditolak' ? $request->reviewer_notes : null
+        ]);
+
+        $message = $request->status == 'terverifikasi' ? 'NIB berhasil diverifikasi.' : 'Verifikasi ditolak.';
+        
+        return redirect()->route('admin.manajemen_pengguna', ['tab' => 'unit_bisnis'])
+                         ->with('success', $message);
     }
 }

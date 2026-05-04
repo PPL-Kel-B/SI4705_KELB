@@ -95,8 +95,8 @@
                         <div>
                             <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Jumlah Stok</label>
                             <div class="flex items-center bg-[#f4f6f5] rounded-xl p-1">
-                                <button type="button" @click="if(stock > 1) stock--" class="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm text-xl font-bold text-[#1cb764] transition">-</button>
-                                <input type="number" name="stok_porsi" x-model="stock" min="1" class="w-full text-center font-bold text-lg outline-none bg-transparent text-gray-900 border-none focus:ring-0">
+                                <button type="button" @click="if(stock > 0) stock--" class="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm text-xl font-bold text-[#1cb764] transition">-</button>
+                                <input type="number" name="stok_porsi" x-model="stock" min="0" class="w-full text-center font-bold text-lg outline-none bg-transparent text-gray-900 border-none focus:ring-0">
                                 <button type="button" @click="stock++" class="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm text-xl font-bold text-[#1cb764] transition">+</button>
                             </div>
                         </div>

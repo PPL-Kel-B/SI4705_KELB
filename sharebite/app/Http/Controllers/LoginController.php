@@ -46,10 +46,17 @@ class LoginController extends Controller
         // Cek verifikasi untuk Unit Bisnis
         if ($user->role === 'unit_bisnis') {
             $profile = $user->unitBisnisProfile;
-            if ($profile && $profile->status_verifikasi === 'pending') {
-                return back()->withErrors([
-                    'email' => 'Akun mu belum terverifikasi, harap cek secara berkala.',
-                ])->withInput();
+            if ($profile) {
+                if ($profile->status_verifikasi === 'pending') {
+                    return back()->withErrors([
+                        'email' => 'Akun mu belum terverifikasi, harap cek secara berkala.',
+                    ])->withInput();
+                } elseif ($profile->status_verifikasi === 'ditolak') {
+                    return back()->with([
+                        'rejection_message' => 'Mohon maaf, pengajuan verifikasi NIB Anda ditolak.',
+                        'rejection_notes' => $profile->reviewer_notes ?? 'Tidak ada catatan tambahan.'
+                    ])->withInput();
+                }
             }
         }
 

@@ -17,10 +17,16 @@
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
     {{-- Search --}}
     <form action="{{ route('unit.kelola_makanan') }}" method="GET" class="w-full md:w-96 relative">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari pesanan atau menu..." 
-               class="w-full bg-[#f4f6f5] border-none rounded-xl pl-10 pr-4 py-3.5 text-sm font-medium text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-[#1cb764] shadow-sm">
-        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <div class="relative flex items-center bg-[#e9eeeb] rounded-full px-4 py-3">
+            <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text"
+                   name="search"
+                   value="{{ request('search') }}"
+                   placeholder="Cari pesanan atau menu..."
+                   onchange="this.form.submit()"
+                   class="bg-transparent border-none outline-none w-full ml-3 text-sm text-gray-700 font-medium placeholder-gray-500 focus:ring-0">
         </div>
     </form>
 
@@ -99,16 +105,16 @@
         </div>
     </div>
 
-    {{-- Total Menu Habis --}}
+    {{-- Total Menu Habis Hari Ini --}}
     <div class="bg-white rounded-3xl p-6 flex items-center gap-5 shadow-sm border border-gray-50">
         <div class="w-14 h-14 rounded-2xl bg-[#fee2e2] flex items-center justify-center flex-shrink-0">
             <svg class="w-6 h-6 text-[#ef4444]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
         </div>
         <div>
-            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Menu Habis</p>
+            <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Menu Habis Hari Ini</p>
             <div class="flex items-end gap-2">
-                <span class="text-3xl font-extrabold text-gray-900 leading-none">{{ $totalMenuHabis }}</span>
-                <span class="text-sm font-semibold text-gray-500 mb-0.5">Menu</span>
+                <span class="text-3xl font-extrabold text-gray-900 leading-none">{{ $totalMenuHabisHariIni }}</span>
+                <span class="text-sm font-semibold text-gray-500 mb-0.5">Kategori</span>
             </div>
         </div>
     </div>
@@ -128,35 +134,78 @@
     </div>
 </div>
 
-{{-- ===== FILTERS (DUMMY) ===== --}}
+{{-- ===== FILTERS & SORT ===== --}}
 <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-    <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-        <button class="px-5 py-2.5 rounded-xl bg-[#0a2e1f] text-white text-sm font-bold whitespace-nowrap">Semua</button>
-        <button class="px-5 py-2.5 rounded-xl bg-[#e9eeeb] text-gray-600 hover:bg-[#dcfce7] hover:text-[#1cb764] text-sm font-bold whitespace-nowrap transition-colors">Tersedia</button>
-        <button class="px-5 py-2.5 rounded-xl bg-[#e9eeeb] text-gray-600 hover:bg-[#fee2e2] hover:text-[#ef4444] text-sm font-bold whitespace-nowrap transition-colors">Segera Habis</button>
-        <button class="px-5 py-2.5 rounded-xl bg-[#e9eeeb] text-gray-600 hover:bg-gray-200 text-sm font-bold whitespace-nowrap transition-colors">Habis</button>
+    <div id="filters-container" class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <a href="{{ route('unit.kelola_makanan', array_merge(request()->query(), ['filter' => 'semua'])) }}" 
+           class="ajax-link px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-colors {{ request('filter', 'semua') === 'semua' ? 'bg-[#0a2e1f] text-white' : 'bg-[#e9eeeb] text-gray-600 hover:bg-[#dcfce7] hover:text-[#1cb764]' }}">
+            Semua
+        </a>
+        <a href="{{ route('unit.kelola_makanan', array_merge(request()->query(), ['filter' => 'tersedia'])) }}" 
+           class="ajax-link px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-colors {{ request('filter') === 'tersedia' ? 'bg-[#1cb764] text-white' : 'bg-[#e9eeeb] text-gray-600 hover:bg-[#dcfce7] hover:text-[#1cb764]' }}">
+            Tersedia
+        </a>
+        <a href="{{ route('unit.kelola_makanan', array_merge(request()->query(), ['filter' => 'segera_habis'])) }}" 
+           class="ajax-link px-5 py-2.5 rounded-xl text-sm font-bold whitespace-nowrap transition-colors {{ request('filter') === 'segera_habis' ? 'bg-[#cf8129] text-white' : 'bg-[#e9eeeb] text-gray-600 hover:bg-[#fdf4e9] hover:text-[#cf8129]' }}">
+            Segera Habis
+        </a>
     </div>
     
-    <div class="flex items-center gap-2 text-sm font-semibold text-gray-500 cursor-pointer hover:text-gray-800 transition-colors bg-white px-4 py-2.5 rounded-xl shadow-sm border border-gray-50">
-        <span>Urutkan: Terbaru</span>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+    <div id="sort-container" class="relative group">
+        <div class="flex items-center gap-2 text-sm font-semibold text-gray-500 cursor-pointer hover:text-gray-800 transition-colors bg-white px-4 py-2.5 rounded-xl shadow-sm border border-gray-50">
+            <span>Urutkan: 
+                @if(request('sort') === 'terlama') Terlama
+                @elseif(request('sort') === 'stok_terbanyak') Stok Terbanyak
+                @elseif(request('sort') === 'stok_terdikit') Stok Terdikit
+                @else Terbaru
+                @endif
+            </span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </div>
+        <div class="absolute right-0 top-full mt-2 w-48 bg-white border border-gray-100 shadow-xl rounded-xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+            <a href="{{ route('unit.kelola_makanan', array_merge(request()->query(), ['sort' => 'terbaru'])) }}" class="ajax-link block px-4 py-3 text-sm font-medium hover:bg-gray-50 {{ request('sort', 'terbaru') === 'terbaru' ? 'text-[#1cb764]' : 'text-gray-700' }}">Terbaru</a>
+            <a href="{{ route('unit.kelola_makanan', array_merge(request()->query(), ['sort' => 'terlama'])) }}" class="ajax-link block px-4 py-3 text-sm font-medium hover:bg-gray-50 {{ request('sort') === 'terlama' ? 'text-[#1cb764]' : 'text-gray-700' }}">Terlama</a>
+            <a href="{{ route('unit.kelola_makanan', array_merge(request()->query(), ['sort' => 'stok_terbanyak'])) }}" class="ajax-link block px-4 py-3 text-sm font-medium hover:bg-gray-50 {{ request('sort') === 'stok_terbanyak' ? 'text-[#1cb764]' : 'text-gray-700' }}">Stok Terbanyak</a>
+            <a href="{{ route('unit.kelola_makanan', array_merge(request()->query(), ['sort' => 'stok_terdikit'])) }}" class="ajax-link block px-4 py-3 text-sm font-medium hover:bg-gray-50 {{ request('sort') === 'stok_terdikit' ? 'text-[#1cb764]' : 'text-gray-700' }}">Stok Terdikit</a>
+        </div>
     </div>
 </div>
 
 {{-- ===== MENU LIST ===== --}}
+<div id="menu-container">
 @if($menuAktifs->isEmpty())
     <div class="bg-white rounded-3xl p-12 shadow-sm border border-gray-50 flex flex-col items-center justify-center text-center mt-6">
-        <div class="bg-[#eefcf4] w-24 h-24 rounded-full flex items-center justify-center text-[#1cb764] mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-            </svg>
-        </div>
-        <h2 class="text-2xl font-extrabold text-gray-800 mb-2">Belum ada makanan aktif</h2>
-        <p class="text-gray-500 max-w-md mb-8">Anda belum memiliki menu yang sedang aktif dijual hari ini. Buka menu sekarang untuk mulai berjualan.</p>
-        <a href="{{ route('unit.menu_aktif.create') }}" class="inline-flex items-center justify-center gap-2 bg-[#1cb764] hover:bg-[#19a55a] text-white font-bold px-8 py-4 rounded-xl transition-all shadow-md hover:shadow-lg">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
-            <span>Buka Menu Pertama</span>
-        </a>
+        @if(request('search'))
+            <div class="bg-blue-50 w-24 h-24 rounded-full flex items-center justify-center text-blue-500 mb-6">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-extrabold text-gray-800 mb-2">Pencarian Tidak Ditemukan</h2>
+            <p class="text-gray-500 max-w-md mb-8">Kami tidak menemukan makanan dengan kata kunci "<b>{{ request('search') }}</b>" di menu aktif.</p>
+            <a href="{{ route('unit.kelola_makanan', request()->except('search')) }}" class="ajax-link inline-flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-8 py-4 rounded-xl transition-all shadow-sm hover:shadow-md">
+                Reset Pencarian
+            </a>
+        @elseif(request('filter') && request('filter') !== 'semua')
+            <div class="bg-orange-50 w-24 h-24 rounded-full flex items-center justify-center text-orange-500 mb-6">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-extrabold text-gray-800 mb-2">Filter Kosong</h2>
+            <p class="text-gray-500 max-w-md mb-8">Tidak ada menu aktif yang cocok dengan filter yang Anda pilih saat ini.</p>
+            <a href="{{ route('unit.kelola_makanan', request()->except('filter')) }}" class="ajax-link inline-flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold px-8 py-4 rounded-xl transition-all shadow-sm hover:shadow-md">
+                Hapus Filter
+            </a>
+        @else
+            <div class="bg-[#eefcf4] w-24 h-24 rounded-full flex items-center justify-center text-[#1cb764] mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+            </div>
+            <h2 class="text-2xl font-extrabold text-gray-800 mb-2">Belum ada makanan aktif</h2>
+            <p class="text-gray-500 max-w-md mb-8">Anda belum memiliki menu yang sedang aktif dijual hari ini. Buka menu sekarang untuk mulai berjualan.</p>
+            <a href="{{ route('unit.menu_aktif.create') }}" class="inline-flex items-center justify-center gap-2 bg-[#1cb764] hover:bg-[#19a55a] text-white font-bold px-8 py-4 rounded-xl transition-all shadow-md hover:shadow-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
+                <span>Buka Menu Pertama</span>
+            </a>
+        @endif
     </div>
 @else
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -175,9 +224,15 @@
                 @endif
                 
                 <div class="absolute top-4 left-4">
-                    <span class="bg-[#0a2e1f] text-white text-[10px] font-extrabold px-3 py-1.5 rounded-lg uppercase tracking-widest shadow-md">
-                        Tersedia
-                    </span>
+                    @if($menu->stok_porsi > 5)
+                        <span class="bg-[#0a2e1f] text-white text-[10px] font-extrabold px-3 py-1.5 rounded-lg uppercase tracking-widest shadow-md">
+                            Tersedia
+                        </span>
+                    @else
+                        <span class="bg-[#cf8129] text-white text-[10px] font-extrabold px-3 py-1.5 rounded-lg uppercase tracking-widest shadow-md">
+                            Segera Habis
+                        </span>
+                    @endif
                 </div>
             </div>
 
@@ -203,25 +258,109 @@
                     @endif
                 </div>
 
-                {{-- Dummy Actions --}}
+                {{-- Actions --}}
                 <div class="flex items-center gap-3">
-                    <button type="button" disabled class="flex-1 py-3 bg-white border border-gray-200 text-gray-600 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-not-allowed hover:bg-gray-50">
+                    <a href="{{ route('unit.menu_aktif.edit', $menu->id) }}" class="flex-1 py-3 bg-white border border-gray-200 text-gray-600 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors hover:bg-gray-50 hover:border-gray-300">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         Edit
-                    </button>
-                    <button type="button" disabled class="flex-1 py-3 bg-white border border-red-200 text-red-500 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 cursor-not-allowed hover:bg-red-50">
+                    </a>
+                    <button type="button" onclick="confirmTutup('{{ $menu->id }}', '{{ addslashes($menu->masterMakanan->nama_makanan) }}')" class="flex-1 py-3 bg-white border border-red-200 text-red-500 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors hover:bg-red-50 hover:border-red-300">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>
                         Tutup
                     </button>
+                    <form id="tutup-form-{{ $menu->id }}" action="{{ route('unit.menu_aktif.destroy', $menu->id) }}" method="POST" class="hidden">
+                        @csrf
+                        @method('DELETE')
+                    </form>
                 </div>
             </div>
         </div>
         @endforeach
     </div>
 @endif
+</div>
 
 @endsection
 
 @push('scripts')
-{{-- Additional scripts can go here --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function confirmTutup(id, name) {
+        if(typeof Swal === 'undefined') return alert('Library SweetAlert tidak ditemukan!');
+        
+        Swal.fire({
+            title: 'Tutup Menu Aktif?',
+            text: `Apakah Anda yakin ingin menutup dan menghapus "${name}" dari daftar menu yang sedang dijual hari ini?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#9ca3af',
+            confirmButtonText: 'Ya, Tutup!',
+            cancelButtonText: 'Batal',
+            customClass: {
+                confirmButton: 'rounded-xl shadow-md',
+                cancelButton: 'rounded-xl shadow-md'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('tutup-form-' + id).submit();
+            }
+        });
+    }
+
+    // ===== AJAX FILTER & SORT =====
+    document.addEventListener('click', async (e) => {
+        const link = e.target.closest('.ajax-link');
+        if (!link) return;
+        
+        e.preventDefault();
+        const url = link.href;
+        const menuContainer = document.getElementById('menu-container');
+        
+        // Animasi Loading
+        menuContainer.innerHTML = `
+            <div class="flex flex-col justify-center items-center h-64 w-full">
+                <svg class="animate-spin h-10 w-10 text-[#1cb764] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <p class="text-sm font-bold text-gray-500">Memuat data...</p>
+            </div>
+        `;
+        
+        // Update URL Address Bar (tanpa refresh)
+        window.history.pushState({}, '', url);
+
+        try {
+            const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const html = await response.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Replace konten grid/list
+            if (doc.getElementById('menu-container')) {
+                menuContainer.innerHTML = doc.getElementById('menu-container').innerHTML;
+            }
+            
+            // Replace tab filter (untuk update state aktif)
+            if (doc.getElementById('filters-container')) {
+                document.getElementById('filters-container').innerHTML = doc.getElementById('filters-container').innerHTML;
+            }
+
+            // Replace dropdown sort
+            if (doc.getElementById('sort-container')) {
+                document.getElementById('sort-container').innerHTML = doc.getElementById('sort-container').innerHTML;
+            }
+        } catch (err) {
+            // Fallback jika fetch gagal (misal koneksi terputus)
+            window.location.href = url;
+        }
+    });
+
+    // Support browser back/forward buttons
+    window.addEventListener('popstate', () => {
+        window.location.reload();
+    });
+</script>
 @endpush

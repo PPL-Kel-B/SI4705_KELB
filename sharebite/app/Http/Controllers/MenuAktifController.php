@@ -26,10 +26,23 @@ class MenuAktifController extends Controller
             ]);
         }
 
+        // Auto-update ke 'habis' jika stok habis (otomatis menghilang dari daftar aktif)
+        MenuAktif::where('unit_bisnis_id', $profile->id)
+            ->where('stok_porsi', '<=', 0)
+            ->where('status', 'aktif')
+            ->update(['status' => 'habis']);
+
+        // Auto-update ke 'ditutup' jika melebihi batas pengambilan
+        MenuAktif::where('unit_bisnis_id', $profile->id)
+            ->where('batas_pengambilan', '<', Carbon::now())
+            ->where('status', 'aktif')
+            ->update(['status' => 'ditutup']);
+
         $query = MenuAktif::with('masterMakanan')
             ->where('unit_bisnis_id', $profile->id)
             ->where('status', 'aktif');
 
+        // Search
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('masterMakanan', function ($q) use ($search) {
@@ -37,21 +50,40 @@ class MenuAktifController extends Controller
             });
         }
 
-        $menuAktifs = $query->latest()->get();
+        // Filter
+        if ($request->filled('filter')) {
+            if ($request->filter === 'tersedia') {
+                $query->where('stok_porsi', '>', 5);
+            } elseif ($request->filter === 'segera_habis') {
+                $query->where('stok_porsi', '<=', 5); // Stok 1-5 masuk segera habis (0 sudah dihapus otomatis)
+            }
+        }
+
+        // Sort
+        if ($request->filled('sort')) {
+            if ($request->sort === 'terlama') {
+                $query->oldest();
+            } elseif ($request->sort === 'stok_terbanyak') {
+                $query->orderBy('stok_porsi', 'desc');
+            } elseif ($request->sort === 'stok_terdikit') {
+                $query->orderBy('stok_porsi', 'asc');
+            } else {
+                $query->latest();
+            }
+        } else {
+            $query->latest(); // Default
+        }
+
+        $menuAktifs = $query->get();
 
         // Calculate stats
         $totalMenuAktif = MenuAktif::where('unit_bisnis_id', $profile->id)
             ->where('status', 'aktif')
-            ->where('stok_porsi', '>', 0)
-            ->where('batas_pengambilan', '>', Carbon::now())
             ->count();
             
-        $totalMenuHabis = MenuAktif::where('unit_bisnis_id', $profile->id)
-            ->where('status', 'aktif')
-            ->where(function($q) {
-                $q->where('stok_porsi', '<=', 0)
-                  ->orWhere('batas_pengambilan', '<=', Carbon::now());
-            })
+        $totalMenuHabisHariIni = MenuAktif::where('unit_bisnis_id', $profile->id)
+            ->where('status', 'habis')
+            ->whereDate('updated_at', Carbon::today())
             ->count();
             
         // For 'Porsi Terjual Hari Ini', calculate from pesanan
@@ -60,7 +92,7 @@ class MenuAktifController extends Controller
             ->sum('jumlah_porsi');
 
         return view('unit_bisnis.kelola_makanan.menu_aktif', compact(
-            'menuAktifs', 'totalMenuAktif', 'totalMenuHabis', 'porsiTerjualHariIni'
+            'menuAktifs', 'totalMenuAktif', 'totalMenuHabisHariIni', 'porsiTerjualHariIni'
         ));
     }
 
@@ -107,7 +139,7 @@ class MenuAktifController extends Controller
         $request->validate([
             'master_makanan_id' => 'required|exists:master_makanans,id',
             'is_gratis' => 'nullable|boolean',
-            'stok_porsi' => 'required|integer|min:1',
+            'stok_porsi' => 'required|integer|min:0',
             'batas_pengambilan' => 'required', // format HH:MM
         ]);
 
@@ -138,10 +170,66 @@ class MenuAktifController extends Controller
             'harga_jual' => $masterMakanan->harga, // Save current price at time of publication
             'stok_porsi' => $request->stok_porsi,
             'batas_pengambilan' => $batasWaktu,
-            'status' => 'aktif',
+            'status' => $request->stok_porsi <= 0 ? 'habis' : 'aktif',
         ]);
 
         return redirect()->route('unit.kelola_makanan')
                         ->with('success', 'Menu berhasil diaktifkan');
+    }
+
+    public function edit(MenuAktif $menuAktif)
+    {
+        $user = auth()->user();
+        if ($menuAktif->unit_bisnis_id !== $user->unitBisnisProfile->id) {
+            abort(403);
+        }
+
+        return view('unit_bisnis.kelola_makanan.edit_menu_aktif', compact('menuAktif'));
+    }
+
+    public function update(Request $request, MenuAktif $menuAktif)
+    {
+        $user = auth()->user();
+        if ($menuAktif->unit_bisnis_id !== $user->unitBisnisProfile->id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'is_gratis' => 'nullable|boolean',
+            'stok_porsi' => 'required|integer|min:0',
+            'batas_pengambilan' => 'required',
+        ]);
+
+        $isGratis = $request->has('is_gratis') ? true : false;
+        
+        $batasWaktu = Carbon::createFromFormat('H:i', $request->batas_pengambilan);
+        if ($batasWaktu->isPast() && $menuAktif->batas_pengambilan->format('H:i') !== $request->batas_pengambilan) {
+            $batasWaktu->addDay();
+        } elseif ($menuAktif->batas_pengambilan->format('H:i') === $request->batas_pengambilan) {
+            $batasWaktu = $menuAktif->batas_pengambilan;
+        }
+
+        $status = $request->stok_porsi <= 0 ? 'habis' : ($menuAktif->status === 'habis' && $request->stok_porsi > 0 ? 'aktif' : $menuAktif->status);
+
+        $menuAktif->update([
+            'is_gratis' => $isGratis,
+            'stok_porsi' => $request->stok_porsi,
+            'batas_pengambilan' => $batasWaktu,
+            'status' => $status,
+        ]);
+
+        return redirect()->route('unit.kelola_makanan')->with('success', 'Menu aktif berhasil diperbarui');
+    }
+
+    public function destroy(MenuAktif $menuAktif)
+    {
+        $user = auth()->user();
+        if ($menuAktif->unit_bisnis_id !== $user->unitBisnisProfile->id) {
+            abort(403);
+        }
+
+        $menuAktif->delete();
+
+        return redirect()->route('unit.kelola_makanan')->with('success', 'Menu aktif berhasil ditutup (dihapus)');
     }
 }
