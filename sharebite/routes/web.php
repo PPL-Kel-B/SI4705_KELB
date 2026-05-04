@@ -101,9 +101,14 @@ Route::middleware('auth')->group(function () {
         
         
         // Master Data
-        Route::get('/kelola-master-data', [MasterDataController::class, 'index'])->name('master_data.index');
-        Route::get('/kelola-master-data/tambah', [MasterDataController::class, 'create'])->name('master_data.create');
-        Route::post('/kelola-master-data/tambah', [MasterDataController::class, 'store'])->name('master_data.store');
+        Route::resource('kelola-master-data', MasterDataController::class)->names([
+            'index' => 'master_data.index',
+            'create' => 'master_data.create',
+            'store' => 'master_data.store',
+            'edit' => 'master_data.edit',
+            'update' => 'master_data.update',
+            'destroy' => 'master_data.destroy',
+        ])->parameters(['kelola-master-data' => 'master_datum']);
 
         Route::get('/pesanan', function () {
             return view('unit_bisnis.pesanan');

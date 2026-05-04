@@ -167,8 +167,8 @@
         class="transition-all duration-300 min-h-screen flex flex-col">
 
         <!-- Header -->
-        <header class="h-22 flex items-center justify-between px-6 lg:px-10">
-            <!-- Left Side (Mobile Toggle & Search) -->
+        <header class="h-28 flex items-center justify-between px-6 lg:px-10">
+            <!-- Left Side (Mobile Toggle) -->
             <div class="flex items-center gap-4">
                 <!-- Hamburger for mobile -->
                 <button @click="sidebarOpen = true"
@@ -179,19 +179,6 @@
                             d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
-
-                <!-- Search Input -->
-                <!-- Search Input -->
-                @if (!isset($hideSearch) || !$hideSearch)
-                    <div class="hidden md:flex items-center bg-[#e9eeeb] rounded-xl px-4 py-3 w-80">
-                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                        <input type="text" placeholder="Cari pesanan atau menu..."
-                            class="bg-transparent border-none outline-none w-full ml-3 text-sm text-gray-700 font-medium placeholder-gray-500">
-                    </div>
-                @endif
             </div>
 
             <!-- Right Side (Notifications & Profile) -->

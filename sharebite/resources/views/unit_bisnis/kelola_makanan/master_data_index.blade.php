@@ -5,7 +5,7 @@
 @section('content')
 
 {{-- ===== PAGE HEADER & TABS ===== --}}
-<div class="mb-8">
+<div class="mb-8 -mt-6">
     <h1 class="text-3xl font-extrabold text-[#0a2e1f] mb-4">Kelola Menu Makanan</h1>
     <div class="flex items-center space-x-6 border-b border-gray-200">
         <a href="{{ route('unit.kelola_makanan') }}" class="pb-2 text-sm font-semibold text-gray-500 hover:text-[#1cb764] transition">Menu Aktif</a>
@@ -171,24 +171,26 @@
 
             {{-- Actions --}}
             <div class="flex items-center space-x-2 border-t border-gray-100 pt-4 mb-4">
-                {{-- Dummy Edit --}}
-                <button type="button" disabled
-                   class="flex-1 flex items-center justify-center space-x-1.5 bg-[#fdf4e9] text-[#cf8129] font-bold text-xs px-3 py-2.5 rounded-xl opacity-80 cursor-not-allowed">
+                {{-- Edit Master --}}
+                <a href="{{ route('unit.master_data.edit', $makanan->id) }}"
+                   class="flex-1 flex items-center justify-center space-x-1.5 bg-[#fdf4e9] text-[#cf8129] hover:bg-[#faeedd] font-bold text-xs px-3 py-2.5 rounded-xl transition-colors">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                     </svg>
                     <span>Edit Master</span>
-                </button>
+                </a>
 
-                {{-- Dummy Delete --}}
-                <button type="button" disabled
-                        class="w-10 h-10 flex items-center justify-center border border-red-100 text-red-400 bg-red-50 rounded-xl opacity-80 cursor-not-allowed">
+                {{-- Delete Master --}}
+                <button type="button" onclick="confirmDelete('{{ $makanan->id }}', '{{ addslashes($makanan->nama_makanan) }}')"
+                        class="w-10 h-10 flex items-center justify-center border border-red-100 text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
                 </button>
+                <form id="delete-form-{{ $makanan->id }}" action="{{ route('unit.master_data.destroy', $makanan->id) }}" method="POST" class="hidden">
+                    @csrf
+                    @method('DELETE')
+                </form>
             </div>
 
         </div>
@@ -257,6 +259,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // ===== AUTO DISMISS ALERTS =====
@@ -271,5 +274,29 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }, 4000);
 });
+
+// Tambahkan Fungsi ini untuk Delete
+function confirmDelete(id, name) {
+    if(typeof Swal === 'undefined') return alert('Library SweetAlert tidak ditemukan!');
+    
+    Swal.fire({
+        title: 'Hapus Master Data?',
+        text: `Apakah Anda yakin ingin menghapus "${name}"? Data yang sudah dihapus tidak dapat dikembalikan.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#9ca3af',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        customClass: {
+            confirmButton: 'rounded-xl shadow-md',
+            cancelButton: 'rounded-xl shadow-md'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('delete-form-' + id).submit();
+        }
+    });
+}
 </script>
 @endpush

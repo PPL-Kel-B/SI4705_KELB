@@ -4,7 +4,7 @@
 
 @section('content')
 
-<div class="max-w-4xl mx-auto">
+<div class="max-w-4xl mx-auto -mt-6">
     {{-- Breadcrumbs & Header --}}
     <div class="mb-6">
         <div class="flex items-center text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">
