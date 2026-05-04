@@ -8,6 +8,7 @@ use App\Http\Controllers\ManajemenUserController;
 use App\Http\Controllers\RegistUnitBisnisController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController;
+use App\Http\Controllers\MasterMakananController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,12 +23,12 @@ Route::get('/', function () {
 // ==========================================
 // Laravel Breeze Default Auth Routes
 // ==========================================
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // ==========================================
 // Authentication Routes (Custom) - Overrides Breeze
 // ==========================================
-Route::get('/login',  [LoginController::class, 'index'])->name('login');
+Route::get('/login', [LoginController::class, 'index'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 
 // ==========================================
@@ -39,7 +40,7 @@ Route::prefix('register')->group(function () {
         return view('auth.register_komunitas');
     });
     Route::post('/store', [KomunitasController::class, 'store'])->name('register.store');
-    
+
     // Unit Bisnis
     Route::get('/unit-bisnis', [RegistUnitBisnisController::class, 'create'])->name('unit-bisnis.create');
     Route::post('/unit-bisnis', [RegistUnitBisnisController::class, 'store'])->name('unit-bisnis.store');
@@ -53,7 +54,7 @@ Route::resource('registerkomunitas', KomunitasController::class)->names([
 // Authenticated Routes
 // ==========================================
 Route::middleware('auth')->group(function () {
-    
+
     // Dashboard
     Route::get('/dashboard', function () {
         return view('dashboard');
@@ -64,9 +65,14 @@ Route::middleware('auth')->group(function () {
 
     // User Dashboard Routes
     Route::prefix('user')->name('user.')->group(function () {
-        Route::get('/dashboard', function () { return view('user.dashboard'); })->name('dashboard');
-        Route::get('/riwayat', function () { return view('user.riwayat'); })->name('riwayat');
+        Route::get('/dashboard', function () {
+            return view('user.dashboard');
+        })->name('dashboard');
+        Route::get('/riwayat', function () {
+            return view('user.riwayat');
+        })->name('riwayat');
         Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
+      
         Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');
         Route::get('/pengaturan/kebijakan/{type}', [\App\Http\Controllers\SettingsController::class, 'policy'])->name('pengaturan.policy');
         Route::delete('/pengaturan/session/{id}', [\App\Http\Controllers\SettingsController::class, 'logoutSession'])->name('pengaturan.logout_session');
@@ -74,29 +80,45 @@ Route::middleware('auth')->group(function () {
 
     // Unit Bisnis Dashboard Routes
     Route::prefix('unit')->name('unit.')->group(function () {
-        Route::get('/dashboard', function () { return view('unit_bisnis.dashboard'); })->name('dashboard');
-        
+        Route::get('/dashboard', function () {
+            return view('unit_bisnis.dashboard');
+        })->name('dashboard');
+
         // Menu Aktif
         Route::get('/kelola-makanan', [\App\Http\Controllers\MenuAktifController::class, 'index'])->name('kelola_makanan');
         Route::get('/kelola-makanan/tambah', [\App\Http\Controllers\MenuAktifController::class, 'create'])->name('menu_aktif.create');
         Route::post('/kelola-makanan/tambah', [\App\Http\Controllers\MenuAktifController::class, 'store'])->name('menu_aktif.store');
-        
-        // Master Data (placeholder)
-        Route::get('/kelola-master-data', function () { return view('unit_bisnis.dashboard'); })->name('master_data.index');
 
-        Route::get('/pesanan', function () { return view('unit_bisnis.pesanan'); })->name('pesanan');
-        Route::get('/riwayat', function () { return view('unit_bisnis.riwayat'); })->name('riwayat');
-        Route::get('/profil', function () { return view('unit_bisnis.profil'); })->name('profil');
-        Route::get('/pengaturan', function () { return view('unit_bisnis.pengaturan'); })->name('pengaturan');
+        // Master Data
+        Route::get('/kelola-master-data', [MasterMakananController::class, 'index'])->name('master_data.index');
+        Route::get('/kelola-master-data/tambah', [MasterMakananController::class, 'create'])->name('master_data.create');
+        Route::post('/kelola-master-data/tambah', [MasterMakananController::class, 'store'])->name('master_data.store');
+
+        Route::get('/pesanan', function () {
+            return view('unit_bisnis.pesanan');
+        })->name('pesanan');
+        Route::get('/riwayat', function () {
+            return view('unit_bisnis.riwayat');
+        })->name('riwayat');
+        Route::get('/profil', function () {
+            return view('unit_bisnis.profil');
+        })->name('profil');
+        Route::get('/pengaturan', function () {
+            return view('unit_bisnis.pengaturan');
+        })->name('pengaturan');
     });
 
     // Admin Dashboard Routes
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::get('/dashboard', function () { return view('admin.dashboard'); })->name('dashboard');
+        Route::get('/dashboard', function () {
+            return view('admin.dashboard');
+        })->name('dashboard');
         Route::get('/manajemen-pengguna', [ManajemenUserController::class, 'index'])->name('manajemen_pengguna');
         Route::put('/manajemen-pengguna/{id}', [ManajemenUserController::class, 'update'])->name('manajemen_pengguna.update');
         Route::delete('/manajemen-pengguna/{id}', [ManajemenUserController::class, 'destroy'])->name('manajemen_pengguna.destroy');
-        Route::get('/chat', function () { return view('admin.chat'); })->name('chat');
+        Route::get('/chat', function () {
+            return view('admin.chat');
+        })->name('chat');
     });
 
 });
