@@ -155,7 +155,7 @@
                 @endif
 
                 <form action="{{ route('unit-bisnis.store') }}" method="POST" enctype="multipart/form-data"
-                    class="space-y-8" id="registForm">
+                    class="space-y-8" id="registForm" autocomplete="off">
                     @csrf
 
                     <!-- Section 1: Informasi Bisnis -->
@@ -582,11 +582,17 @@
                 document.getElementById('err-lokasi').classList.add('hidden');
             }
 
-            // Auto-initialize map
-            window.addEventListener('load', function() {
+            // Auto-initialize map & Reset form state on load/back
+            window.addEventListener('pageshow', function(event) {
+                // Selalu reset form saat halaman dimuat atau kembali (back) agar tidak ada data nyangkut
+                registForm.reset();
+                
                 const defaultLat = -6.200000;
                 const defaultLng = 106.816666;
                 initMap(defaultLat, defaultLng, 13);
+                
+                // Reset validasi
+                checkFormValidity();
             });
 
             // 4b. Location Search (Nominatim / OpenStreetMap)

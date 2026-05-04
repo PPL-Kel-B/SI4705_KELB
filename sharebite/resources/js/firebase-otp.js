@@ -86,6 +86,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (otpInputs.length > 0) {
         otpInputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
+                // TC-VN-10: Pastikan hanya angka yang masuk
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                
                 if (e.target.value.length === 1 && index < otpInputs.length - 1) {
                     otpInputs[index + 1].focus();
                 }
