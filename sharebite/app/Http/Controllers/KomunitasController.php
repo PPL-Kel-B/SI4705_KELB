@@ -15,7 +15,7 @@ class KomunitasController extends Controller
      */
     public function index()
     {
-        return view('RegisterKomunitas');
+        return view('auth.register_komunitas');
     }
 
     /**
@@ -23,7 +23,7 @@ class KomunitasController extends Controller
      */
     public function create()
     {
-        return view('RegisterKomunitas');
+        return view('auth.register_komunitas');
     }
 
     /**
@@ -47,6 +47,7 @@ class KomunitasController extends Controller
             'email'    => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role'     => 'komunitas',
+            'no_hp'    => $validated['no_hp'],
         ]);
 
         // 3. Buat komunitas profile

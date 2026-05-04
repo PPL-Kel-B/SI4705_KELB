@@ -11,7 +11,7 @@ class RegistUnitBisnisController extends Controller
 {
     public function create()
     {
-        return view('unit_bisnis.create');
+        return view('auth.register_unit_bisnis');
     }
 
     public function store(Request $request)
@@ -43,6 +43,7 @@ class RegistUnitBisnisController extends Controller
             'password' => Hash::make($validated['Password']),
             'no_hp'    => $validated['Nomor_hp'] ?? null,
             'role'     => 'unit_bisnis',
+            'alamat'   => $validated['Alamat'],
         ]);
 
         // Buat unit bisnis profile
@@ -50,7 +51,6 @@ class RegistUnitBisnisController extends Controller
             'user_id'           => $user->id,
             'nama_usaha'        => $validated['Nama_Usaha'],
             'jenis_usaha'       => $validated['Jenis_Usaha'],
-            'alamat'            => $validated['Alamat'],
             'nib_file'          => $nibPath,
             'status_verifikasi' => 'pending',
         ]);
