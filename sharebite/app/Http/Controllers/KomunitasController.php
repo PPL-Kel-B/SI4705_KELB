@@ -34,7 +34,7 @@ class KomunitasController extends Controller
         // 1. Validation
         $validated = $request->validate([
             'nama_komunitas'   => 'required|string|max:255',
-            'penanggung_jawab' => 'required|string|max:255',
+            'penanggung_jawab' => ['required', 'string', 'max:255', 'regex:/^[\pL\s]+$/u'],
             'jumlah_anggota'   => 'required|integer|min:1',
             'no_hp'            => 'required|numeric|digits_between:10,14',
             'email'            => 'required|email|unique:users,email',

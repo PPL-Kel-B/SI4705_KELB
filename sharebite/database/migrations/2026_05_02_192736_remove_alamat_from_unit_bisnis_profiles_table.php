@@ -13,14 +13,10 @@ return new class extends Migration
     public function up(): void
     {
         // Pindahkan data alamat ke tabel users jika di users masih kosong
-        // Gunakan PHP loop karena SQLite tidak support JOIN di UPDATE
-        $profiles = DB::table('unit_bisnis_profiles')->get();
-        foreach ($profiles as $profile) {
-            DB::table('users')
-                ->where('id', $profile->user_id)
-                ->whereRaw("(alamat IS NULL OR alamat = '')")
-                ->update(['alamat' => $profile->alamat ?? '-']);
-        }
+        DB::statement("UPDATE users 
+                       JOIN unit_bisnis_profiles ON users.id = unit_bisnis_profiles.user_id 
+                       SET users.alamat = unit_bisnis_profiles.alamat 
+                       WHERE users.alamat IS NULL OR users.alamat = ''");
 
         Schema::table('unit_bisnis_profiles', function (Blueprint $table) {
             $table->dropColumn('alamat');

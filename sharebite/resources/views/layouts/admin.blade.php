@@ -10,9 +10,6 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
-        /* Alpine.js: sembunyikan elemen x-cloak sebelum Alpine diinisialisasi */
-        [x-cloak] { display: none !important; }
-
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #F6F9F7;

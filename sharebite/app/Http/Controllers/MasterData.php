@@ -19,6 +19,7 @@ class MasterDataController extends Controller
                 'user_id' => $user->id,
                 'nama_usaha' => $user->name,
                 'jenis_usaha' => 'Restoran',
+                'alamat' => $user->alamat ?? '-',
             ]);
         }
 

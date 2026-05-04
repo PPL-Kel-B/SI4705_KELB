@@ -96,130 +96,38 @@ class ManajemenUserController extends Controller
 
     public function update(Request $request, $id)
     {
-        try {
-            $user = User::findOrFail($id);
-
-            // Update alamat di tabel users (email tidak diupdate karena readonly)
-            $dataToUpdate = [];
-            if ($request->filled('alamat')) {
-                $dataToUpdate['alamat'] = $request->alamat;
+        $user = User::findOrFail($id);
+        
+        $dataToUpdate = $request->only(['email', 'alamat']);
+        
+        if ($request->has('name')) {
+            if ($user->role == 'unit_bisnis') {
+                $user->unitBisnisProfile()->update([
+                    'nama_usaha' => $request->name
+                ]);
+            } elseif ($user->role == 'komunitas') {
+                $user->komunitasProfile()->update(['nama_komunitas' => $request->name]);
+            } else {
+                $dataToUpdate['name'] = $request->name;
             }
-
-            // Update nama: tergantung role
-            if ($request->filled('name')) {
-                if ($user->role == 'unit_bisnis') {
-                    DB::table('unit_bisnis_profiles')
-                        ->where('user_id', $user->id)
-                        ->update(['nama_usaha' => $request->name]);
-                } elseif ($user->role == 'komunitas') {
-                    DB::table('komunitas_profiles')
-                        ->where('user_id', $user->id)
-                        ->update(['nama_komunitas' => $request->name]);
-                } else {
-                    $dataToUpdate['name'] = $request->name;
-                }
-            }
-
-            // Update status_verifikasi untuk unit bisnis (fitur verifikasi admin)
-            if ($request->filled('status_verifikasi') && $user->role == 'unit_bisnis') {
-                DB::table('unit_bisnis_profiles')
-                    ->where('user_id', $user->id)
-                    ->update(['status_verifikasi' => $request->status_verifikasi]);
-            }
-
-            // Update foto profil jika ada upload
-            if ($request->hasFile('foto_profil')) {
-                $path = $request->file('foto_profil')->store('profiles', 'public');
-                $dataToUpdate['foto_profil'] = $path;
-            }
-
-            // Update tabel users jika ada data yang berubah
-            if (!empty($dataToUpdate)) {
-                $user->update($dataToUpdate);
-            }
-
-            return redirect()->route('admin.manajemen_pengguna', ['tab' => $request->tab ?? 'unit_bisnis'])
-                             ->with('success', 'Data pengguna berhasil diperbarui');
-
-        } catch (\Exception $e) {
-            return redirect()->route('admin.manajemen_pengguna', ['tab' => $request->tab ?? 'unit_bisnis'])
-                             ->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
         }
+
+        if ($request->hasFile('foto_profil')) {
+            $path = $request->file('foto_profil')->store('profiles', 'public');
+            $dataToUpdate['foto_profil'] = $path;
+        }
+
+        $user->update($dataToUpdate);
+
+        return redirect()->route('admin.manajemen_pengguna', ['tab' => $request->tab])
+                         ->with('success', 'Data berhasil diperbarui');
     }
 
-    /**
-     * UPDATE via POST body (user_id dari form hidden input, bukan URL)
-     * Dipakai oleh modal edit di manajemen_user.blade.php
-     */
-    public function updateByPost(Request $request)
+    public function destroy($id)
     {
-        try {
-            $id   = $request->input('user_id');
-            $user = User::findOrFail($id);
+        $user = User::findOrFail($id);
+        $user->delete();
 
-            // Update status_verifikasi unit bisnis (prioritas utama: fitur verifikasi admin)
-            if ($request->filled('status_verifikasi') && $user->role === 'unit_bisnis') {
-                DB::table('unit_bisnis_profiles')
-                    ->where('user_id', $user->id)
-                    ->update([
-                        'status_verifikasi' => $request->status_verifikasi,
-                        'updated_at'        => now(),
-                    ]);
-            }
-
-            // Update nama usaha
-            if ($request->filled('name')) {
-                if ($user->role === 'unit_bisnis') {
-                    DB::table('unit_bisnis_profiles')
-                        ->where('user_id', $user->id)
-                        ->update(['nama_usaha' => $request->name, 'updated_at' => now()]);
-                } elseif ($user->role === 'komunitas') {
-                    DB::table('komunitas_profiles')
-                        ->where('user_id', $user->id)
-                        ->update(['nama_komunitas' => $request->name, 'updated_at' => now()]);
-                } else {
-                    $user->update(['name' => $request->name]);
-                }
-            }
-
-            // Update alamat di tabel users
-            if ($request->filled('alamat')) {
-                $user->update(['alamat' => $request->alamat]);
-            }
-
-            // Upload foto profil
-            if ($request->hasFile('foto_profil')) {
-                $path = $request->file('foto_profil')->store('profiles', 'public');
-                $user->update(['foto_profil' => $path]);
-            }
-
-            $tab = $request->input('tab', 'unit_bisnis');
-            return redirect()->route('admin.manajemen_pengguna', ['tab' => $tab])
-                             ->with('success', 'Data pengguna berhasil diperbarui!');
-
-        } catch (\Exception $e) {
-            return redirect()->route('admin.manajemen_pengguna', ['tab' => $request->input('tab', 'unit_bisnis')])
-                             ->with('error', 'Gagal memperbarui: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * DESTROY via POST body (user_id dari form hidden input, bukan URL)
-     */
-    public function destroyByPost(Request $request)
-    {
-        try {
-            $id   = $request->input('user_id');
-            $user = User::findOrFail($id);
-            $user->delete();
-
-            $tab = $request->input('tab', 'unit_bisnis');
-            return redirect()->route('admin.manajemen_pengguna', ['tab' => $tab])
-                             ->with('success', 'Pengguna berhasil dihapus!');
-
-        } catch (\Exception $e) {
-            return redirect()->route('admin.manajemen_pengguna', ['tab' => $request->input('tab', 'unit_bisnis')])
-                             ->with('error', 'Gagal menghapus: ' . $e->getMessage());
-        }
+        return redirect()->route('admin.manajemen_pengguna')->with('success', 'Data berhasil dihapus');
     }
 }
