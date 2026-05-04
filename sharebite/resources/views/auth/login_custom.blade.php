@@ -450,7 +450,6 @@
                     Baru di ShareBite?&nbsp;
                     <a href="{{ route('registerkomunitas') }}" class="register-link">Buat Akun Baru</a>
                 </p>
-
             </form>
         </div>
     </div>
