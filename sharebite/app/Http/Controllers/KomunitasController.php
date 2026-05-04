@@ -15,7 +15,8 @@ class KomunitasController extends Controller
      */
     public function index()
     {
-        return view('auth.register_komunitas');
+        $totalKomunitas = User::where('role', 'komunitas')->count();
+        return view('auth.register_komunitas', compact('totalKomunitas'));
     }
 
     /**
@@ -23,7 +24,8 @@ class KomunitasController extends Controller
      */
     public function create()
     {
-        return view('auth.register_komunitas');
+        $totalKomunitas = User::where('role', 'komunitas')->count();
+        return view('auth.register_komunitas', compact('totalKomunitas'));
     }
 
     /**
@@ -52,9 +54,10 @@ class KomunitasController extends Controller
 
         // 3. Buat komunitas profile
         KomunitasProfile::create([
-            'user_id'        => $user->id,
-            'nama_komunitas' => $validated['nama_komunitas'],
-            'jumlah_anggota' => $validated['jumlah_anggota'],
+            'user_id'          => $user->id,
+            'nama_komunitas'   => $validated['nama_komunitas'],
+            'penanggung_jawab' => $validated['penanggung_jawab'],
+            'jumlah_anggota'   => $validated['jumlah_anggota'],
         ]);
 
         return redirect()->back()->with('success', 'Registrasi Komunitas berhasil!');

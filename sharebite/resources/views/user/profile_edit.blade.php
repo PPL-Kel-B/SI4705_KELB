@@ -97,41 +97,63 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        @if($user->role === 'individu')
+                            <div class="space-y-3 md:col-span-2">
+                                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Nama
+                                    Lengkap</label>
+                                <input type="text" name="name" value="{{ old('name', $user->name) }}"
+                                    class="w-full bg-gray-900 px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all">
+                            </div>
+                        @else
+                            <div class="space-y-3">
+                                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Nama
+                                    Komunitas</label>
+                                <input type="text" name="name" value="{{ old('name', $user->name) }}"
+                                    class="w-full bg-gray-50 px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all">
+                            </div>
+                            <div class="space-y-3">
+                                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Penanggung Jawab</label>
+                                <input type="text" name="penanggung_jawab" value="{{ old('penanggung_jawab', $komunitasData->penanggung_jawab ?? '') }}"
+                                    class="w-full bg-gray-50 px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all">
+                            </div>
+                            <div class="space-y-3 md:col-span-2">
+                                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Jumlah Anggota</label>
+                                <input type="number" name="jumlah_anggota" value="{{ old('jumlah_anggota', $komunitasData->jumlah_anggota ?? '') }}" min="1"
+                                    class="w-full bg-gray-50 px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all">
+                            </div>
+                        @endif
+
                         <div class="space-y-3">
-                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Nama
-                                Komunitas</label>
-                            <input type="text" name="name" value="{{ old('name', $user->name) }}"
-                                class="w-full bg-[#f4f7f5] px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all">
+                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Email</label>
+                            <input type="email" name="email" value="{{ old('email', $user->email) }}"
+                                class="w-full bg-gray-50 px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all">
                         </div>
                         <div class="space-y-3">
-                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Email
-                                (Non-aktif)</label>
-                            <input type="email" value="{{ $user->email }}"
-                                class="w-full bg-[#f4f7f5] px-6 py-4 rounded-2xl border-2 border-transparent opacity-60 cursor-not-allowed font-bold text-gray-400 outline-none"
-                                readonly>
-                        </div>
-                        <div class="md:col-span-2 space-y-3">
                             <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">
                                 Nomor Telepon
                             </label>
                             <input type="text" name="no_hp" id="phone_input" value="{{ old('no_hp', $user->no_hp) }}"
                                 onkeypress="return isNumberKey(event)" inputmode="numeric" maxlength="15"
                                 oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                class="w-full bg-[#f4f7f5] px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all"
+                                class="w-full bg-gray-50 px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all"
                                 placeholder="08xxxxxxxxxx">
                         </div>
-                        <div class="md:col-span-2 space-y-3">
-                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Alamat
-                                Utama</label>
-                            <textarea name="alamat" rows="3"
-                                class="w-full bg-[#f4f7f5] px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all resize-none"
-                                placeholder="Masukkan alamat lengkap Anda...">{{ old('alamat', $user->alamat) }}</textarea>
-                        </div>
+
+                        @if($user->role !== 'individu')
+                            <div class="md:col-span-2 space-y-3">
+                                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Alamat
+                                    Utama</label>
+                                <textarea name="alamat" rows="3"
+                                    class="w-full bg-gray-50 px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all resize-none"
+                                    placeholder="Masukkan alamat lengkap Anda...">{{ old('alamat', $user->alamat) }}</textarea>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
-                {{-- Keamanan (Disabled for now) --}}
-                <div class="bg-white rounded-[2.5rem] p-8 lg:p-10 shadow-sm border border-gray-50">
+                {{-- Keamanan --}}
+                {{-- Keamanan --}}
+                <div class="bg-white rounded-[2.5rem] p-8 lg:p-10 shadow-sm border border-gray-50" x-data="{ showPasswordForm: {{ (request()->query('expand') === 'password' || $errors->hasAny(['current_password', 'new_password'])) ? 'true' : 'false' }} }">
                     <div class="flex items-center gap-4 mb-8">
                         <div class="w-10 h-10 bg-[#eefcf4] rounded-xl flex items-center justify-center text-[#1cb764]">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,9 +165,9 @@
                         <h3 class="text-xl font-black text-[#0a2e1f]">Keamanan</h3>
                     </div>
 
-                    <a href="#"
-                        class="flex items-center justify-between bg-[#f4f7f5] hover:bg-[#eefcf4] p-6 rounded-3xl transition-all group border border-transparent hover:border-[#1cb764]/20">
-                        <div class="flex items-center gap-5">
+                    <button type="button" @click="showPasswordForm = !showPasswordForm"
+                        class="w-full flex items-center justify-between bg-[#f4f7f5] hover:bg-[#eefcf4] p-6 rounded-3xl transition-all group border border-transparent hover:border-[#1cb764]/20">
+                        <div class="flex items-center gap-5 text-left">
                             <div
                                 class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#1cb764] shadow-sm">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,12 +187,61 @@
                                 </p>
                             </div>
                         </div>
-                        <svg class="w-6 h-6 text-gray-300 group-hover:text-[#1cb764] transition" fill="none"
+                        <svg class="w-6 h-6 text-gray-300 group-hover:text-[#1cb764] transition transform" :class="{ 'rotate-90': showPasswordForm }" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7">
                             </path>
                         </svg>
-                    </a>
+                    </button>
+
+                    <div x-show="showPasswordForm" x-collapse class="mt-6 space-y-6">
+                        <div class="space-y-3">
+                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Password Saat Ini</label>
+                            <input type="password" name="current_password"
+                                class="w-full bg-[#f4f7f5] px-6 py-4 rounded-2xl border-2 @error('current_password') border-red-500 @else border-transparent @enderror focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all">
+                            @error('current_password')
+                                <p class="text-red-500 text-xs font-bold mt-1 ml-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="space-y-3">
+                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Password Baru</label>
+                            <input type="password" name="new_password" id="new_password"
+                                class="w-full bg-[#f4f7f5] px-6 py-4 rounded-2xl border-2 @error('new_password') border-red-500 @else border-transparent @enderror focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all">
+                            
+                            <!-- Password Requirements Block -->
+                            <div class="mt-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
+                                <ul class="text-xs space-y-2">
+                                    <li id="req-cap" class="flex items-center text-red-500 transition-colors">
+                                        <svg class="w-3.5 h-3.5 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        Minimal 1 huruf kapital
+                                    </li>
+                                    <li id="req-num" class="flex items-center text-red-500 transition-colors">
+                                        <svg class="w-3.5 h-3.5 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        Karakter unik atau nomor
+                                    </li>
+                                    <li id="req-len" class="flex items-center text-red-500 transition-colors">
+                                        <svg class="w-3.5 h-3.5 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                        Minimal 8 karakter
+                                    </li>
+                                </ul>
+                            </div>
+
+                            @error('new_password')
+                                <p class="text-red-500 text-xs font-bold mt-1 ml-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div class="space-y-3">
+                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Konfirmasi Password Baru</label>
+                            <input type="password" name="new_password_confirmation"
+                                class="w-full bg-[#f4f7f5] px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all">
+                        </div>
+                    </div>
                 </div>
 
             </div>
@@ -184,7 +255,6 @@
         </form>
     </div>
 
-@section('scripts')
     <script>
         function previewImage(event) {
             const file = event.target.files[0];
@@ -196,6 +266,43 @@
                 reader.readAsDataURL(file);
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('new_password');
+            const reqCap = document.getElementById('req-cap');
+            const reqNum = document.getElementById('req-num');
+            const reqLen = document.getElementById('req-len');
+
+            const validIcon = `<svg class="w-3.5 h-3.5 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+            const invalidIcon = `<svg class="w-3.5 h-3.5 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+
+            function updateRequirement(el, isValid, text) {
+                if (isValid) {
+                    el.classList.remove('text-red-500');
+                    el.classList.add('text-green-500');
+                    el.innerHTML = validIcon + text;
+                } else {
+                    el.classList.remove('text-green-500');
+                    el.classList.add('text-red-500');
+                    el.innerHTML = invalidIcon + text;
+                }
+            }
+
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function (e) {
+                    let val = e.target.value;
+
+                    // Requirements checks
+                    const hasCapital = /[A-Z]/.test(val);
+                    const hasNumOrUnique = /[\d\W_]/.test(val);
+                    const isLengthValid = val.length >= 8;
+
+                    // Update UI
+                    updateRequirement(reqCap, hasCapital, 'Minimal 1 huruf kapital');
+                    updateRequirement(reqNum, hasNumOrUnique, 'Karakter unik atau nomor');
+                    updateRequirement(reqLen, isLengthValid, 'Minimal 8 karakter');
+                });
+            }
+        });
     </script>
-@endsection
 @endsection

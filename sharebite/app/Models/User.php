@@ -34,6 +34,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
+            'password_updated_at' => 'datetime',
         ];
     }
 

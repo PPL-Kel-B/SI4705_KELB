@@ -12,6 +12,7 @@ class KomunitasProfile extends Model
     protected $fillable = [
         'user_id',
         'nama_komunitas',
+        'penanggung_jawab',
         'jumlah_anggota',
         'total_berat_diselamatkan',
         'total_makanan_dibeli',

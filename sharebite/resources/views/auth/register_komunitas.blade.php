@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <title>Pendaftaran Komunitas - ShareBite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -25,9 +26,9 @@
     <!-- OTP SECTION (Hidden by default) -->
     <div id="otp-section" class="hidden fixed inset-0 bg-[#f7fbf8] z-50 flex flex-col">
         <!-- Header -->
-        <div class="flex justify-between items-center px-10 py-6">
-            <div class="bg-white rounded-full px-4 py-1.5 inline-flex items-center shadow-sm">
-                <img src="{{ asset('images/logo.png') }}" alt="ShareBite Logo" class="h-6 object-contain"
+        <div class="p-6 flex items-center justify-between">
+            <div class="bg-white rounded-full w-36 h-16 flex items-center justify-center shadow-sm overflow-hidden">
+                <img src="{{ asset('images/logo.png') }}" alt="ShareBite Logo" class="h-24 w-auto object-contain"
                     onerror="this.outerHTML='<span class=\'text-[#1cb764] font-bold text-lg\'>ShareBite</span>'">
             </div>
             <button type="button" id="btn-back-to-number"
@@ -113,8 +114,8 @@
             class="hidden lg:flex lg:w-4/12 bg-[#1cb764] flex-col justify-between px-10 py-10 text-white relative overflow-hidden">
 
             <div class="z-10">
-                <div class="bg-white rounded-full px-4 py-1.5 inline-flex items-center shadow-sm">
-                    <img src="{{ asset('images/logo.png') }}" alt="ShareBite Logo" class="h-14 object-contain"
+                <div class="bg-white rounded-full w-36 h-16 flex items-center justify-center shadow-sm overflow-hidden">
+                    <img src="{{ asset('images/logo.png') }}" alt="ShareBite Logo" class="h-24 w-auto object-contain"
                         onerror="this.outerHTML='<span class=\'text-[#1cb764] font-bold text-lg\'>ShareBite</span>'">
                 </div>
             </div>
@@ -143,7 +144,7 @@
                     </div>
                     <div>
                         <div class="text-[10px] font-semibold text-white">Dampak Kolektif</div>
-                        <div class="text-[15px] font-bold tracking-widest text-white">500+ Komunitas
+                        <div class="text-[15px] font-bold tracking-widest text-white">{{ $totalKomunitas }} Komunitas
                             Terdaftar</div>
                     </div>
                 </div>
@@ -161,7 +162,8 @@
                         Bisnis</a>
                     <a href="{{ route('registerkomunitas') }}"
                         class="flex-1 bg-[#1cb764] text-white py-2.5 rounded-lg shadow-sm cursor-default block">Komunitas</a>
-                    <a href="{{ route('individu.create') }}" class="flex-1 text-gray-500 py-2.5 hover:bg-white/50 rounded-lg transition block">Individu</a>
+                    <a href="{{ route('individu.create') }}"
+                        class="flex-1 text-gray-500 py-2.5 hover:bg-white/50 rounded-lg transition block">Individu</a>
                 </div>
 
                 <div class="flex items-center gap-3 mb-6">
@@ -225,9 +227,12 @@
                     <div class="flex gap-4">
                         <div class="w-1/2">
                             <label class="text-sm text-gray-700">Nomor HP</label>
-                            <input name="no_hp" type="text" value="{{ old('no_hp') }}" placeholder="0812-XXXX-XXXX"
-                                required
+                            <input id="no_hp" name="no_hp" type="tel" value="{{ old('no_hp') }}"
+                                placeholder="0812-XXXX-XXXX" inputmode="numeric" pattern="^(\+62|0)[0-9]{9,13}$"
+                                maxlength="15" required
                                 class="w-full mt-2 p-4 rounded-xl bg-[#e9eeeb] outline-none text-sm {{ $errors->has('no_hp') ? 'border border-red-500 bg-red-50' : '' }}">
+                            <p id="err-hp" class="mt-1 text-xs text-red-500 hidden">Nomor HP hanya boleh angka (10–14
+                                digit), contoh: 08123456789.</p>
                         </div>
 
                         <div class="w-1/2">
@@ -299,13 +304,14 @@
                     </div>
 
                     <button id="submitButton" type="submit" disabled
-                        class="w-full bg-gradient-to-r from-green-400 to-green-500 text-black py-4 rounded-xl font-extrabold">
+                        class="w-full bg-gradient-to-r from-green-400 to-green-500 text-white py-4 rounded-xl font-extrabold shadow-lg transition duration-300 opacity-50 cursor-not-allowed">
                         Daftar Sebagai Komunitas
                     </button>
 
                     <p class="text-center text-sm text-gray-500">
                         Sudah memiliki akun ?
-                        <a href="{{ route('login') }}" class="text-[#1cb764] font-bold hover:underline">Masuk Ke Dashboard</a>
+                        <a href="{{ route('login') }}" class="text-[#1cb764] font-bold hover:underline">Masuk Ke
+                            Dashboard</a>
                     </p>
 
                 </form>
@@ -359,6 +365,29 @@
                 }
             }
 
+            // Phone validation
+            const phoneInput = document.getElementById('no_hp');
+            const errHp = document.getElementById('err-hp');
+            let isPhoneValid = false;
+            const phoneRegex = /^(\+62|0)[0-9]{9,13}$/;
+
+            phoneInput.addEventListener('keypress', function (e) {
+                if (!/[0-9+]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                    e.preventDefault();
+                }
+            });
+
+            phoneInput.addEventListener('input', function () {
+                this.value = this.value.replace(/[^0-9+]/g, '');
+                isPhoneValid = phoneRegex.test(this.value);
+                if (this.value.length > 0 && !isPhoneValid) {
+                    errHp.classList.remove('hidden');
+                } else {
+                    errHp.classList.add('hidden');
+                }
+                checkFormValidity();
+            });
+
             // Fungsi utama pengecekan keseluruhan form
             function checkFormValidity() {
                 let allInputsFilled = true;
@@ -372,11 +401,15 @@
                     }
                 });
 
-                // Aktifkan button HANYA jika password valid dan semua field terisi/tercentang
-                if (allInputsFilled && isPasswordValid) {
+                // Aktifkan button HANYA jika password valid, HP valid, dan semua field terisi/tercentang
+                if (allInputsFilled && isPasswordValid && isPhoneValid) {
                     submitButton.disabled = false;
+                    submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    submitButton.classList.add('hover:scale-[1.01]', 'active:scale-95');
                 } else {
                     submitButton.disabled = true;
+                    submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    submitButton.classList.remove('hover:scale-[1.01]', 'active:scale-95');
                 }
             }
 
@@ -387,24 +420,20 @@
 
                     const hasCapital = /[A-Z]/.test(val);
                     const hasNumOrUnique = /[\d\W_]/.test(val);
-
-                    // UBAH LOGIKA: Sekarang harus minimal 8 karakter
                     const isLengthValid = val.length >= 8;
 
                     updateRequirement(reqCap, hasCapital, 'Minimal 1 huruf kapital');
                     updateRequirement(reqNum, hasNumOrUnique, 'Karakter unik atau nomor');
-                    updateRequirement(reqLen, isLengthValid, 'Maksimal 8 karakter');
+                    updateRequirement(reqLen, isLengthValid, 'Minimal 8 karakter');
 
-                    // Update status password valid secara global
                     isPasswordValid = hasCapital && hasNumOrUnique && isLengthValid;
-
-                    // Panggil pengecekan form setiap kali password diketik
                     checkFormValidity();
                 });
             }
 
-            // Pasang event listener ke semua input required
+            // Pasang event listener ke semua input required (kecuali no_hp, sudah ditangani)
             allRequiredInputs.forEach(input => {
+                if (input.id === 'no_hp') return;
                 const eventType = input.type === 'checkbox' ? 'change' : 'input';
                 input.addEventListener(eventType, checkFormValidity);
             });

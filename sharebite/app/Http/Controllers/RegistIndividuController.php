@@ -13,7 +13,8 @@ class RegistIndividuController extends Controller
 {
     public function create()
     {
-        return view('auth.register_individu');
+        $totalIndividu = \App\Models\User::where('role', 'individu')->count();
+        return view('auth.register_individu', compact('totalIndividu'));
     }
 
     public function store(RegistIndividuRequest $request)

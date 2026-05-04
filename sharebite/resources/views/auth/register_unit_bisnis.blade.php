@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <title>Pendaftaran Unit Bisnis - ShareBite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Leaflet CSS for Map -->
@@ -11,6 +12,13 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        /* Menghilangkan icon mata bawaan browser (Edge/Chrome) */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+    </style>
 </head>
 
 <body class="bg-white">
@@ -23,8 +31,8 @@
 
             <!-- Logo -->
             <div class="z-10">
-                <div class="bg-white rounded-full px-4 py-1.5 inline-flex items-center shadow-sm">
-                    <img src="{{ asset('images/logo.png') }}" alt="ShareBite Logo" class="h-6 object-contain"
+                <div class="bg-white rounded-full w-36 h-16 flex items-center justify-center shadow-sm overflow-hidden">
+                    <img src="{{ asset('images/logo.png') }}" alt="ShareBite Logo" class="h-24 w-auto object-contain"
                         onerror="this.outerHTML='<span class=\'text-[#1cb764] font-bold text-lg\'>ShareBite</span>'">
                 </div>
             </div>
@@ -57,7 +65,7 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="text-2xl font-extrabold text-white">1,200+</div>
+                        <div class="text-2xl font-extrabold text-white">{{ $totalUnitBisnis }}+</div>
                         <div class="text-[11px] font-bold tracking-widest text-white uppercase mt-0.5">UNIT BISNIS
                             TERDAFTAR</div>
                     </div>
@@ -73,7 +81,7 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="text-2xl font-extrabold text-white">50+ Ton</div>
+                        <div class="text-2xl font-extrabold text-white">{{ $totalMakananTerselamatkan }} Porsi</div>
                         <div class="text-[11px] font-bold tracking-widest text-white uppercase mt-0.5">MAKANAN
                             TERSELAMATKAN</div>
                     </div>
@@ -88,7 +96,7 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="text-2xl font-extrabold text-white">85,000+</div>
+                        <div class="text-2xl font-extrabold text-white">{{ $totalPenerimaManfaat }}+</div>
                         <div class="text-[11px] font-bold tracking-widest text-white uppercase mt-0.5">PENERIMA MANFAAT
                         </div>
                     </div>
@@ -118,7 +126,8 @@
                         Bisnis</a>
                     <a href="{{ route('registerkomunitas') }}"
                         class="flex-1 text-gray-500 py-2.5 hover:bg-white/50 rounded-lg transition block">Komunitas</a>
-                    <div class="flex-1 text-gray-400 py-2.5 cursor-not-allowed">Individu</div>
+                    <a href="{{ route('individu.create') }}"
+                        class="flex-1 text-gray-500 py-2.5 hover:bg-white/50 rounded-lg transition block">Individu</a>
                 </div>
 
                 @if(session('success'))
@@ -279,11 +288,13 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Nomor HP</label>
-                                <input type="text" id="Nomor_hp" name="Nomor_hp" value="{{ old('Nomor_hp') }}"
-                                    placeholder="0812-XXXX-XXXX"
+                                <input type="tel" id="Nomor_hp" name="Nomor_hp" value="{{ old('Nomor_hp') }}"
+                                    placeholder="0812-XXXX-XXXX" inputmode="numeric" pattern="^(\+62|0)[0-9]{9,13}$"
+                                    maxlength="15"
                                     class="w-full bg-[#EBF0EE] border-none rounded-xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-[#1cb764] outline-none transition"
                                     required>
-                                <p id="err-hp" class="text-xs text-red-500 mt-1 hidden">Nomor HP tidak valid.</p>
+                                <p id="err-hp" class="text-xs text-red-500 mt-1 hidden">Nomor HP hanya boleh angka
+                                    (10–14 digit), contoh: 08123456789.</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Email Bisnis</label>
@@ -299,7 +310,7 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kata Sandi</label>
                             <div class="relative">
                                 <input type="password" id="Password" name="Password" placeholder="••••••••"
-                                    maxlength="8"
+                                    minlength="8"
                                     class="w-full bg-[#EBF0EE] border-none rounded-xl px-4 py-3.5 text-sm focus:ring-2 focus:ring-[#1cb764] outline-none transition"
                                     required>
                                 <button type="button" id="togglePassword"
@@ -334,13 +345,13 @@
                                         </svg>
                                         Karakter unik atau nomor
                                     </li>
-                                    <li id="req-len" class="flex items-center text-green-500 transition-colors">
+                                    <li id="req-len" class="flex items-center text-red-500 transition-colors">
                                         <svg class="w-3 h-3 mr-1.5 shrink-0" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M5 13l4 4L19 7"></path>
+                                                d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
-                                        Maksimal 8 karakter
+                                        Minimal 8 karakter
                                     </li>
                                 </ul>
                             </div>
@@ -362,6 +373,28 @@
                                 </svg>
                             </div>
                             <h2 class="text-xl font-bold">Lokasi & Alamat</h2>
+                        </div>
+
+                        <!-- Location Search Bar -->
+                        <div class="relative mb-3" id="location-search-wrapper">
+                            <div class="flex items-center bg-[#EBF0EE] rounded-xl px-4 py-3 gap-2">
+                                <svg class="w-4 h-4 text-[#1cb764] shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                                <input type="text" id="location-search"
+                                    placeholder="Cari lokasi, misal: Jl. Sudirman Jakarta..."
+                                    class="flex-1 bg-transparent text-sm outline-none text-gray-700 placeholder-gray-400">
+                                <button type="button" id="btn-search-loc"
+                                    class="text-xs font-bold text-white bg-[#1cb764] px-3 py-1.5 rounded-lg hover:bg-[#19a55a] transition shrink-0">
+                                    Cari
+                                </button>
+                            </div>
+                            <!-- Autocomplete Dropdown -->
+                            <ul id="search-suggestions"
+                                class="absolute z-50 w-full bg-white border border-gray-200 rounded-xl mt-1 shadow-lg text-sm hidden max-h-48 overflow-y-auto">
+                            </ul>
                         </div>
 
                         <div
@@ -397,7 +430,8 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <p>Pastikan titik lokasi sesuai dengan alamat operasional bisnis Anda untuk penjemputan.
+                            <p>Cari lokasi melalui kolom pencarian atau klik "Tentukan Lokasi Anda" untuk menggunakan
+                                GPS.
                                 Anda dapat menggeser pin lokasi (marker) jika titik kurang tepat.</p>
                         </div>
                         <p id="err-lokasi" class="text-xs text-red-500 mt-1 hidden">Lokasi harus ditentukan dari peta.
@@ -419,7 +453,8 @@
 
                         <!-- Submit Button -->
                         <button type="submit" id="submitBtn" disabled
-                            class="w-full bg-[#1cb764] text-white font-bold py-4 rounded-xl shadow-lg transition duration-300 opacity-50 cursor-not-allowed">
+                            class="w-full bg-[#1cb764] text-white font-bold py-4 rounded-xl shadow-lg transition duration-300 opacity-50 cursor-not-allowed"
+                            style="background-color: #1cb764 !important;">
                             Daftar Sekarang
                         </button>
                     </div>
@@ -484,20 +519,15 @@
             passwordInput.addEventListener('input', function (e) {
                 const val = e.target.value;
 
-                // Limit to 8 characters physically if pasted
-                if (val.length > 8) {
-                    e.target.value = val.substring(0, 8);
-                }
-
                 const hasCapital = /[A-Z]/.test(val);
                 const hasNumOrUnique = /[\d\W]/.test(val);
-                const isMaxLengthValid = val.length > 0 && val.length <= 8;
+                const isMinLengthValid = val.length >= 8;
 
                 updateRequirement(reqCap, hasCapital, 'Minimal 1 huruf kapital');
                 updateRequirement(reqNum, hasNumOrUnique, 'Karakter unik atau nomor');
-                updateRequirement(reqLen, isMaxLengthValid, 'Maksimal 8 karakter');
+                updateRequirement(reqLen, isMinLengthValid, 'Minimal 8 karakter');
 
-                isPasswordValid = hasCapital && hasNumOrUnique && isMaxLengthValid;
+                isPasswordValid = hasCapital && hasNumOrUnique && isMinLengthValid;
                 checkFormValidity();
             });
 
@@ -535,52 +565,100 @@
             const lngInput = document.getElementById('Longitude');
             const mapOverlay = document.getElementById('map-overlay');
 
-            btnLokasi.addEventListener('click', function () {
-                mapOverlay.classList.add('opacity-0');
-                setTimeout(() => { mapOverlay.classList.add('hidden'); }, 300);
-
-                // Default to Jakarta
-                let startLat = -6.200000;
-                let startLng = 106.816666;
-
-                map = L.map('map').setView([startLat, startLng], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; OpenStreetMap contributors'
-                }).addTo(map);
-
-                marker = L.marker([startLat, startLng], { draggable: true }).addTo(map);
-
-                // Try Geolocation
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition((pos) => {
-                        startLat = pos.coords.latitude;
-                        startLng = pos.coords.longitude;
-                        map.setView([startLat, startLng], 15);
-                        marker.setLatLng([startLat, startLng]);
-
-                        latInput.value = startLat;
-                        lngInput.value = startLng;
-                        checkFormValidity();
-                    }, () => {
-                        // Fallback if denied
-                        latInput.value = startLat;
-                        lngInput.value = startLng;
+            function initMap(lat, lng, zoom) {
+                if (map) {
+                    map.setView([lat, lng], zoom);
+                    marker.setLatLng([lat, lng]);
+                } else {
+                    mapOverlay.classList.add('opacity-0');
+                    setTimeout(() => { mapOverlay.classList.add('hidden'); }, 300);
+                    map = L.map('map').setView([lat, lng], zoom);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(map);
+                    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                    marker.on('dragend', function () {
+                        latInput.value = marker.getLatLng().lat;
+                        lngInput.value = marker.getLatLng().lng;
                         checkFormValidity();
                     });
-                } else {
-                    latInput.value = startLat;
-                    lngInput.value = startLng;
-                    checkFormValidity();
                 }
-
-                // Update input on drag end
-                marker.on('dragend', function (e) {
-                    latInput.value = marker.getLatLng().lat;
-                    lngInput.value = marker.getLatLng().lng;
-                    checkFormValidity();
-                });
-
+                latInput.value = lat;
+                lngInput.value = lng;
+                checkFormValidity();
                 document.getElementById('err-lokasi').classList.add('hidden');
+            }
+
+            btnLokasi.addEventListener('click', function () {
+                const defaultLat = -6.200000;
+                const defaultLng = 106.816666;
+                initMap(defaultLat, defaultLng, 13);
+
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        initMap(pos.coords.latitude, pos.coords.longitude, 15);
+                    });
+                }
+            });
+
+            // 4b. Location Search (Nominatim / OpenStreetMap)
+            const locationSearchInput = document.getElementById('location-search');
+            const btnSearchLoc = document.getElementById('btn-search-loc');
+            const searchSuggestions = document.getElementById('search-suggestions');
+            let searchDebounce;
+
+            function renderSuggestions(results) {
+                searchSuggestions.innerHTML = '';
+                if (!results || results.length === 0) {
+                    searchSuggestions.innerHTML = '<li class="px-4 py-3 text-gray-400 text-xs">Lokasi tidak ditemukan.</li>';
+                    searchSuggestions.classList.remove('hidden');
+                    return;
+                }
+                results.forEach(function (item) {
+                    const li = document.createElement('li');
+                    li.className = 'px-4 py-2.5 cursor-pointer hover:bg-[#f0faf5] text-gray-700 flex items-start gap-2 border-b border-gray-100 last:border-0';
+                    li.innerHTML = `<svg class="w-3.5 h-3.5 mt-0.5 shrink-0 text-[#1cb764]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg><span class="leading-tight">${item.display_name}</span>`;
+                    li.addEventListener('click', function () {
+                        locationSearchInput.value = item.display_name;
+                        searchSuggestions.classList.add('hidden');
+                        initMap(parseFloat(item.lat), parseFloat(item.lon), 16);
+                    });
+                    searchSuggestions.appendChild(li);
+                });
+                searchSuggestions.classList.remove('hidden');
+            }
+
+            async function doSearch(query) {
+                if (!query.trim()) return;
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&accept-language=id`;
+                    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                    const data = await res.json();
+                    renderSuggestions(data);
+                } catch (err) {
+                    searchSuggestions.innerHTML = '<li class="px-4 py-3 text-red-400 text-xs">Gagal terhubung. Periksa koneksi internet.</li>';
+                    searchSuggestions.classList.remove('hidden');
+                }
+            }
+
+            locationSearchInput.addEventListener('input', function () {
+                clearTimeout(searchDebounce);
+                const q = this.value.trim();
+                if (q.length < 3) { searchSuggestions.classList.add('hidden'); return; }
+                searchDebounce = setTimeout(() => doSearch(q), 400);
+            });
+
+            locationSearchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') { e.preventDefault(); doSearch(this.value); }
+            });
+
+            btnSearchLoc.addEventListener('click', function () { doSearch(locationSearchInput.value); });
+
+            // Close suggestions when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!document.getElementById('location-search-wrapper').contains(e.target)) {
+                    searchSuggestions.classList.add('hidden');
+                }
             });
 
             // 5. Checkbox & Form Validity Check
@@ -588,16 +666,39 @@
             const submitBtn = document.getElementById('submitBtn');
             const registForm = document.getElementById('registForm');
 
+            // Phone number validation
+            const phoneInput = document.getElementById('Nomor_hp');
+            const errHp = document.getElementById('err-hp');
+            let isPhoneValid = false;
+            const phoneRegex = /^(\+62|0)[0-9]{9,13}$/;
+
+            phoneInput.addEventListener('keypress', function (e) {
+                const allowed = /[0-9+]/;
+                if (!allowed.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                    e.preventDefault();
+                }
+            });
+
+            phoneInput.addEventListener('input', function () {
+                // Strip anything that isn't digit or +
+                this.value = this.value.replace(/[^0-9+]/g, '');
+                isPhoneValid = phoneRegex.test(this.value);
+                if (this.value.length > 0 && !isPhoneValid) {
+                    errHp.classList.remove('hidden');
+                } else {
+                    errHp.classList.add('hidden');
+                }
+                checkFormValidity();
+            });
+
             function checkFormValidity() {
                 // 1. Cek Checkbox Syarat & Ketentuan
                 const isTermsChecked = termsCheckbox.checked;
 
                 // 2. Cek File NIB (Wajib)
-                // Akan bernilai true jika ada file yang dipilih
                 const isFileUploaded = fileInput.files.length > 0;
 
                 // 3. Cek Lokasi (Wajib)
-                // Akan bernilai true jika Latitude dan Longitude tidak kosong
                 const isLocationSet = latInput.value.trim() !== "" && lngInput.value.trim() !== "";
 
                 // 4. Cek input lainnya (Nama, Email, HP, dll)
@@ -611,10 +712,10 @@
                 });
 
                 // 5. Validasi Akhir: Semuanya harus TRUE agar tombol menyala
-                if (isTermsChecked && isPasswordValid && allInputsFilled && isFileUploaded && isLocationSet) {
+                if (isTermsChecked && isPasswordValid && allInputsFilled && isFileUploaded && isLocationSet && isPhoneValid) {
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    submitBtn.classList.add('hover:bg-[#19a55a]', 'bg-[#1cb764]');
+                    submitBtn.classList.add('hover:bg-[#19a55a]');
 
                     // Sembunyikan pesan error jika sudah valid
                     document.getElementById('err-nib').classList.add('hidden');
@@ -622,7 +723,7 @@
                 } else {
                     submitBtn.disabled = true;
                     submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                    submitBtn.classList.remove('hover:bg-[#19a55a]', 'bg-[#1cb764]');
+                    submitBtn.classList.remove('hover:bg-[#19a55a]');
                 }
             }
 
@@ -631,9 +732,11 @@
             // Basic HTML5 validation error clearing on input
             const inputs = registForm.querySelectorAll('input, textarea');
             inputs.forEach(input => {
-                input.addEventListener('input', function () {
-                    checkFormValidity();
-                });
+                if (input.id !== 'Nomor_hp') { // skip, handled above
+                    input.addEventListener('input', function () {
+                        checkFormValidity();
+                    });
+                }
             });
 
         });

@@ -4,9 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <title>Pendaftaran Relawan (Individu) - ShareBite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @vite(['resources/js/firebase-otp.js'])
 
     <style>
         /* Menghilangkan icon mata bawaan browser (Edge/Chrome) */
@@ -18,15 +20,104 @@
 </head>
 
 <body class="bg-white">
+    <!-- RECAPTCHA CONTAINER -->
+    <div id="recaptcha-container"></div>
 
-    <div class="flex min-h-screen bg-white">
+    <!-- OTP SECTION (Hidden by default) -->
+    <div id="otp-section" class="hidden fixed inset-0 bg-[#f7fbf8] z-50 flex flex-col">
+        <!-- Header -->
+        <div class="p-6 flex items-center justify-between">
+            <div class="bg-white rounded-full w-36 h-16 flex items-center justify-center shadow-sm overflow-hidden">
+                <img src="{{ asset('images/logo.png') }}" alt="ShareBite Logo" class="h-24 w-auto object-contain"
+                    onerror="this.outerHTML='<span class=\'text-[#1cb764] font-bold text-lg\'>ShareBite</span>'">
+            </div>
+            <button type="button" id="btn-back-to-number"
+                class="flex items-center text-gray-600 hover:text-gray-900 font-medium text-sm transition">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Kembali ke pengaturan nomor
+            </button>
+        </div>
+
+        <!-- OTP Card -->
+        <div class="flex-1 flex flex-col items-center justify-center px-4 pb-20">
+            <div class="bg-white p-10 rounded-[2rem] shadow-sm w-full max-w-md text-center">
+                <!-- Icon -->
+                <div class="bg-[#e9eeeb] w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-8 h-8 text-[#1cb764]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                        </path>
+                    </svg>
+                </div>
+
+                <h2 class="text-2xl font-extrabold text-[#1cb764] mb-3">Verifikasi Nomor HP</h2>
+                <p class="text-sm text-gray-500 mb-8 px-4">
+                    Masukkan kode OTP yang dikirimkan ke nomor Anda untuk melanjutkan langkah keamanan.
+                </p>
+
+                <!-- 6 OTP Inputs for Firebase -->
+                <div class="flex justify-center gap-2 mb-6" id="otp-inputs">
+                    <input type="text" maxlength="1"
+                        class="w-12 h-14 text-center text-xl font-bold bg-[#e9eeeb] rounded-xl outline-none focus:ring-2 focus:ring-[#1cb764] transition">
+                    <input type="text" maxlength="1"
+                        class="w-12 h-14 text-center text-xl font-bold bg-[#e9eeeb] rounded-xl outline-none focus:ring-2 focus:ring-[#1cb764] transition">
+                    <input type="text" maxlength="1"
+                        class="w-12 h-14 text-center text-xl font-bold bg-[#e9eeeb] rounded-xl outline-none focus:ring-2 focus:ring-[#1cb764] transition">
+                    <input type="text" maxlength="1"
+                        class="w-12 h-14 text-center text-xl font-bold bg-[#e9eeeb] rounded-xl outline-none focus:ring-2 focus:ring-[#1cb764] transition">
+                    <input type="text" maxlength="1"
+                        class="w-12 h-14 text-center text-xl font-bold bg-[#e9eeeb] rounded-xl outline-none focus:ring-2 focus:ring-[#1cb764] transition">
+                    <input type="text" maxlength="1"
+                        class="w-12 h-14 text-center text-xl font-bold bg-[#e9eeeb] rounded-xl outline-none focus:ring-2 focus:ring-[#1cb764] transition">
+                </div>
+
+                <div class="text-sm text-gray-600 font-medium mb-8 flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Kirim Ulang Kode dalam <span id="otp-timer" class="text-[#1cb764] font-bold">01:59</span>
+                </div>
+
+                <button type="button" id="btn-confirm-otp"
+                    class="w-full bg-[#22c55e] hover:bg-[#1cb764] text-white py-4 rounded-xl font-bold shadow-md hover:scale-[1.01] transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Konfirmasi
+                </button>
+
+                <div class="mt-8 pt-6 border-t border-gray-100">
+                    <p class="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-2">Punya Masalah?</p>
+                    <a href="#"
+                        class="text-sm font-bold text-[#b47a32] hover:underline flex items-center justify-center gap-1">
+                        Butuh bantuan? Hubungi CS
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z">
+                            </path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-8 text-sm text-gray-500 font-medium">
+                Tidak menerima kode? <button type="button" id="btn-resend-otp"
+                    class="text-[#1cb764] font-bold hover:underline disabled:opacity-50" disabled>Kirim Ulang</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REGISTRATION SECTION -->
+    <div id="registration-section" class="flex min-h-screen bg-white">
         <!-- Left Column: Branding -->
-        <div class="hidden lg:flex lg:w-4/12 bg-[#1cb764] flex-col justify-between px-10 py-10 text-white relative overflow-hidden">
+        <div
+            class="hidden lg:flex lg:w-4/12 bg-[#1cb764] flex-col justify-between px-10 py-10 text-white relative overflow-hidden">
 
             <!-- Logo -->
             <div class="z-10">
-                <div class="bg-white rounded-full px-4 py-1.5 inline-flex items-center shadow-sm">
-                    <img src="{{ asset('images/logo.png') }}" alt="ShareBite Logo" class="h-14 object-contain"
+                <div class="bg-white rounded-full w-36 h-16 flex items-center justify-center shadow-sm overflow-hidden">
+                    <img src="{{ asset('images/logo.png') }}" alt="ShareBite Logo" class="h-24 w-auto object-contain"
                         onerror="this.outerHTML='<span class=\'text-[#1cb764] font-bold text-lg\'>ShareBite</span>'">
                 </div>
             </div>
@@ -34,7 +125,7 @@
             <!-- Main Copy -->
             <div class="mt-8 z-10">
                 <h1 class="text-4xl xl:text-5xl font-extrabold leading-tight mb-4">
-                    Bergabunglah <br> sebagai <br> <span class="text-[#f7b055]">Relawan</span>
+                    Bergabunglah <br> sebagai <br> <span class="text-[#f7b055]">Individu</span>
                 </h1>
                 <p class="text-base text-white/90 font-medium mb-3">
                     Mari bersama kurangi limbah pangan dan bantu sesama. Langkah kecil Anda hari ini adalah dampak besar
@@ -47,13 +138,14 @@
                 <div class="bg-white/10 rounded-2xl p-4 flex items-center space-x-5 shadow-sm">
                     <div class="bg-white/20 p-3.5 rounded-2xl flex-shrink-0">
                         <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
+                            </path>
                         </svg>
                     </div>
                     <div>
                         <div class="text-[11px] font-bold tracking-widest text-white mt-0.5">Sudah Bergabung</div>
-                        <div class="text-2xl font-extrabold text-white">1,200+ Relawan Aktif</div>
+                        <div class="text-2xl font-extrabold text-white">{{ $totalIndividu }}+ Individu Aktif</div>
                     </div>
                 </div>
             </div>
@@ -69,21 +161,26 @@
             <div class="w-full max-w-2xl">
 
                 <!-- Tabs -->
-                <div class="flex space-x-2 bg-[#EBF0EE] p-1.5 rounded-xl mb-8 text-sm font-medium text-center shadow-inner">
-                    <a href="{{ route('unit-bisnis.create') }}" class="flex-1 text-gray-500 py-2.5 hover:bg-white/50 rounded-lg transition block">Unit Bisnis</a>
-                    <a href="{{ route('registerkomunitas') }}" class="flex-1 text-gray-500 py-2.5 hover:bg-white/50 rounded-lg transition block">Komunitas</a>
-                    <a href="{{ route('individu.create') }}" class="flex-1 bg-[#1cb764] text-white py-2.5 rounded-lg shadow-sm cursor-default block">Individu</a>
+                <div
+                    class="flex space-x-2 bg-[#EBF0EE] p-1.5 rounded-xl mb-8 text-sm font-medium text-center shadow-inner">
+                    <a href="{{ route('unit-bisnis.create') }}"
+                        class="flex-1 text-gray-500 py-2.5 hover:bg-white/50 rounded-lg transition block">Unit
+                        Bisnis</a>
+                    <a href="{{ route('registerkomunitas') }}"
+                        class="flex-1 text-gray-500 py-2.5 hover:bg-white/50 rounded-lg transition block">Komunitas</a>
+                    <a href="{{ route('individu.create') }}"
+                        class="flex-1 bg-[#1cb764] text-white py-2.5 rounded-lg shadow-sm cursor-default block">Individu</a>
                 </div>
 
                 <div class="flex items-center gap-3 mb-6">
                     <div class="bg-green-100 p-2 rounded-lg">
                         <svg class="w-6 h-6 text-[#1cb764]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
                     </div>
                     <h2 class="text-lg font-bold text-gray-800">
-                        Identitas Relawan
+                        Identitas Individu
                     </h2>
                 </div>
 
@@ -123,9 +220,12 @@
                         <!-- Nomor HP -->
                         <div class="w-full md:w-1/2">
                             <label class="text-sm font-semibold text-gray-700">Nomor HP</label>
-                            <input name="no_hp" type="text" value="{{ old('no_hp') }}" placeholder="0812-XXXX-XXXX"
-                                required
+                            <input id="no_hp" name="no_hp" type="tel" value="{{ old('no_hp') }}"
+                                placeholder="0812-XXXX-XXXX" inputmode="numeric" pattern="^(\+62|0)[0-9]{9,13}$"
+                                maxlength="15" required
                                 class="w-full mt-2 p-4 rounded-xl bg-[#EBF0EE] border-none outline-none text-sm focus:ring-2 focus:ring-[#1cb764] transition {{ $errors->has('no_hp') ? 'ring-2 ring-red-500 bg-red-50' : '' }}">
+                            <p id="err-hp" class="mt-1 text-xs text-red-500 hidden">Nomor HP hanya boleh angka (10–14
+                                digit), contoh: 08123456789.</p>
                             @error('no_hp')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -134,8 +234,8 @@
                         <!-- Email -->
                         <div class="w-full md:w-1/2">
                             <label class="text-sm font-semibold text-gray-700">Email</label>
-                            <input name="email" type="email" value="{{ old('email') }}"
-                                placeholder="email@contoh.com" required
+                            <input name="email" type="email" value="{{ old('email') }}" placeholder="email@contoh.com"
+                                required
                                 class="w-full mt-2 p-4 rounded-xl bg-[#EBF0EE] border-none outline-none text-sm focus:ring-2 focus:ring-[#1cb764] transition {{ $errors->has('email') ? 'ring-2 ring-red-500 bg-red-50' : '' }}">
                             @error('email')
                                 <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -197,24 +297,27 @@
 
                     <!-- Agreement Checkbox -->
                     <div class="bg-[#EBF0EE] p-4 rounded-xl mt-8 flex gap-3 text-sm text-gray-600 items-start">
-                        <input id="agreementCheckbox" name="agreement" type="checkbox" class="mt-1 w-5 h-5 text-[#1cb764] rounded border-gray-300 focus:ring-[#1cb764]" required>
+                        <input id="agreementCheckbox" name="agreement" type="checkbox"
+                            class="mt-1 w-5 h-5 text-[#1cb764] rounded border-gray-300 focus:ring-[#1cb764]" required>
                         <p class="leading-relaxed">
-                            Saya bersedia mengikuti regulasi dan peraturan yang ada serta berkomitmen pada standar keamanan pangan
+                            Saya bersedia mengikuti regulasi dan peraturan yang ada serta berkomitmen pada standar
+                            keamanan pangan
                             <span class="text-[#1cb764] font-semibold">ShareBite</span> secara konsisten.
                         </p>
                     </div>
 
                     <!-- Submit Button -->
                     <button id="submitButton" type="submit" disabled
-                        class="w-full bg-[#1cb764] text-black py-4 mt-6 rounded-xl font-bold">
-                        Daftar Sebagai Relawan
+                        class="w-full bg-[#1cb764] text-white py-4 mt-6 rounded-xl font-bold shadow-lg transition duration-300 opacity-50 cursor-not-allowed">
+                        Daftar Sebagai Individu
                     </button>
 
                     <!-- Login Link -->
                     <div class="text-center mt-6">
                         <p class="text-sm text-gray-500">
                             Sudah punya akun?
-                            <a href="{{ route('login') }}" class="text-[#1cb764] font-bold hover:underline">Masuk di sini</a>
+                            <a href="{{ route('login') }}" class="text-[#1cb764] font-bold hover:underline">Masuk di
+                                sini</a>
                         </p>
                     </div>
 
@@ -268,6 +371,29 @@
                 }
             }
 
+            // Phone validation
+            const phoneInput = document.getElementById('no_hp');
+            const errHp = document.getElementById('err-hp');
+            let isPhoneValid = false;
+            const phoneRegex = /^(\+62|0)[0-9]{9,13}$/;
+
+            phoneInput.addEventListener('keypress', function (e) {
+                if (!/[0-9+]/.test(e.key) && !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                    e.preventDefault();
+                }
+            });
+
+            phoneInput.addEventListener('input', function () {
+                this.value = this.value.replace(/[^0-9+]/g, '');
+                isPhoneValid = phoneRegex.test(this.value);
+                if (this.value.length > 0 && !isPhoneValid) {
+                    errHp.classList.remove('hidden');
+                } else {
+                    errHp.classList.add('hidden');
+                }
+                checkFormValidity();
+            });
+
             function checkFormValidity() {
                 let allInputsFilled = true;
 
@@ -279,10 +405,14 @@
                     }
                 });
 
-                if (allInputsFilled && isPasswordValid) {
+                if (allInputsFilled && isPasswordValid && isPhoneValid) {
                     submitButton.disabled = false;
+                    submitButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    submitButton.classList.add('hover:bg-[#19a55a]');
                 } else {
                     submitButton.disabled = true;
+                    submitButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    submitButton.classList.remove('hover:bg-[#19a55a]');
                 }
             }
 
@@ -304,6 +434,7 @@
             }
 
             allRequiredInputs.forEach(input => {
+                if (input.id === 'no_hp') return;
                 const eventType = input.type === 'checkbox' ? 'change' : 'input';
                 input.addEventListener(eventType, checkFormValidity);
             });

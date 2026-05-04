@@ -8,7 +8,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('unit_bisnis_profiles', function (Blueprint $table) {
-            $table->text('reviewer_notes')->nullable()->after('status_verifikasi');
+            if (!Schema::hasColumn('unit_bisnis_profiles', 'reviewer_notes')) {
+                $table->text('reviewer_notes')->nullable()->after('status_verifikasi');
+            }
         });
     }
 

@@ -4,11 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <title>@yield('title', 'Dashboard') - ShareBite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        [x-cloak] { display: none !important; }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -157,33 +160,6 @@
                     </svg>
                 </button>
 
-                @php $isHide = str_contains(request()->url(), 'pengaturan'); @endphp
-
-                @unless($isHide)
-                    <!-- Top Navbar Items -->
-                    <div class="hidden md:flex items-center bg-[#e9eeeb] rounded-xl px-4 py-3 w-80">
-                        <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                        <input type="text" placeholder="Cari donasi makanan..."
-                            class="bg-transparent border-none outline-none w-full ml-3 text-sm text-gray-700 font-medium placeholder-gray-500">
-                    </div>
-
-                    <button class="hidden md:flex items-center gap-2 bg-white px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm border border-gray-100">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
-                        </svg>
-                        Kategori
-                    </button>
-
-                    <button class="hidden md:flex items-center gap-2 bg-white px-4 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 shadow-sm border border-gray-100">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                        Lihat Map
-                    </button>
-                @endunless
             </div>
 
             <!-- Right Side (Notifications & Profile) -->
@@ -207,7 +183,7 @@
                         <p class="text-sm font-extrabold text-[#1cb764]">
                             {{ Auth::check() ? Auth::user()->name : 'Farid Munadhil' }}</p>
                     </div>
-                    <img src="https://ui-avatars.com/api/?name={{ Auth::check() ? urlencode(Auth::user()->name) : 'Farid' }}&background=f7b055&color=fff&bold=true"
+                    <img src="{{ Auth::user()->foto_profil ? asset('storage/' . Auth::user()->foto_profil) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=f7b055&color=fff&bold=true' }}"
                         alt="Avatar" class="w-11 h-11 rounded-full object-cover shadow-sm ring-2 ring-white">
                 </div>
             </div>
@@ -267,6 +243,45 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: '{{ session('success') }}',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    customClass: {
+                        popup: 'rounded-3xl'
+                    }
+                });
+            @endif
+        });
+
+        function confirmDelete(formId, message = 'Data yang dihapus tidak dapat dikembalikan!') {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: message,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#9ca3af',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-3xl',
+                    confirmButton: 'rounded-xl px-6 py-2.5 font-bold',
+                    cancelButton: 'rounded-xl px-6 py-2.5 font-bold'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>

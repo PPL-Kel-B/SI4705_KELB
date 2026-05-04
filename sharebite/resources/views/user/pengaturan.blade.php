@@ -3,13 +3,13 @@
 @section('title', 'Pengaturan')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 py-4" x-data="{ 
+<div class="max-w-7xl mx-auto px-4" x-data="{ 
     notifDonasi: true, 
     notifEmail: false,
     showAccountModal: false 
 }">
     <!-- Header Section -->
-    <div class="mb-10">
+    <div class="mb-6">
         <h1 class="text-4xl font-black text-[#1cb764] tracking-tight">Pengaturan</h1>
         <p class="text-gray-500 font-medium mt-2 text-lg">Kelola preferensi akun dan aplikasi Anda untuk pengalaman berbagi terbaik.</p>
     </div>
@@ -41,19 +41,27 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                     <div class="space-y-3">
                         <label class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Nama Lengkap</label>
-                        <div class="bg-[#f2f4f3] px-8 py-5 rounded-[1.5rem] text-[#111] font-bold text-lg shadow-inner">
+                        <div class="bg-gray-100 px-8 py-5 rounded-[1.5rem] text-[#111] font-bold text-lg shadow-inner">
                             {{ $user->name }}
                         </div>
                     </div>
                     <div class="space-y-3">
                         <label class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Email</label>
-                        <div class="bg-[#f2f4f3] px-8 py-5 rounded-[1.5rem] text-[#111] font-bold text-lg shadow-inner">
+                        <div class="bg-gray-100 px-8 py-5 rounded-[1.5rem] text-[#111] font-bold text-lg shadow-inner">
                             {{ $user->email }}
                         </div>
                     </div>
                 </div>
 
-                <!-- Tombol Edit Profil yang Membuka Modal (Bukan direct ke profile page) -->
+                <div class="mt-8 border-t border-gray-100 pt-8">
+                    <a href="{{ route('user.profile.edit', ['source' => 'pengaturan']) }}" 
+                       class="w-full flex items-center justify-center gap-3 bg-[#f8faf9] hover:bg-[#eefcf4] text-[#1cb764] px-8 py-4 rounded-2xl font-black transition-all group border border-transparent hover:border-[#1cb764]/20 shadow-sm hover:shadow-md">
+                        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                        </svg>
+                        Edit Profile
+                    </a>
+                </div>
             </div>
 
             <!-- Box 2: Kebijakan & Peraturan -->

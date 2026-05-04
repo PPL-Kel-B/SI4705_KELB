@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\UnitBisnisProfile;
 use App\Models\User;
+use App\Models\Pesanan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -11,7 +12,15 @@ class RegistUnitBisnisController extends Controller
 {
     public function create()
     {
-        return view('auth.register_unit_bisnis');
+        $totalUnitBisnis = UnitBisnisProfile::count();
+        $totalMakananTerselamatkan = Pesanan::whereIn('status', ['selesai', 'siap_diambil', 'dibayar'])->sum('jumlah_porsi');
+        $totalPenerimaManfaat = Pesanan::whereIn('status', ['selesai', 'siap_diambil', 'dibayar'])->distinct('user_id')->count('user_id');
+
+        return view('auth.register_unit_bisnis', compact(
+            'totalUnitBisnis',
+            'totalMakananTerselamatkan',
+            'totalPenerimaManfaat'
+        ));
     }
 
     public function store(Request $request)
@@ -22,9 +31,9 @@ class RegistUnitBisnisController extends Controller
             'Jenis_Usaha' => 'required|string|max:100',
             'Alamat'      => 'required|string|max:255',
             'NIB_File'    => 'nullable|file|mimes:pdf,jpg,jpeg|max:5120',
-            'Nomor_hp'    => 'nullable|string|max:20',
+            'Nomor_hp'    => ['required', 'string', 'regex:/^(\+62|0)[0-9]{9,13}$/'],
             'Email'       => 'required|email|max:100|unique:users,email',
-            'Password'    => 'required|string|min:6',
+            'Password'    => 'required|string|min:8',
             'Latitude'    => 'nullable|string',
             'Longitude'   => 'nullable|string',
         ]);

@@ -26,7 +26,19 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'no_hp' => ['nullable', 'string', 'max:20'],
+            'alamat' => ['nullable', 'string'],
+            'penanggung_jawab' => ['nullable', 'string', 'max:255'],
+            'jumlah_anggota' => ['nullable', 'integer', 'min:1'],
+            'current_password' => ['nullable', 'required_with:new_password', 'current_password'],
+            'new_password' => [
+                'nullable',
+                'min:8',
+                'confirmed',
+                'regex:/[A-Z]/', // Minimal 1 huruf kapital
+                'regex:/[\d\W_]/' // Karakter unik atau nomor
+            ],
+            'foto_profil' => ['nullable', 'image', 'max:2048'],
         ];
     }
 }

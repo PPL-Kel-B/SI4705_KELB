@@ -8,7 +8,7 @@
 
 @section('content')
     <div class="max-w-6xl mx-auto space-y-6">
-        <h1 class="text-3xl font-extrabold text-[#0a2e1f] mb-6">Profile Saya</h1>
+        <h1 class="text-3xl font-extrabold text-[#1cb764] mb-6">Profile Saya</h1>
 
         {{-- Profile Header Card --}}
         <div
@@ -20,7 +20,7 @@
 
             <div
                 class="relative w-32 h-32 md:w-40 md:h-40 shrink-0 bg-[#f4f7f5] rounded-3xl p-2 border-4 border-white shadow-md z-10 flex items-center justify-center">
-                <img src="https://ui-avatars.com/api/?name={{ urlencode($profile['name']) }}&background=f7b055&color=fff&size=150"
+                <img src="{{ $profile['foto_profil'] ? asset('storage/' . $profile['foto_profil']) : 'https://ui-avatars.com/api/?name=' . urlencode($profile['name']) . '&background=f7b055&color=fff&size=150' }}"
                     alt="{{ $profile['name'] }}" class="w-full h-full rounded-2xl object-cover">
             </div>
 
@@ -38,7 +38,7 @@
             </div>
 
             <div class="z-10 w-full md:w-auto">
-                <a href="{{ route('user.profile.edit') }}"
+                <a href="{{ route('user.profile.edit', ['source' => 'profile']) }}"
                     class="w-full md:w-auto inline-flex justify-center items-center gap-2 bg-[#1cb764] hover:bg-[#19a55a] text-white px-6 py-3.5 rounded-full font-bold transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -111,30 +111,51 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        @if($profile['role'] === 'individu')
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Lengkap</label>
+                                <div class="bg-gray-100 px-5 py-4 rounded-xl text-sm font-bold text-gray-800 border border-gray-100">
+                                    {{ $profile['name'] }}
+                                </div>
+                            </div>
+                        @else
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nama Komunitas</label>
+                                <div class="bg-gray-100 px-5 py-4 rounded-xl text-sm font-bold text-gray-800 border border-gray-100">
+                                    {{ $profile['name'] }}
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Penanggung Jawab</label>
+                                <div class="bg-gray-100 px-5 py-4 rounded-xl text-sm font-bold text-gray-800 border border-gray-100">
+                                    {{ $profile['penanggung_jawab'] }}
+                                </div>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Jumlah Anggota</label>
+                                <div class="bg-gray-100 px-5 py-4 rounded-xl text-sm font-bold text-gray-800 border border-gray-100 flex items-center gap-2">
+                                    <span class="text-[#1cb764]">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                        </svg>
+                                    </span>
+                                    {{ $profile['jumlah_anggota'] }} Anggota
+                                </div>
+                            </div>
+                        @endif
+
                         <div>
-                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nama
-                                Komunitas</label>
-                            <div
-                                class="bg-[#f8faf9] px-5 py-4 rounded-xl text-sm font-bold text-gray-800 border border-gray-100">
-                                {{ $profile['name'] }}
+                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Email</label>
+                            <div class="bg-gray-100 px-5 py-4 rounded-xl text-sm font-bold text-gray-800 border border-gray-100">
+                                {{ $profile['email'] }}
                             </div>
                         </div>
+
                         <div>
-                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Jumlah
-                                Komunitas</label>
-                            <div
-                                class="bg-[#f8faf9] px-5 py-4 rounded-xl text-sm font-bold text-gray-800 border border-gray-100 flex items-center gap-2">
-                                <span class="text-[#1cb764]">★</span>
-                                {{ $profile['jumlah_komunitas'] }} Komunitas Bergabung
+                            <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nomor Telepon</label>
+                            <div class="bg-gray-100 px-5 py-4 rounded-xl text-sm font-bold text-gray-800 border border-gray-100">
+                                {{ $profile['phone'] }}
                             </div>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nomor
-                            Telepon</label>
-                        <div
-                            class="bg-[#f8faf9] px-5 py-4 rounded-xl text-sm font-bold text-gray-800 border border-gray-100">
-                            {{ $profile['phone'] }}
                         </div>
                     </div>
                 </div>
@@ -154,12 +175,9 @@
                             </div>
                             <h3 class="text-xl font-extrabold text-gray-900">Lokasi & Alamat Utama</h3>
                         </div>
-                        <button
-                            class="bg-[#fdf6ec] text-[#f7b055] hover:bg-[#faeedb] px-4 py-2 rounded-xl text-xs font-bold transition">Ubah
-                            Alamat</button>
                     </div>
 
-                    <div class="flex gap-4 bg-[#f8faf9] p-5 rounded-2xl border border-gray-100 relative overflow-hidden">
+                    <div class="flex gap-4 bg-gray-100 p-5 rounded-2xl border border-gray-100 relative overflow-hidden">
                         <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-[#f7b055]"></div>
                         <div class="text-[#f7b055] shrink-0">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,7 +209,7 @@
                     </div>
 
                     <div class="space-y-3">
-                        <button
+                        <a href="{{ route('user.profile.edit', ['expand' => 'password', 'source' => 'profile']) }}"
                             class="w-full flex items-center justify-between bg-[#f8faf9] hover:bg-gray-50 px-5 py-4 rounded-2xl border border-gray-100 transition group">
                             <div class="flex items-center gap-3">
                                 <div class="text-[#1cb764] bg-white p-2 rounded-lg shadow-sm">
@@ -208,7 +226,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7">
                                 </path>
                             </svg>
-                        </button>
+                        </a>
 
                         <button
                             class="w-full flex items-center justify-between bg-[#f8faf9] hover:bg-gray-50 px-5 py-4 rounded-2xl border border-gray-100 transition group">
