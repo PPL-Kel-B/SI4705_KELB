@@ -114,16 +114,16 @@
 
             <div class="z-10">
                 <div class="bg-white rounded-full px-4 py-1.5 inline-flex items-center shadow-sm">
-                    <img src="{{ asset('images/logo.png') }}" alt="ShareBite Logo" class="h-6 object-contain"
+                    <img src="{{ asset('images/logo.png') }}" alt="ShareBite Logo" class="h-14 object-contain"
                         onerror="this.outerHTML='<span class=\'text-[#1cb764] font-bold text-lg\'>ShareBite</span>'">
                 </div>
             </div>
 
-            <div class="mt-8 z-10">
+            <div class="mt-0 z-5">
                 <h1 class="text-4xl xl:text-5xl font-extrabold leading-tight mb-4">
                     Bergabunglah <br> sebagai <br> <span class="text-[#f7b055]">Komunitas</span>
                 </h1>
-                <p class="text-base text-white/90 font-medium mb-3">
+                <p class="text-base text-white/90 font-medium mb-2">
                     Mari bersama kurangi limbah pangan dan bantu sesama. Langkah kecil Anda hari ini adalah dampak besar
                     bagi kelestarian pangan esok hari.
                 </p>
@@ -142,20 +142,13 @@
                         </svg>
                     </div>
                     <div>
-                        <div class="text-2xl font-extrabold text-white">500+</div>
-                        <div class="text-[11px] font-bold tracking-widest text-white uppercase mt-0.5">KOMUNITAS
-                            TERDAFTAR</div>
+                        <div class="text-[10px] font-semibold text-white">Dampak Kolektif</div>
+                        <div class="text-[15px] font-bold tracking-widest text-white">500+ Komunitas
+                            Terdaftar</div>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-10 flex items-start space-x-2 text-xs text-white/80 z-10 font-medium">
-                <svg class="w-4 h-4 shrink-0 text-[#f7b055]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span>Dampak Kolektif untuk Ketahanan Pangan</span>
-            </div>
         </div>
 
         <div class="w-full lg:w-8/12 flex justify-center py-8 px-6 sm:px-12 overflow-y-auto">
@@ -168,8 +161,7 @@
                         Bisnis</a>
                     <a href="{{ route('registerkomunitas') }}"
                         class="flex-1 bg-[#1cb764] text-white py-2.5 rounded-lg shadow-sm cursor-default block">Komunitas</a>
-                    <a href="{{ route('individu.create') }}"
-                        class="flex-1 text-gray-500 py-2.5 hover:bg-white/50 rounded-lg transition block">Individu</a>
+                    <a href="{{ route('individu.create') }}" class="flex-1 text-gray-500 py-2.5 hover:bg-white/50 rounded-lg transition block">Individu</a>
                 </div>
 
                 <div class="flex items-center gap-3 mb-6">
@@ -307,13 +299,13 @@
                     </div>
 
                     <button id="submitButton" type="submit" disabled
-                        class="w-full bg-gradient-to-r from-green-400 to-green-500 text-white py-4 rounded-xl font-semibold shadow-md hover:scale-[1.01] transition disabled:cursor-not-allowed disabled:opacity-60">
+                        class="w-full bg-gradient-to-r from-green-400 to-green-500 text-black py-4 rounded-xl font-extrabold">
                         Daftar Sebagai Komunitas
                     </button>
 
                     <p class="text-center text-sm text-gray-500">
                         Sudah memiliki akun ?
-                        <a href="{{ route('login') }}" class="text-[#1cb764] font-bold hover:underline">Login disini</a>
+                        <a href="{{ route('login') }}" class="text-[#1cb764] font-bold hover:underline">Masuk Ke Dashboard</a>
                     </p>
 
                 </form>
