@@ -220,6 +220,7 @@
                             <label class="text-sm text-gray-700">Jumlah Anggota</label>
                             <input name="jumlah_anggota" type="text" value="{{ old('jumlah_anggota') }}"
                                 placeholder="Contoh: 50" required
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                 class="w-full mt-2 p-4 rounded-xl bg-[#e9eeeb] outline-none text-sm {{ $errors->has('jumlah_anggota') ? 'border border-red-500 bg-red-50' : '' }}">
                         </div>
                     </div>
