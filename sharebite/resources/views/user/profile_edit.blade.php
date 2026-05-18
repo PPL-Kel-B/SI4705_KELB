@@ -102,7 +102,7 @@
                                 <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Nama
                                     Lengkap</label>
                                 <input type="text" name="name" value="{{ old('name', $user->name) }}"
-                                    class="w-full bg-gray-900 px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all">
+                                    class="w-full bg-gray-50 px-6 py-4 rounded-2xl border-2 border-transparent focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all">
                             </div>
                         @else
                             <div class="space-y-3">
@@ -207,7 +207,7 @@
                             <label class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest ml-1">Password Baru</label>
                             <input type="password" name="new_password" id="new_password"
                                 class="w-full bg-[#f4f7f5] px-6 py-4 rounded-2xl border-2 @error('new_password') border-red-500 @else border-transparent @enderror focus:border-[#1cb764] focus:bg-white outline-none font-bold text-gray-700 transition-all">
-                            
+
                             <!-- Password Requirements Block -->
                             <div class="mt-2 bg-gray-50 p-3 rounded-xl border border-gray-100">
                                 <ul class="text-xs space-y-2">

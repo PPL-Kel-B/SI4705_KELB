@@ -73,17 +73,23 @@
                         <label for="Harga" class="block text-sm font-extrabold text-gray-900 mb-2">Harga (Rp)</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-gray-800 font-bold text-sm pointer-events-none">Rp</span>
-                            <input type="text" id="Harga" name="Harga" placeholder="0"
-                                   class="form-input w-full bg-[#f4f8f6] border-none rounded-xl pl-10 pr-4 py-3.5 text-sm text-gray-800 font-bold focus:ring-2 focus:ring-[#1cb764]">
+                            <input type="text" id="Harga" name="Harga" placeholder="0" value="{{ old('Harga') }}"
+                                   class="form-input w-full bg-[#f4f8f6] border-none rounded-xl pl-10 pr-4 py-3.5 text-sm text-gray-800 font-bold focus:ring-2 focus:ring-[#1cb764] {{ $errors->has('Harga') ? 'ring-2 ring-red-500' : '' }}">
                         </div>
+                        @error('Harga')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                     <div>
                         <label for="Berat" class="block text-sm font-extrabold text-gray-900 mb-2">Berat (kg)</label>
                         <div class="relative">
-                            <input type="number" id="Berat" name="Berat" step="0.01" min="0" placeholder="0.5"
-                                   class="form-input w-full bg-[#f4f8f6] border-none rounded-xl px-4 py-3.5 text-sm text-gray-800 font-bold focus:ring-2 focus:ring-[#1cb764]">
+                            <input type="number" id="Berat" name="Berat" step="0.01" min="0" max="10" placeholder="0.5" value="{{ old('Berat') }}"
+                                   class="form-input w-full bg-[#f4f8f6] border-none rounded-xl px-4 py-3.5 text-sm text-gray-800 font-bold focus:ring-2 focus:ring-[#1cb764] {{ $errors->has('Berat') ? 'ring-2 ring-red-500' : '' }}">
                             <span class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-800 font-bold text-sm pointer-events-none">kg</span>
                         </div>
+                        @error('Berat')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
 

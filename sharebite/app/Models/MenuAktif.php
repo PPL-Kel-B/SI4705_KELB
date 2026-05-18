@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MenuAktif extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'master_makanan_id',
@@ -35,7 +36,7 @@ class MenuAktif extends Model
 
     public function masterMakanan()
     {
-        return $this->belongsTo(MasterMakanan::class, 'master_makanan_id');
+        return $this->belongsTo(MasterMakanan::class, 'master_makanan_id')->withTrashed();
     }
 
     public function unitBisnis()

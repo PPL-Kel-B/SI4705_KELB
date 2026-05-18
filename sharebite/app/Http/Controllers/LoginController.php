@@ -52,8 +52,9 @@ class LoginController extends Controller
                         'email' => 'Akun mu belum terverifikasi, harap cek secara berkala.',
                     ])->withInput();
                 } elseif ($profile->status_verifikasi === 'ditolak') {
+                    session()->put('retry_user_id', $user->id);
                     return back()->with([
-                        'rejection_message' => 'Mohon maaf, pengajuan verifikasi NIB Anda ditolak.',
+                        'rejection_message' => 'Mohon maaf, pengajuan verifikasi NIB Anda ditolak. Silakan daftar ulang kembali untuk melakukan perbaikan.',
                         'rejection_notes' => $profile->reviewer_notes ?? 'Tidak ada catatan tambahan.'
                     ])->withInput();
                 }

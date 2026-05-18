@@ -42,27 +42,34 @@ class MasterDataController extends Controller
 
     public function store(Request $request)
     {
+        // Clean Harga formatting before validation
+        if ($request->has('Harga')) {
+            $request->merge([
+                'Harga' => str_replace('.', '', $request->Harga)
+            ]);
+        }
+
         $request->validate([
             'Nama_Makanan' => 'required|string|max:255',
             'Kategori' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'Harga' => 'required|string', // from input formatting
-            'Berat' => 'nullable|numeric|min:0',
+            'Harga' => 'required|numeric|min:0|max:1000000',
+            'Berat' => 'nullable|numeric|min:0|max:10',
             'Foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ], [
+            'Harga.max' => 'Harga tidak boleh lebih dari Rp 1.000.000',
+            'Berat.max' => 'Berat tidak boleh lebih dari 10 kg',
         ]);
 
         $user = auth()->user();
         $profile = $user->unitBisnisProfile;
-
-        // Clean Harga formatting
-        $hargaClean = str_replace('.', '', $request->Harga);
 
         $data = [
             'unit_bisnis_id' => $profile->id,
             'nama_makanan' => $request->Nama_Makanan,
             'kategori' => $request->Kategori,
             'deskripsi' => $request->deskripsi,
-            'harga' => $hargaClean,
+            'harga' => $request->Harga,
             'berat' => $request->Berat,
         ];
 
@@ -93,23 +100,30 @@ class MasterDataController extends Controller
             abort(403);
         }
 
+        // Clean Harga formatting before validation
+        if ($request->has('Harga')) {
+            $request->merge([
+                'Harga' => str_replace('.', '', $request->Harga)
+            ]);
+        }
+
         $request->validate([
             'Nama_Makanan' => 'required|string|max:255',
             'Kategori' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'Harga' => 'required|string',
-            'Berat' => 'nullable|numeric|min:0',
+            'Harga' => 'required|numeric|min:0|max:1000000',
+            'Berat' => 'nullable|numeric|min:0|max:10',
             'Foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ], [
+            'Harga.max' => 'Harga tidak boleh lebih dari Rp 1.000.000',
+            'Berat.max' => 'Berat tidak boleh lebih dari 10 kg',
         ]);
-
-        // Clean Harga formatting
-        $hargaClean = str_replace('.', '', $request->Harga);
 
         $data = [
             'nama_makanan' => $request->Nama_Makanan,
             'kategori' => $request->Kategori,
             'deskripsi' => $request->deskripsi,
-            'harga' => $hargaClean,
+            'harga' => $request->Harga,
             'berat' => $request->Berat,
         ];
 

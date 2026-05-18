@@ -596,11 +596,15 @@
                     html: `{!! session('rejection_message') !!}<br><br><div class="text-left bg-red-50 p-5 rounded-2xl border border-red-100"><p class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Catatan Admin:</p><p class="text-sm text-red-600 font-bold italic">"${ {!! json_encode(session('rejection_notes')) !!} }"</p></div>`,
                     icon: 'error',
                     confirmButtonColor: '#22c55e',
-                    confirmButtonText: 'Saya Mengerti',
+                    confirmButtonText: 'Daftar Ulang',
                     background: '#ffffff',
                     customClass: {
                         popup: 'rounded-[2.5rem] p-8',
                         confirmButton: 'rounded-full px-10 py-3.5 font-bold text-sm tracking-wide'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = "{{ route('unit-bisnis.create') }}";
                     }
                 });
             @endif

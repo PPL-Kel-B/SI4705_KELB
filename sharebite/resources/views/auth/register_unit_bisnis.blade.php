@@ -221,6 +221,7 @@
                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">Verifikasi Dokumen</label>
 
                             <!-- Dropzone Area -->
+                            <input type="hidden" id="Existing_NIB_File" name="Existing_NIB_File" value="{{ old('NIB_File_Name') }}">
                             <div id="upload-zone"
                                 class="border-2 border-dashed border-[#1cb764]/40 bg-[#1cb764]/5 rounded-2xl p-6 text-center transition hover:bg-[#1cb764]/10">
                                 <svg class="w-8 h-8 mx-auto text-[#1cb764] mb-2" fill="none" stroke="currentColor"
@@ -230,7 +231,8 @@
                                     </path>
                                 </svg>
                                 <p class="text-sm font-bold text-gray-800">Upload Nomor Induk Berusaha (NIB)</p>
-                                <p class="text-xs text-gray-500 mb-4">Format PDF atau JPG (Maks. 5MB)</p>
+                                <p class="text-xs text-gray-500 mb-4" id="upload-instruction">Format PDF, JPG, atau PNG (Maks. 5MB)</p>
+                                <p id="err-file-type" class="text-xs text-red-500 mb-4 hidden font-bold">Format file tidak didukung!</p>
 
                                 <label
                                     class="inline-flex items-center px-5 py-2.5 bg-white border border-gray-300 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer shadow-sm transition">
@@ -241,7 +243,7 @@
                                     </svg>
                                     Unggah NIB
                                     <input type="file" id="NIB_File" name="NIB_File" class="hidden"
-                                        accept=".pdf,.jpg,.jpeg">
+                                        accept=".pdf,.jpg,.jpeg,.png">
                                 </label>
                             </div>
                             <p id="err-nib" class="text-xs text-red-500 mt-1 hidden">Harap unggah dokumen NIB.</p>
@@ -520,20 +522,45 @@
             const uploadSuccess = document.getElementById('upload-success');
             const fileNameDisplay = document.getElementById('file-name-display');
             const removeFileBtn = document.getElementById('remove-file');
+            const existingNibInput = document.getElementById('Existing_NIB_File');
+
+            // Initialize existing file view
+            if (existingNibInput && existingNibInput.value !== '') {
+                fileNameDisplay.textContent = existingNibInput.value;
+                uploadZone.classList.add('hidden');
+                uploadSuccess.classList.remove('hidden');
+            }
 
             fileInput.addEventListener('change', function (e) {
+                const errFileType = document.getElementById('err-file-type');
+                const uploadInstruction = document.getElementById('upload-instruction');
+
                 if (e.target.files.length > 0) {
                     const file = e.target.files[0];
                     const fileSize = file.size / 1024 / 1024; // size in MB
+                    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
 
+                    // Reset error state
+                    errFileType.classList.add('hidden');
+                    uploadInstruction.classList.remove('hidden');
+
+                    // Check File Type
+                    if (!allowedTypes.includes(file.type)) {
+                        errFileType.textContent = 'Format file tidak didukung!';
+                        errFileType.classList.remove('hidden');
+                        uploadInstruction.classList.add('hidden');
+                        fileInput.value = '';
+                        checkFormValidity();
+                        return;
+                    }
+
+                    // Check File Size
                     if (fileSize > 5) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'File Terlalu Besar',
-                            text: 'Ukuran file NIB tidak boleh melebihi 5MB.',
-                            confirmButtonColor: '#1cb764'
-                        });
-                        fileInput.value = ''; // Reset input
+                        errFileType.textContent = 'Ukuran file melebihi 5MB!';
+                        errFileType.classList.remove('hidden');
+                        uploadInstruction.classList.add('hidden');
+                        fileInput.value = '';
+                        checkFormValidity();
                         return;
                     }
 
@@ -549,6 +576,9 @@
 
             removeFileBtn.addEventListener('click', function () {
                 fileInput.value = ''; // clear
+                if (existingNibInput) {
+                    existingNibInput.value = ''; // clear existing
+                }
                 uploadZone.classList.remove('hidden');
                 uploadSuccess.classList.add('hidden');
                 checkFormValidity();
@@ -663,8 +693,8 @@
             // Phone number validation
             const phoneInput = document.getElementById('Nomor_hp');
             const errHp = document.getElementById('err-hp');
-            let isPhoneValid = false;
             const phoneRegex = /^(\+62|0)[0-9]{9,13}$/;
+            let isPhoneValid = phoneRegex.test(phoneInput.value);
 
             phoneInput.addEventListener('keypress', function (e) {
                 const allowed = /[0-9+]/;
@@ -690,7 +720,7 @@
                 const isTermsChecked = termsCheckbox.checked;
 
                 // 2. Cek File NIB (Wajib)
-                const isFileUploaded = fileInput.files.length > 0;
+                const isFileUploaded = fileInput.files.length > 0 || (existingNibInput && existingNibInput.value !== '');
 
                 // 3. Cek Lokasi (Wajib)
                 const isLocationSet = latInput.value.trim() !== "" && lngInput.value.trim() !== "";
@@ -723,7 +753,6 @@
 
             termsCheckbox.addEventListener('change', checkFormValidity);
 
-            // Basic HTML5 validation error clearing on input
             const inputs = registForm.querySelectorAll('input, textarea');
             inputs.forEach(input => {
                 if (input.id !== 'Nomor_hp') { // skip, handled above
@@ -733,6 +762,7 @@
                 }
             });
 
+            checkFormValidity();
         });
     </script>
 </body>

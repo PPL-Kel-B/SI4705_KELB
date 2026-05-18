@@ -38,7 +38,7 @@ class Pesanan extends Model
 
     public function menuAktif()
     {
-        return $this->belongsTo(MenuAktif::class, 'menu_aktif_id');
+        return $this->belongsTo(MenuAktif::class, 'menu_aktif_id')->withTrashed();
     }
 
     public function unitBisnis()
