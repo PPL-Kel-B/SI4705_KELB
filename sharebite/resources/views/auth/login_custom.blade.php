@@ -604,7 +604,7 @@
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        window.location.href = "{{ route('unit-bisnis.create') }}";
+                        window.location.href = "{{ route('unit-bisnis.create', ['retry' => 1]) }}";
                     }
                 });
             @endif

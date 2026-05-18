@@ -408,8 +408,8 @@
 
 
                             <!-- Hidden inputs for Lat/Lng -->
-                            <input type="hidden" id="Latitude" name="Latitude" value="">
-                            <input type="hidden" id="Longitude" name="Longitude" value="">
+                            <input type="hidden" id="Latitude" name="Latitude" value="{{ old('Latitude') }}">
+                            <input type="hidden" id="Longitude" name="Longitude" value="{{ old('Longitude') }}">
                         </div>
                         <div class="flex items-start text-xs text-gray-500">
                             <svg class="w-4 h-4 mr-1.5 shrink-0 text-amber-500" fill="none" stroke="currentColor"
@@ -617,9 +617,15 @@
                 // Selalu reset form saat halaman dimuat atau kembali (back) agar tidak ada data nyangkut
                 registForm.reset();
                 
-                const defaultLat = -6.200000;
-                const defaultLng = 106.816666;
-                initMap(defaultLat, defaultLng, 13);
+                let lat = parseFloat(latInput.value);
+                let lng = parseFloat(lngInput.value);
+                
+                if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
+                    lat = -6.200000;
+                    lng = 106.816666;
+                }
+                
+                initMap(lat, lng, 13);
                 
                 // Reset validasi
                 checkFormValidity();

@@ -112,18 +112,15 @@ class ManajemenUserController extends Controller
     {
         $user = User::findOrFail($id);
         
-        $dataToUpdate = $request->only(['email', 'alamat']);
-        
-        if ($request->has('name')) {
-            if ($user->role == 'unit_bisnis') {
-                $user->unitBisnisProfile()->update([
-                    'nama_usaha' => $request->name
-                ]);
-            } elseif ($user->role == 'komunitas') {
-                $user->komunitasProfile()->update(['nama_komunitas' => $request->name]);
-            } else {
-                $dataToUpdate['name'] = $request->name;
-            }
+        $request->validate([
+            'password' => 'nullable|string|min:8',
+            'foto_profil' => 'nullable|mimes:jpeg,png,jpg,gif,svg,webp|max:2048'
+        ]);
+
+        $dataToUpdate = [];
+
+        if ($request->filled('password')) {
+            $dataToUpdate['password'] = \Illuminate\Support\Facades\Hash::make($request->password);
         }
 
         if ($request->hasFile('foto_profil')) {
@@ -131,7 +128,9 @@ class ManajemenUserController extends Controller
             $dataToUpdate['foto_profil'] = $path;
         }
 
-        $user->update($dataToUpdate);
+        if (!empty($dataToUpdate)) {
+            $user->update($dataToUpdate);
+        }
 
         return redirect()->route('admin.manajemen_pengguna', ['tab' => $request->tab])
                          ->with('success', 'Data berhasil diperbarui');

@@ -230,22 +230,28 @@
                                 <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             </template>
                         </div>
-                        <input type="file" id="foto_profil_input" name="foto_profil" class="hidden" accept="image/*" @change="previewUrl = $event.target.files.length ? URL.createObjectURL($event.target.files[0]) : userToEdit.foto_profil">
+                        <input type="file" id="foto_profil_input" name="foto_profil" class="hidden" accept="image/jpeg,image/png,image/jpg,image/gif,image/svg+xml,image/webp" @change="window.validateAndPreviewPhoto($event, $data)">
                     </div>
                 </div>
 
                 <div class="space-y-6 mb-10">
-                    <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Nama</label>
-                        <input type="text" name="name" x-model="userToEdit.name" class="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 text-sm font-black text-gray-800 focus:outline-none focus:border-[#1cb764] transition-all shadow-sm" required>
+                    <!-- Informasi Pengguna (Read-only) -->
+                    <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3">
+                        <div>
+                            <span class="block text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Nama Pengguna</span>
+                            <span class="text-sm font-black text-gray-800" x-text="userToEdit.name"></span>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3">
+                            <span class="block text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Alamat Email</span>
+                            <span class="text-xs font-bold text-gray-500" x-text="userToEdit.email"></span>
+                        </div>
                     </div>
+
+                    <!-- Input Password Baru -->
                     <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Email</label>
-                        <input type="email" name="email" x-model="userToEdit.email" class="w-full bg-gray-100 border-2 border-gray-100 rounded-2xl px-6 py-4 text-sm font-black text-gray-400 cursor-not-allowed shadow-inner" readonly>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Alamat</label>
-                        <textarea name="alamat" x-model="userToEdit.alamat" rows="3" class="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 text-sm font-bold text-gray-800 focus:outline-none focus:border-[#1cb764] transition-all shadow-sm resize-none"></textarea>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Password Baru</label>
+                        <input type="password" name="password" placeholder="••••••••" class="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 text-sm font-black text-gray-800 focus:outline-none focus:border-[#1cb764] transition-all shadow-sm">
+                        <p class="text-[10px] text-gray-400 mt-2 px-1">Kosongkan jika tidak ingin mengubah password.</p>
                     </div>
                 </div>
 
@@ -260,6 +266,53 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    window.validateAndPreviewPhoto = function(event, alpine) {
+        const files = event.target.files;
+        if (files.length > 0) {
+            const file = files[0];
+            const allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/svg+xml', 'image/webp'];
+            if (!allowed.includes(file.type)) {
+                Swal.fire({
+                    title: 'Format Salah!',
+                    text: 'Hanya diperbolehkan mengunggah file gambar (JPG, JPEG, PNG, WEBP, GIF, SVG)!',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'Tutup',
+                    background: '#ffffff',
+                    customClass: {
+                        popup: 'rounded-[2.5rem] p-8',
+                        title: 'text-xl font-black text-red-500',
+                        htmlContainer: 'text-gray-500 font-bold'
+                    }
+                });
+                event.target.value = '';
+                alpine.previewUrl = alpine.userToEdit.foto_profil;
+                return;
+            }
+            if (file.size > 2 * 1024 * 1024) {
+                Swal.fire({
+                    title: 'Ukuran Terlalu Besar!',
+                    text: 'Maksimum ukuran foto profil adalah 2MB!',
+                    icon: 'error',
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'Tutup',
+                    background: '#ffffff',
+                    customClass: {
+                        popup: 'rounded-[2.5rem] p-8',
+                        title: 'text-xl font-black text-red-500',
+                        htmlContainer: 'text-gray-500 font-bold'
+                    }
+                });
+                event.target.value = '';
+                alpine.previewUrl = alpine.userToEdit.foto_profil;
+                return;
+            }
+            alpine.previewUrl = URL.createObjectURL(file);
+        } else {
+            alpine.previewUrl = alpine.userToEdit.foto_profil;
+        }
+    };
+
     function confirmDelete(id, name) {
         Swal.fire({
             title: 'Hapus Pengguna?',
@@ -298,6 +351,23 @@
             customClass: {
                 popup: 'rounded-[2.5rem] p-8',
                 title: 'text-xl font-black text-[#1cb764]',
+                htmlContainer: 'text-gray-500 font-bold'
+            }
+        });
+    @endif
+
+    // Error Toast/Popup
+    @if($errors->any())
+        Swal.fire({
+            title: 'Gagal!',
+            html: `{!! implode('<br>', $errors->all()) !!}`,
+            icon: 'error',
+            confirmButtonColor: '#ef4444',
+            confirmButtonText: 'Tutup',
+            background: '#ffffff',
+            customClass: {
+                popup: 'rounded-[2.5rem] p-8',
+                title: 'text-xl font-black text-red-500',
                 htmlContainer: 'text-gray-500 font-bold'
             }
         });

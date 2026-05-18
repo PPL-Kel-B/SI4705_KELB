@@ -10,15 +10,18 @@ use Illuminate\Support\Facades\Hash;
 
 class RegistUnitBisnisController extends Controller
 {
-    public function create()
+    public function create(Request $request)
     {
         $totalUnitBisnis = UnitBisnisProfile::count();
         $totalMakananTerselamatkan = Pesanan::whereIn('status', ['selesai', 'siap_diambil', 'dibayar'])->sum('jumlah_porsi');
         $totalPenerimaManfaat = Pesanan::whereIn('status', ['selesai', 'siap_diambil', 'dibayar'])->distinct('user_id')->count('user_id');
 
-        if (session()->has('retry_user_id')) {
+        if ($request->query('retry') == 1 && session()->has('retry_user_id')) {
             $user = User::with('unitBisnisProfile')->find(session('retry_user_id'));
             if ($user && $user->unitBisnisProfile) {
+                $rawFileName = $user->unitBisnisProfile->nib_file ? basename($user->unitBisnisProfile->nib_file) : null;
+                $cleanFileName = $rawFileName ? preg_replace('/^\d+_/', '', $rawFileName) : null;
+
                 session()->flashInput([
                     'Nama_Usaha' => $user->unitBisnisProfile->nama_usaha,
                     'Jenis_Usaha' => $user->unitBisnisProfile->jenis_usaha,
@@ -27,9 +30,12 @@ class RegistUnitBisnisController extends Controller
                     'Nomor_hp' => $user->no_hp,
                     'Latitude' => $user->latitude,
                     'Longitude' => $user->longitude,
-                    'NIB_File_Name' => $user->unitBisnisProfile->nib_file ? basename($user->unitBisnisProfile->nib_file) : null,
+                    'NIB_File_Name' => $cleanFileName,
                 ]);
             }
+        } else {
+            // Bersihkan session jika diakses secara manual
+            session()->forget('retry_user_id');
         }
 
         return view('auth.register_unit_bisnis', compact(
@@ -77,7 +83,8 @@ class RegistUnitBisnisController extends Controller
         $nibPath = null;
         if ($request->hasFile('NIB_File')) {
             $file    = $request->file('NIB_File');
-            $nibPath = $file->store('nib_files', 'public');
+            $originalName = $file->getClientOriginalName();
+            $nibPath = $file->storeAs('nib_files', time() . '_' . $originalName, 'public');
         }
 
         if ($isRejectedUser && $existingUser) {
