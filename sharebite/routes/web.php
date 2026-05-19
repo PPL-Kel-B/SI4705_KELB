@@ -18,6 +18,9 @@ use App\Http\Controllers\RegistIndividuController;
 */
 
 Route::get('/', [\App\Http\Controllers\LandingController::class, 'index'])->name('home');
+Route::get('/tentang-kami', function () {
+    return view('tentang_kami');
+})->name('tentang-kami');
 
 // ==========================================
 // Laravel Breeze Default Auth Routes
