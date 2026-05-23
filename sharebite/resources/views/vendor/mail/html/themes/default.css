@@ -28,7 +28,7 @@ blockquote {
 }
 
 a {
-    color: #18181b;
+    color: #1cb764;
 }
 
 a img {
@@ -38,8 +38,8 @@ a img {
 /* Typography */
 
 h1 {
-    color: #18181b;
-    font-size: 18px;
+    color: #0a5c36;
+    font-size: 20px;
     font-weight: bold;
     margin-top: 0;
     text-align: start;
@@ -80,7 +80,7 @@ img {
     -premailer-cellpadding: 0;
     -premailer-cellspacing: 0;
     -premailer-width: 100%;
-    background-color: #fafafa;
+    background-color: #eefcf4;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -125,9 +125,9 @@ img {
     -premailer-cellpadding: 0;
     -premailer-cellspacing: 0;
     -premailer-width: 100%;
-    background-color: #fafafa;
-    border-bottom: 1px solid #fafafa;
-    border-top: 1px solid #fafafa;
+    background-color: #eefcf4;
+    border-bottom: 1px solid #eefcf4;
+    border-top: 1px solid #eefcf4;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -138,10 +138,11 @@ img {
     -premailer-cellspacing: 0;
     -premailer-width: 570px;
     background-color: #ffffff;
-    border-color: #e4e4e7;
-    border-radius: 4px;
+    border-color: #a7f3d0;
+    border-radius: 16px;
     border-width: 1px;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    border-top: 4px solid #1cb764;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
     margin: 0 auto;
     padding: 0;
     width: 570px;
@@ -230,20 +231,21 @@ img {
 
 .button {
     -webkit-text-size-adjust: none;
-    border-radius: 4px;
+    border-radius: 999px;
     color: #fff;
     display: inline-block;
     overflow: hidden;
     text-decoration: none;
+    font-weight: bold;
 }
 
 .button-blue,
 .button-primary {
-    background-color: #18181b;
-    border-bottom: 8px solid #18181b;
-    border-left: 18px solid #18181b;
-    border-right: 18px solid #18181b;
-    border-top: 8px solid #18181b;
+    background-color: #0a5c36;
+    border-bottom: 8px solid #0a5c36;
+    border-left: 18px solid #0a5c36;
+    border-right: 18px solid #0a5c36;
+    border-top: 8px solid #0a5c36;
 }
 
 .button-green,

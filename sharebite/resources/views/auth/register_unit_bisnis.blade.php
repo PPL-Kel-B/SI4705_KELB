@@ -185,7 +185,7 @@
                                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jenis Usaha</label>
                                 <div class="relative">
                                     <select name="Jenis_Usaha"
-                                        class="w-full bg-[#EBF0EE] border-none rounded-xl px-4 py-3.5 text-sm text-gray-700 focus:ring-2 focus:ring-[#1cb764] outline-none appearance-none transition"
+                                        class="w-full bg-white border border-gray-200 hover:border-[#1cb764] focus:border-[#1cb764] focus:ring-2 focus:ring-[#1cb764]/10 rounded-2xl pl-5 pr-10 py-4 text-sm font-semibold text-gray-700 outline-none appearance-none transition"
                                         required>
                                         <option value="Restoran" {{ old('Jenis_Usaha') == 'Restoran' ? 'selected' : '' }}>
                                             Restoran</option>
@@ -198,9 +198,9 @@
                                             Lainnya</option>
                                     </select>
                                     <div
-                                        class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-400">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                                 d="M19 9l-7 7-7-7"></path>
                                         </svg>
                                     </div>
