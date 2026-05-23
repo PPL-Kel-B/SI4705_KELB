@@ -111,6 +111,12 @@ class RegistUnitBisnisController extends Controller
 
             $existingUser->unitBisnisProfile->update($profileData);
 
+            // Notify Admins
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new \App\Notifications\UnitBisnisMendaftarNotification($existingUser));
+            }
+
             return redirect()->route('login')
                              ->with('success', 'Pendaftaran ulang berhasil! Akun Anda kembali dalam proses verifikasi.');
         } else {
@@ -133,6 +139,12 @@ class RegistUnitBisnisController extends Controller
                 'nib_file'          => $nibPath,
                 'status_verifikasi' => 'pending',
             ]);
+
+            // Notify Admins
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                $admin->notify(new \App\Notifications\UnitBisnisMendaftarNotification($user));
+            }
 
             return redirect()->route('login')
                              ->with('success', 'Pendaftaran Unit Bisnis berhasil! Akun Anda sedang dalam proses verifikasi.');

@@ -74,10 +74,8 @@
                 <div class="hidden md:flex items-center space-x-12">
                     <a href="/"
                         class="text-[13px] font-black text-[#0a5c36] border-b-2 border-[#0a5c36] pb-1 uppercase tracking-widest">Home</a>
-                    <a href="#"
-                        class="text-[13px] font-black text-gray-400 hover:text-[#0a5c36] transition-colors uppercase tracking-widest">Promo</a>
-                    <a href="#"
-                        class="text-[13px] font-black text-gray-400 hover:text-[#0a5c36] transition-colors uppercase tracking-widest">Komunitas</a>
+                    <a href="/mitra"
+                        class="text-[13px] font-black text-gray-400 hover:text-[#0a5c36] transition-colors uppercase tracking-widest">Mitra Kami</a>
                     <a href="/tentang-kami"
                         class="text-[13px] font-black text-gray-400 hover:text-[#0a5c36] transition-colors uppercase tracking-widest">Tentang
                         Kami</a>

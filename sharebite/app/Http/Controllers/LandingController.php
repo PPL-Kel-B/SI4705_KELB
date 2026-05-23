@@ -50,4 +50,53 @@ class LandingController extends Controller
             'menus'
         ));
     }
+
+    public function mitra(Request $request)
+    {
+        $search = $request->input('search');
+        $jenis_usaha = $request->input('jenis_usaha');
+
+        $query = User::where('role', 'unit_bisnis')
+            ->whereHas('unitBisnisProfile', function ($q) {
+                $q->where('status_verifikasi', 'terverifikasi');
+            })
+            ->with('unitBisnisProfile');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('alamat', 'like', "%{$search}%")
+                  ->orWhereHas('unitBisnisProfile', function($subQ) use ($search) {
+                      $subQ->where('nama_usaha', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        if ($jenis_usaha) {
+            $query->whereHas('unitBisnisProfile', function($q) use ($jenis_usaha) {
+                $q->where('jenis_usaha', $jenis_usaha);
+            });
+        }
+
+        $mitras = $query->latest()->paginate(9)->withQueryString();
+
+        // Ambil list jenis usaha unik untuk filter dropdown/button
+        $jenisUsahaList = \App\Models\UnitBisnisProfile::where('status_verifikasi', 'terverifikasi')
+            ->whereNotNull('jenis_usaha')
+            ->distinct()
+            ->pluck('jenis_usaha');
+
+        return view('mitra', compact('mitras', 'jenisUsahaList', 'search', 'jenis_usaha'));
+    }
+
+    public function komunitas()
+    {
+        // Ambil data komunitas aktif
+        $komunitases = User::where('role', 'komunitas')
+            ->latest()
+            ->take(6)
+            ->get();
+
+        return view('komunitas', compact('komunitases'));
+    }
 }
