@@ -11,7 +11,7 @@ class UnitBisnisMendaftarNotification extends Notification
 {
     use Queueable;
 
-    protected $unitBisnisUser;
+    public $unitBisnisUser;
 
     public function __construct(User $unitBisnisUser)
     {

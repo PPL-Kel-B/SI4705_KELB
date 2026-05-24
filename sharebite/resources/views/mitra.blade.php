@@ -129,7 +129,7 @@
 
                         <!-- Custom Category Dropdown (AlpineJS) -->
                         <div class="md:col-span-4 relative">
-                            <button type="button" @click="open = !open" 
+                            <button type="button" id="category-dropdown-btn" @click="open = !open" 
                                 class="w-full flex items-center justify-between pl-5 pr-4 py-4 rounded-2xl border border-gray-100 hover:border-[#1cb764] focus:outline-none text-sm font-semibold text-gray-700 bg-white transition-all shadow-sm">
                                 <span x-text="selected"></span>
                                 <svg class="w-5 h-5 text-gray-400 transform transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,7 +148,7 @@
                                 x-transition:leave-end="opacity-0 scale-95" 
                                 class="absolute z-50 w-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 max-h-60 overflow-y-auto"
                                 style="display: none;">
-                                <button type="button" @click="selected = 'Semua Kategori Usaha'; value = ''; open = false; $nextTick(() => $refs.form.submit())" 
+                                <button type="button" dusk="category-option-all" @click="selected = 'Semua Kategori Usaha'; value = ''; open = false; $nextTick(() => $refs.form.submit())" 
                                     class="w-full text-left px-5 py-3.5 text-sm font-semibold text-gray-600 hover:bg-[#eefcf4] hover:text-dark-green transition-colors flex items-center justify-between">
                                     <span>Semua Kategori Usaha</span>
                                     <svg x-show="value === ''" class="w-4 h-4 text-[#1cb764]" fill="currentColor" viewBox="0 0 20 20">
@@ -156,7 +156,7 @@
                                     </svg>
                                 </button>
                                 @foreach ($jenisUsahaList as $ju)
-                                    <button type="button" @click="selected = '{{ ucfirst($ju) }}'; value = '{{ $ju }}'; open = false; $nextTick(() => $refs.form.submit())" 
+                                    <button type="button" dusk="category-option-{{ str_replace(' ', '-', strtolower($ju)) }}" @click="selected = '{{ ucfirst($ju) }}'; value = '{{ $ju }}'; open = false; $nextTick(() => $refs.form.submit())" 
                                         class="w-full text-left px-5 py-3.5 text-sm font-semibold text-gray-600 hover:bg-[#eefcf4] hover:text-dark-green transition-colors flex items-center justify-between"
                                         :class="value === '{{ $ju }}' ? 'bg-[#eefcf4] text-dark-green font-bold' : ''">
                                         <span>{{ ucfirst($ju) }}</span>
@@ -170,7 +170,7 @@
 
                         <!-- Submit Button -->
                         <div class="md:col-span-2">
-                            <button type="submit"
+                            <button type="submit" dusk="search-submit-btn"
                                 class="w-full bg-dark-green hover:bg-[#064225] text-white py-4 rounded-2xl text-xs uppercase tracking-widest font-black transition-all shadow-lg shadow-[#0a5c36]/20 hover:-translate-y-0.5">
                                 Cari
                             </button>
