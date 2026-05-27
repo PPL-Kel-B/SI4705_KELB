@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
+use App\Models\MenuAktif;
+use Carbon\Carbon;
 
 class PembayaranController extends Controller
 {
@@ -16,17 +18,14 @@ class PembayaranController extends Controller
     {
         $qty = $request->input('qty', 1);
 
-        $makanan = (object) [
-            'nama'   => ucwords(str_replace('-', ' ', $slug)),
-            'slug'   => $slug,
-            'harga'  => 15000, 
-            'resto'  => 'Healthy Garden Bistro',
-            'alamat' => 'Jl. Kebon Jeruk No. 45, Jakarta Barat',
-            'gambar' => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80',
-            'batas_pengambilan' => '2026-05-24 17:30:00' 
-        ];
+        // Mengambil data makanan dari database, beserta relasinya
+        $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])
+                    ->whereHas('masterMakanan', function ($query) use ($slug) {
+                        $query->where('nama_makanan', str_replace('-', ' ', $slug));
+                    })
+                    ->firstOrFail();
 
-        $subtotal = $makanan->harga * $qty;
+        $subtotal = $makanan->harga_jual * $qty;
         $ref = 'SB-' . strtoupper(substr(md5($slug . time()), 0, 8));
 
         return view('user.pembayaran', compact('makanan', 'qty', 'subtotal', 'ref'));
@@ -54,17 +53,14 @@ class PembayaranController extends Controller
     {
         $qty = $request->input('qty', 1);
 
-        $makanan = (object) [
-            'nama'   => ucwords(str_replace('-', ' ', $slug)),
-            'slug'   => $slug,
-            'harga'  => 15000, 
-            'resto'  => 'Healthy Garden Bistro',
-            'alamat' => 'Jl. Kebon Jeruk No. 45, Jakarta Barat',
-            'gambar' => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80',
-            'batas_pengambilan' => '2026-05-24 17:30:00' 
-        ];
+        // Mengambil data makanan dari database untuk halaman sukses
+        $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])
+                    ->whereHas('masterMakanan', function ($query) use ($slug) {
+                        $query->where('nama_makanan', str_replace('-', ' ', $slug));
+                    })
+                    ->firstOrFail();
 
-        $subtotal = $makanan->harga * $qty;
+        $subtotal = $makanan->harga_jual * $qty;
         
         $kode_verifikasi = 'GP-' . rand(1000, 9999) . '-' . strtoupper(Str::random(3));
 
