@@ -185,7 +185,7 @@
                                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">Jenis Usaha</label>
                                 <div class="relative">
                                     <select name="Jenis_Usaha"
-                                        class="w-full bg-white border border-gray-200 hover:border-[#1cb764] focus:border-[#1cb764] focus:ring-2 focus:ring-[#1cb764]/10 rounded-2xl pl-5 pr-10 py-4 text-sm font-semibold text-gray-700 outline-none appearance-none transition"
+                                        class="w-full bg-[#EBF0EE] border-none rounded-xl pl-4 pr-10 py-3.5 text-sm text-gray-700 outline-none appearance-none transition focus:ring-2 focus:ring-[#1cb764]"
                                         required>
                                         <option value="Restoran" {{ old('Jenis_Usaha') == 'Restoran' ? 'selected' : '' }}>
                                             Restoran</option>
