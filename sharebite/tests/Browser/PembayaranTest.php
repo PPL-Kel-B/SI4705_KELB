@@ -56,7 +56,7 @@ class PembayaranTest extends DuskTestCase
 
     // =========================================================================
     // TEST 1
-    // Klik tombol panah (<- Pembayaran) → kembali ke halaman riwayat
+    // Klik tombol panah (<- Pembayaran) ke halaman riwayat
     // =========================================================================
     public function testBackButtonNavigatesToRiwayat(): void
     {
