@@ -10,6 +10,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\RegistIndividuController;
+use App\Http\Controllers\RiwayatController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -73,9 +74,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', function () {
             return view('user.dashboard');
         })->name('dashboard');
-        Route::get('/riwayat', function () {
-            return view('user.riwayat');
-        })->name('riwayat');
+        Route::get('/riwayat', [\App\Http\Controllers\RiwayatController::class, 'index'])->name('riwayat');
+        Route::get('/riwayat/{id}', [App\Http\Controllers\RiwayatController::class, 'show'])->name('riwayat.show');
+        Route::post('/riwayat/{id}/rate', [App\Http\Controllers\RiwayatController::class, 'storeRating'])->name('riwayat.storeRating');
         Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
         Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');

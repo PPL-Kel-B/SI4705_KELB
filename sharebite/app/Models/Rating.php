@@ -12,6 +12,10 @@ class Rating extends Model
     protected $fillable = [
         'user_id',
         'unit_bisnis_id',
+        'pesanan_id',
+        'skor_rating',
+        'catatan_pengalaman',
+        'foto_bukti_berbagi',
         'nilai',
         'komentar',
     ];
