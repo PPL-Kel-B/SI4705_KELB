@@ -6919,10 +6919,6 @@
             "time": "2026-03-10T19:59:01+00:00"
         },
         {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 669723edec21ff0354824c36c07a4e403f994e18
             "name": "laravel/dusk",
             "version": "v8.6.0",
             "source": {
@@ -6997,11 +6993,6 @@
             "time": "2026-04-15T14:50:40+00:00"
         },
         {
-<<<<<<< HEAD
-=======
->>>>>>> origin/Develop-v3
-=======
->>>>>>> 669723edec21ff0354824c36c07a4e403f994e18
             "name": "laravel/pail",
             "version": "v1.2.6",
             "source": {
@@ -7984,10 +7975,6 @@
             "time": "2022-02-21T01:04:05+00:00"
         },
         {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 669723edec21ff0354824c36c07a4e403f994e18
             "name": "php-webdriver/webdriver",
             "version": "1.16.0",
             "source": {
@@ -8054,11 +8041,6 @@
             "time": "2025-12-28T23:57:40+00:00"
         },
         {
-<<<<<<< HEAD
-=======
->>>>>>> origin/Develop-v3
-=======
->>>>>>> 669723edec21ff0354824c36c07a4e403f994e18
             "name": "phpdocumentor/reflection-common",
             "version": "2.2.0",
             "source": {
@@ -9850,9 +9832,5 @@
         "php": "^8.3.6"
     },
     "platform-dev": {},
-<<<<<<< HEAD
     "plugin-api-version": "2.9.0"
-=======
-    "plugin-api-version": "2.6.0"
->>>>>>> origin/Develop-v3
 }
