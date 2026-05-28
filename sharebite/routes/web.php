@@ -10,7 +10,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\RegistIndividuController;
-use App\Http\Controllers\RiwayatController; 
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\PembayaranController;
 
 use App\Http\Controllers\DashboardUnitBisnisController;
@@ -197,9 +197,9 @@ Route::middleware('auth')->group(function () {
 
     // Admin Dashboard Routes
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('admin.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/laporan', [AdminDashboardController::class, 'report'])->name('laporan');
+        Route::get('/transaksi', [AdminDashboardController::class, 'allTransactions'])->name('transaksi');
         Route::get('/manajemen-pengguna', [ManajemenUserController::class, 'index'])->name('manajemen_pengguna');
         Route::get('/manajemen-pengguna/verifikasi/{id}', [ManajemenUserController::class, 'reviewNib'])->name('manajemen_pengguna.review_nib');
         Route::post('/manajemen-pengguna/verifikasi/{id}', [ManajemenUserController::class, 'processNib'])->name('manajemen_pengguna.process_nib');

@@ -38,7 +38,7 @@ class KomunitasController extends Controller
             'nama_komunitas'   => 'required|string|max:255',
             'penanggung_jawab' => ['required', 'string', 'max:255', 'regex:/^[\pL\s]+$/u'],
             'jumlah_anggota'   => 'required|integer|min:1',
-            'no_hp'            => ['required', 'numeric', 'digits_between:10,14', 'unique:users,no_hp'],
+            'no_hp'            => ['required', 'string', 'regex:/^(\+62|0)[0-9]{9,13}$/', 'unique:users,no_hp'],
             'email'            => 'required|email|unique:users,email',
             'password'         => ['required', Password::min(8)],
         ]);
