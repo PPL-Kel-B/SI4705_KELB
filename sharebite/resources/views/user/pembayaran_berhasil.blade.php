@@ -61,29 +61,34 @@
                 </div>
             </div>
 
-            {{-- LOKASI PENGAMBILAN --}}
-            <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50 flex-1">
-                <div class="flex items-center gap-2.5 mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-[26px] w-[26px] text-[#189347]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-8-4.5-8-11.8A8 8 0 0112 1.2a8 8 0 018 8c0 7.3-8 11.8-8 11.8z" />
-                        <circle cx="12" cy="9.2" r="2.5" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    <h3 class="text-[14px] font-bold text-gray-500 tracking-[0.2em] uppercase">LOKASI PENJEMPUTAN</h3>
-                </div>
-                
-                <div class="flex flex-col md:flex-row gap-6">
-                    <div onclick="window.open('https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}', '_blank')" class="w-full md:w-1/2 h-[200px] bg-gray-100 rounded-[24px] overflow-hidden cursor-pointer shadow-sm z-0">
-                        <div id="map-berhasil" class="w-full h-full"></div>
+            {{-- LOKASI PENGAMBILAN (DESAIN BARU) --}}
+            <div class="bg-white p-6 lg:p-8 rounded-[32px] shadow-sm border border-gray-50 flex-1 flex flex-col">
+                {{-- Header Lokasi & Petunjuk Arah --}}
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-[22px] w-[22px] text-[#189347]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-8-4.5-8-11.8A8 8 0 0112 1.2a8 8 0 018 8c0 7.3-8 11.8-8 11.8z" />
+                            <circle cx="12" cy="9.2" r="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <h3 class="text-[17px] font-extrabold text-gray-900">Lokasi Pengambilan</h3>
                     </div>
                     
-                    <div class="w-full md:w-1/2 flex flex-col justify-center">
-                        <h4 class="text-2xl font-extrabold text-gray-800 mb-2">{{ $makanan->unitBisnis->user->name ?? 'Gerai ShareBite' }}</h4>
-                        <p class="text-gray-500 font-medium text-[16px] mb-4">{{ $makanan->unitBisnis->user->alamat ?? 'Alamat gerai belum diatur' }}</p>
-                        <a href="https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}" target="_blank" class="text-[#189347] font-bold hover:underline flex items-center gap-1.5">
-                            Buka di Google Maps
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                        </a>
-                    </div>
+                    <a href="https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}" target="_blank" class="text-[#189347] text-[13px] font-bold flex items-center gap-1.5 hover:underline">
+                        Petunjuk Arah
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                    </a>
+                </div>
+                
+                {{-- Nama Resto & Alamat Singkat --}}
+                <p class="text-gray-500 font-medium text-[14px] mb-6 pl-8">
+                    {{ $makanan->unitBisnis->user->name ?? 'Gerai ShareBite' }}, {{ $makanan->unitBisnis->user->alamat ?? 'Alamat gerai belum diatur' }}
+                </p>
+                
+                {{-- MAP WRAPPER FULL WIDTH --}}
+                <div class="relative w-full h-[250px] bg-gray-100 rounded-[20px] overflow-hidden border border-gray-100 shadow-inner z-0">
+                    <div id="map-berhasil" class="absolute inset-0 z-0"></div>
                 </div>
             </div>
         </div>
@@ -91,7 +96,12 @@
         {{-- KOLOM KANAN --}}
         <div class="xl:col-span-4 flex flex-col gap-6">
             <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50">
-                <h3 class="text-[17px] font-extrabold text-gray-800 mb-6">Ringkasan Pesanan</h3>
+                
+                {{-- INI TAMBAHAN JUDUL & BADGE PAID-NYA --}}
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-[17px] font-extrabold text-gray-800 tracking-tight">Ringkasan Pesanan</h3>
+                    <span class="bg-[#eefcf4] border border-[#b3dfc3] text-[#189347] text-[11px] font-extrabold px-4 py-1.5 rounded-full tracking-widest uppercase shadow-sm">PAID</span>
+                </div>
                 <div class="flex gap-4 items-center mb-6">
                     <img src="{{ asset('storage/' . ($makanan->masterMakanan->foto ?? '')) }}" onerror="this.src='https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80'" class="w-16 h-16 object-cover rounded-xl shadow-sm">
                     <div>
@@ -99,20 +109,46 @@
                         <p class="text-gray-400 text-[13px] font-bold">{{ $qty }} Porsi</p>
                     </div>
                 </div>
-                <div class="pt-5 border-t border-gray-100 flex justify-between items-center">
-                    <span class="text-[14px] text-gray-500 font-medium">Total Bayar</span>
+                <div class="pt-5 border-t border-gray-140 flex justify-between items-center">
+                    <span class="text-[14px] text-gray-500 font-bold">Total Pembayaran</span>
                     <span class="text-[22px] font-extrabold text-[#189347]">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
                 </div>
             </div>
 
-            <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50 flex-1">
-                <h3 class="text-[18px] font-extrabold text-gray-800 mb-8">Langkah Pengambilan</h3>
-                <div class="relative pl-2 space-y-8">
-                    <div class="absolute left-6 top-2 bottom-4 w-[2px] bg-green-100 z-0"></div>
-                    <div class="flex items-center gap-5 relative z-10"><div class="w-8 h-8 bg-[#189347] text-white rounded-full flex items-center justify-center font-bold text-[13px]">1</div><p class="text-gray-800 font-extrabold text-[15px]">Tunjukkan Kode</p></div>
-                    <div class="flex items-center gap-5 relative z-10"><div class="w-8 h-8 bg-[#189347] text-white rounded-full flex items-center justify-center font-bold text-[13px]">2</div><p class="text-gray-800 font-extrabold text-[15px]">Ambil Makanan</p></div>
-                    <div class="flex items-center gap-5 relative z-10"><div class="w-8 h-8 bg-[#189347] text-white rounded-full flex items-center justify-center font-bold text-[13px]">3</div><p class="text-gray-800 font-extrabold text-[15px]">Konfirmasi Selesai</p></div>
+            <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50 h-fit flex flex-col z-10 relative">
+                
+                {{-- Judul dengan Aksen Garis Vertikal --}}
+                <div class="flex items-center gap-3 mb-5 z-10 relative">
+                    <div class="w-1.5 h-6 bg-[#0B6A38] rounded-full"></div>
+                    <h3 class="text-[18px] font-extrabold text-gray-900 tracking-tight">Langkah Pengambilan</h3>
                 </div>
+
+                {{-- List Langkah --}}
+                <div class="relative space-y-6 z-10 ml-5">
+                    {{-- Garis tebal penghubung di belakang (Dimulai dari top-5 agar sembunyi di balik angka 1) --}}
+                    <div class="absolute left-5 top-5 bottom-5 w-1 bg-[#F0F7F2] -ml-[2px] z-0 rounded-full"></div>
+
+                    {{-- Langkah 1 --}}
+                    <div class="flex items-start gap-5 relative z-10">
+                        <div class="w-10 h-10 bg-[#0B6A38] text-white rounded-full flex items-center justify-center font-bold text-[16px] shadow-[0_6px_16px_rgba(11,106,56,0.3)] shrink-0 ring-4 ring-white z-10">
+                            1
+                        </div>
+                        <p class="text-gray-900 font-bold text-[15px] mt-2 leading-relaxed">
+                            Datang ke gerai sebelum batas waktu pengambilan berakhir.
+                        </p>
+                    </div>
+
+                    {{-- Langkah 2 --}}
+                    <div class="flex items-start gap-5 relative z-10">
+                        <div class="w-10 h-10 bg-[#0B6A38] text-white rounded-full flex items-center justify-center font-bold text-[16px] shadow-[0_6px_16px_rgba(11,106,56,0.3)] shrink-0 ring-4 ring-white z-10">
+                            2
+                        </div>
+                        <p class="text-gray-900 font-bold text-[15px] mt-1 leading-relaxed">
+                            Klik <span class="font-extrabold text-[#189347]">Lihat Kode Verifikasi</span>, lalu tunjukkan kode tersebut kepada staf gerai.
+                        </p>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -144,14 +180,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const lat = {{ $makanan->unitBisnis->user->latitude ?? -6.193125 }};
     const lng = {{ $makanan->unitBisnis->user->longitude ?? 106.76483 }};
     
-    const map = L.map('map-berhasil', { zoomControl: true, dragging: true, scrollWheelZoom: false }).setView([lat, lng], 16);
+    // Zoom control di-false agar UI map terlihat lebih bersih seperti desain
+    const map = L.map('map-berhasil', { zoomControl: false, dragging: true, scrollWheelZoom: false }).setView([lat, lng], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     
+    // Desain Custom Marker Sendok & Garpu dengan efek pulse hijau
     const customIcon = L.divIcon({ 
         className: 'custom-leaflet-marker', 
-        html: `<div class="relative flex items-center justify-center w-16 h-16"><div class="absolute w-full h-full bg-[#189347]/20 rounded-full animate-ping"></div><div class="absolute w-10 h-10 bg-[#189347]/40 rounded-full"></div><div class="relative w-8 h-8 bg-[#189347] rounded-full shadow-md flex items-center justify-center border-2 border-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></div></div>`, 
-        iconSize: [64, 64], 
-        iconAnchor: [32, 32] 
+        html: `<div class="relative flex items-center justify-center w-24 h-24">
+                   <div class="absolute w-16 h-16 bg-[#189347]/30 rounded-full animate-pulse"></div>
+                   <div class="relative w-10 h-10 bg-[#189347] rounded-full shadow-lg flex items-center justify-center border-[3px] border-white">
+                       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                           <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+                           <path d="M7 2v20"></path>
+                           <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"></path>
+                       </svg>
+                   </div>
+               </div>`, 
+        iconSize: [96, 96], 
+        iconAnchor: [48, 48] 
     });
     
     L.marker([lat, lng], { icon: customIcon }).addTo(map);

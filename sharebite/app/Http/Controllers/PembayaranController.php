@@ -28,7 +28,8 @@ class PembayaranController extends Controller
         $subtotal = $makanan->harga_jual * $qty;
         $ref = 'SB-' . strtoupper(substr(md5($slug . time()), 0, 8));
 
-        return view('user.pembayaran', compact('makanan', 'qty', 'subtotal', 'ref'));
+        // Tambahkan 'slug' di dalam compact
+        return view('user.pembayaran', compact('makanan', 'qty', 'subtotal', 'ref', 'slug'));
     }
 
     /**
@@ -62,9 +63,20 @@ class PembayaranController extends Controller
 
         $subtotal = $makanan->harga_jual * $qty;
         
-        $kode_verifikasi = 'GP-' . rand(1000, 9999) . '-' . strtoupper(Str::random(3));
+        // --- LOGIKA BARU: KODE VERIFIKASI PERMANEN (SESSION) ---
+        $sessionKey = 'kode_verifikasi_' . $slug; // Membuat kunci unik berdasarkan nama makanan
+        
+        if (session()->has($sessionKey)) {
+            // Jika kodenya sudah pernah dibuat, ambil dari memori (session)
+            $kode_verifikasi = session()->get($sessionKey);
+        } else {
+            // Jika belum ada, buat kode baru lalu simpan ke memori (session)
+            $kode_verifikasi = 'GP-' . rand(1000, 9999) . '-' . strtoupper(Str::random(3));
+            session()->put($sessionKey, $kode_verifikasi);
+        }
+        // -------------------------------------------------------
 
-        return view('user.pembayaran_berhasil', compact('makanan', 'qty', 'subtotal', 'kode_verifikasi'));
+        return view('user.pembayaran_berhasil', compact('makanan', 'qty', 'subtotal', 'kode_verifikasi', 'slug'));
     }
 
     /**

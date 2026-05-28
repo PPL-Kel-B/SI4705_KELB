@@ -12,9 +12,9 @@
 </style>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-{{-- ── Data Metadata untuk JavaScript (Ditambah Ref dan Total) ── --}}
+{{-- ── Data Metadata untuk JavaScript ── --}}
 <div id="qr-meta"
-     data-slug="{{ $makanan->slug ?? 'nasi-goreng' }}"
+     data-slug="{{ $slug }}"
      data-nama="{{ $makanan->masterMakanan->nama_makanan ?? 'Pesanan' }}"
      data-harga="{{ $makanan->harga_jual ?? 0 }}"
      data-qty="{{ $qty ?? 1 }}"
@@ -34,7 +34,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
         </button>
-        <h1 class="text-[22px] font-extrabold text-gray-800">Pembayaran</h1>
+        <h1 class="text-[30px] font-extrabold text-gray-800">Pembayaran</h1>
     </div>
 
     {{-- GRID UTAMA --}}
@@ -43,21 +43,39 @@
         {{-- KOLOM KIRI --}}
         <div class="xl:col-span-8 flex flex-col gap-6 h-full">
 
-            {{-- Card 1: Item Makanan --}}
-            <div class="bg-white p-5 lg:p-6 rounded-[28px] shadow-sm">
-                <div class="flex gap-5 items-center">
-                    <img src="{{ asset('storage/' . ($makanan->masterMakanan->foto ?? '')) }}" onerror="this.src='https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80'" alt="Menu" class="w-[90px] h-[90px] object-cover rounded-[20px] flex-shrink-0">
+            {{-- Card 1: Item Makanan (DIPERBARUI) --}}
+            <div class="bg-white p-6 lg:p-7 rounded-[28px] shadow-sm">
+                <div class="flex gap-7 items-center">
+                    {{-- Foto Makanan --}}
+                    <img src="{{ asset('storage/' . ($makanan->masterMakanan->foto ?? '')) }}" 
+                         onerror="this.src='https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80'" 
+                         alt="Menu" 
+                         class="w-[110px] h-[110px] object-cover rounded-[22px] flex-shrink-0 shadow-sm">
                     
-                    <div class="flex-1 flex justify-between items-start py-1">
-                        <div class="flex flex-col">
-                            <span class="bg-[#E4F2E8] text-[#189347] text-[10px] font-extrabold px-3 py-1.5 rounded-[10px] tracking-widest uppercase w-fit mb-2">TERSEDIA</span>
-                            <h2 class="font-extrabold text-gray-800 text-[19px] leading-tight mb-2.5">{{ $makanan->masterMakanan->nama_makanan ?? 'Nama Makanan' }}</h2>
-                            <div class="inline-flex items-center bg-[#EAF4ED] rounded-xl px-4 py-1.5 border border-green-50 w-fit">
-                                <span class="font-extrabold text-[13px] text-gray-800">{{ $qty ?? 1 }} Porsi</span>
+                    {{-- Konten Teks (Sejajar Tengah secara Vertikal) --}}
+                    <div class="flex-1 flex justify-between items-center">
+                        <div class="flex flex-col justify-center">
+                            {{-- Label Tersedia --}}
+                            <div class="mb-2">
+                                <span class="bg-[#E4F2E8] text-[#189347] text-[10px] font-extrabold px-3 py-1 rounded-[8px] tracking-[0.1em] uppercase inline-block">
+                                    TERSEDIA
+                                </span>
                             </div>
+                            {{-- Nama Makanan --}}
+                            <h2 class="font-extrabold text-gray-900 text-[22px] leading-tight mb-1">
+                                {{ $makanan->masterMakanan->nama_makanan ?? 'Nama Makanan' }}
+                            </h2>
+                            {{-- Jumlah Porsi (Teks Polos tanpa Sandbox) --}}
+                            <p class="text-gray-500 font-semibold text-[14px]">
+                                {{ $qty ?? 1 }} Porsi
+                            </p>
                         </div>
-                        <div class="text-[#189347] font-extrabold text-xl mt-1">
-                            Rp {{ number_format($makanan->harga_jual ?? 0, 0, ',', '.') }}
+
+                        {{-- Bagian Harga --}}
+                        <div class="text-right">
+                            <span class="text-[#189347] font-extrabold text-[22px]">
+                                Rp {{ number_format($makanan->harga_jual ?? 0, 0, ',', '.') }}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -74,7 +92,7 @@
                     <span>Biaya Layanan</span>
                     <span class="font-extrabold text-[#189347]">Rp 0</span>
                 </div>
-                <hr class="border-gray-50 mb-5">
+                <hr class="border-gray-70 mb-5">
                 <div class="flex justify-between items-center">
                     <span class="font-extrabold text-gray-800 text-[17px]">Total Pembayaran</span>
                     <span class="font-extrabold text-[24px] text-[#189347] tracking-tight">Rp {{ number_format($subtotal ?? 0, 0, ',', '.') }}</span>
@@ -92,7 +110,6 @@
                 </div>
                 
                 <div class="flex flex-col md:flex-row gap-6 flex-1 items-stretch">
-                    
                     <div onclick="window.open('https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}', '_blank')" class="relative w-full md:w-[280px] min-h-[160px] h-full bg-gray-100 rounded-[24px] overflow-hidden border border-gray-100 flex-shrink-0 cursor-pointer group shadow-sm z-0">
                         <div id="map-pembayaran" class="absolute inset-0 z-0"></div>
                         <div class="absolute inset-0 z-10 bg-black/5 group-hover:bg-black/10 transition-colors flex items-center justify-center">
@@ -106,7 +123,6 @@
                     <div class="flex-1 text-left flex flex-col justify-center">
                         <h4 class="text-[20px] font-extrabold text-gray-800 mb-2">{{ $makanan->unitBisnis->user->name ?? 'Gerai ShareBite' }}</h4>
                         <p class="text-gray-500 font-medium text-[15px] mb-5 leading-relaxed">{{ $makanan->unitBisnis->user->alamat ?? 'Alamat gerai belum diatur' }}</p>
-                        
                         <a href="https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}" target="_blank" class="text-[#189347] text-[14px] font-bold flex items-center gap-1.5 hover:underline w-fit">
                             Buka di Google Maps
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
@@ -117,8 +133,8 @@
         </div>
 
         {{-- KOLOM KANAN (QRIS Box) --}}
-        <div class="xl:col-span-4 flex flex-col gap-6">
-            <div class="bg-white p-8 lg:p-9 rounded-[32px] shadow-sm flex flex-col h-full relative z-20">
+        <div class="xl:col-span-4">
+            <div class="bg-white p-8 lg:p-9 rounded-[32px] shadow-sm flex flex-col h-fit relative z-20">
                 <h3 class="font-extrabold text-gray-800 text-[22px] text-left mb-2">Pembayaran QRIS</h3>
                 <p class="text-[14px] text-gray-500 text-left mb-8 font-medium leading-relaxed pr-6">Scan QR code berikut dengan aplikasi pembayaran Anda.</p>
                 
@@ -130,7 +146,7 @@
                 
                 <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" alt="QRIS Logo" class="h-6 mx-auto mb-8">
 
-                <div class="w-full mt-auto">
+                <div class="w-full">
                     <div class="flex items-center justify-between border border-[#F9E2E2] bg-[#FCF4F4] rounded-[18px] p-4 mb-5">
                         <div class="flex items-center text-[#B3261E] text-[13px] font-extrabold gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -154,10 +170,10 @@
             </div>
 
             <div class="hidden">
-                <form action="{{ route('user.pembayaran.proses', $makanan->slug ?? 'nasi-goreng') }}" method="POST">
+                <form action="{{ route('user.pembayaran.proses', $slug) }}" method="POST">
                     @csrf <input type="hidden" name="status" value="Berhasil"> <input type="hidden" name="qty" value="{{ $qty ?? 1 }}">
                 </form>
-                <form id="form-batal-otomatis" action="{{ route('user.pembayaran.proses', $makanan->slug ?? 'nasi-goreng') }}" method="POST">
+                <form id="form-batal-otomatis" action="{{ route('user.pembayaran.proses', $slug) }}" method="POST">
                     @csrf <input type="hidden" name="status" value="Gagal"> <input type="hidden" name="qty" value="{{ $qty ?? 1 }}">
                 </form>
             </div>
@@ -173,68 +189,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const meta = document.getElementById('qr-meta').dataset;
     const slugMenu = meta.slug;
 
-    // ==========================================
-    // 1. RENDER QR CODE 
-    // ==========================================
     try {
         const canvas = document.getElementById('qr-canvas');
         if(canvas) {
-            let rawUrl = "{{ route('pembayaran.scan.public', ['slug' => $makanan->slug ?? 'nasi-goreng']) }}";
-            const ipWifiKamu = "192.168.100.101:8000"; 
-            let sandboxUrl = rawUrl.replace('127.0.0.1:8000', ipWifiKamu).replace('localhost:8000', ipWifiKamu);
+            // Laravel otomatis memasukkan URL utuh berdasarkan yang sedang diakses saat ini
+            // Mengambil rute dari Laravel (parameter 'false' agar hanya mengambil path belakangnya saja)
+            let pathUrl = "{{ route('pembayaran.scan.public', ['slug' => $slug], false) }}";
             
-            // Generate QR lebih besar untuk download yang lebih tajam
-            QRCode.toCanvas(canvas, sandboxUrl, { width: 300, margin: 1, color: { dark: '#000000', light: '#ffffff' } });
+            // Gabungkan domain yang sedang aktif di browser (Ngrok/IP/Localhost) dengan path rute
+            let finalUrl = window.location.origin + pathUrl;
             
-            // Setel tampilan canvas pakai CSS agar terlihat proporsional di layar (meski aslinya 300px)
+            QRCode.toCanvas(canvas, finalUrl, { width: 300, margin: 1, color: { dark: '#000000', light: '#ffffff' } });
             canvas.style.width = '100%';
             canvas.style.height = 'auto';
         }
-    } catch (e) { console.error("QR Error", e); }
+    } catch (e) {}
 
-    // ==========================================
-    // 2. RENDER MAP LEAFLET
-    // ==========================================
     try {
         const lat = parseFloat(meta.lat);
         const lng = parseFloat(meta.lng);
         const mapContainer = document.getElementById('map-pembayaran');
-        
         if (mapContainer && !isNaN(lat) && !isNaN(lng)) {
-            const map = L.map('map-pembayaran', { zoomControl: true, dragging: true, scrollWheelZoom: false }).setView([lat, lng], 15);
-            map.zoomControl.setPosition('topleft');
+            const map = L.map('map-pembayaran', { zoomControl: false, dragging: true, scrollWheelZoom: false }).setView([lat, lng], 15);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
             const customIcon = L.divIcon({
                 className: 'custom-leaflet-marker',
                 html: `<div class="relative flex items-center justify-center w-16 h-16"><div class="absolute w-full h-full bg-[#189347]/20 rounded-full animate-ping"></div><div class="absolute w-10 h-10 bg-[#189347]/40 rounded-full"></div><div class="relative w-8 h-8 bg-[#189347] rounded-full shadow-md flex items-center justify-center border-2 border-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></div></div>`,
-                iconSize: [64, 64],
-                iconAnchor: [32, 32]
+                iconSize: [64, 64], iconAnchor: [32, 32]
             });
             L.marker([lat, lng], {icon: customIcon}).addTo(map);
         }
     } catch (e) {}
 
-    // ==========================================
-    // 3. RENDER TIMER
-    // ==========================================
     try {
         const timerEl = document.getElementById('payment-timer');
         if (timerEl) {
             const cleanName = slugMenu.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
             const storageKey = 'timer_bayar_' + cleanName;
             let expireTime = localStorage.getItem(storageKey);
-
             if (expireTime) expireTime = parseInt(expireTime, 10);
             if (!expireTime || isNaN(expireTime) || expireTime < Date.now()) {
                 expireTime = Date.now() + (15 * 60 * 1000); 
                 localStorage.setItem(storageKey, expireTime.toString());
             }
-
             const interval = setInterval(() => {
                 const now = Date.now();
                 const timeLeft = Math.floor((expireTime - now) / 1000); 
-
                 if (timeLeft <= 0) {
                     clearInterval(interval);
                     timerEl.textContent = '00:00';
@@ -250,9 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } catch (e) {}
 
-    // AJAX Polling
     setInterval(() => {
-        fetch("{{ route('user.pembayaran.check', ['slug' => $makanan->slug ?? 'nasi-goreng']) }}")
+        fetch("{{ route('user.pembayaran.check', ['slug' => $slug]) }}")
         .then(response => response.json())
         .then(data => {
             if (data.status === 'sukses') {
@@ -264,58 +263,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 2000);
 });
 
-// ==========================================
-// FUNGSI BARU: DOWNLOAD QR CODE CUSTOM
-// ==========================================
 function downloadQR() {
     const qrCanvas = document.getElementById('qr-canvas');
     if(!qrCanvas) return;
-
-    // Ambil data-data dari metadata HTML yang sudah kita siapkan
     const meta = document.getElementById('qr-meta').dataset;
     const refCode = meta.ref || 'SB-00000000';
     const totalAmount = meta.total || 'Rp 0';
-
-    // Membuat kanvas baru di belakang layar
     const newCanvas = document.createElement('canvas');
     const ctx = newCanvas.getContext('2d');
-
-    // Menentukan ukuran gambar akhir (Lebar disamakan dengan QR aslinya + area teks di bawah)
     const qrSize = qrCanvas.width;
-    const extraHeight = 110; // Area putih tambahan di bawah untuk teks
+    const extraHeight = 110; 
     newCanvas.width = qrSize;
     newCanvas.height = qrSize + extraHeight;
-
-    // 1. Gambar Background Putih Bersih
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, newCanvas.width, newCanvas.height);
-
-    // 2. Gambar QR Code asli di atas
     ctx.drawImage(qrCanvas, 0, 0);
-
-    // Hitung posisi titik tengah kanvas
     const centerX = newCanvas.width / 2;
     let startY = qrSize + 15;
-
-    // 3. Tulis Baris 1: "QRIS · ShareBite"
-    ctx.font = 'bold 18px "Segoe UI", Arial, sans-serif'; // Font standar aman
-    ctx.fillStyle = '#111827'; // Warna Hitam (Gray 900)
+    ctx.font = 'bold 18px "Segoe UI", Arial, sans-serif'; 
+    ctx.fillStyle = '#111827'; 
     ctx.textAlign = 'center';
     ctx.fillText('QRIS · ShareBite', centerX, startY);
-
-    // 4. Tulis Baris 2: "Ref: SB-XXXXXX"
     startY += 24;
     ctx.font = '15px "Segoe UI", Arial, sans-serif';
-    ctx.fillStyle = '#9CA3AF'; // Warna Abu-abu (Gray 400)
+    ctx.fillStyle = '#9CA3AF'; 
     ctx.fillText('Ref: ' + refCode, centerX, startY);
-
-    // 5. Tulis Baris 3: "Total: Rp 30.000"
     startY += 30;
     ctx.font = 'bold 20px "Segoe UI", Arial, sans-serif';
-    ctx.fillStyle = '#189347'; // Warna Hijau Khas ShareBite
+    ctx.fillStyle = '#189347'; 
     ctx.fillText('Total: ' + totalAmount, centerX, startY);
-
-    // Proses Download
     const a = document.createElement('a');
     a.download = 'qris-sharebite-' + refCode + '.png';
     a.href = newCanvas.toDataURL('image/png');
