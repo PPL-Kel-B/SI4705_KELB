@@ -32,7 +32,7 @@
                     <label for="Kategori" class="block text-sm font-extrabold text-gray-900 mb-2">Kategori Makanan</label>
                     <select id="Kategori" name="Kategori"
                             class="form-input w-full bg-[#f4f8f6] border-none rounded-xl px-4 py-3.5 text-sm text-gray-800 focus:ring-2 focus:ring-[#1cb764] appearance-none cursor-pointer">
-                        @foreach(['Makanan Berat', 'Snack / Cemilan', 'Minuman', 'Dessert', 'Makanan Sehat', 'Makanan Rumahan', 'Makanan Cepat Saji', 'Makanan Tradisional', 'Makanan Internasional'] as $kategori)
+                        @foreach(['Makanan Berat', 'Cemilan / Makanan Ringan', 'Minuman', 'Dessert'] as $kategori)
                             <option value="{{ $kategori }}" {{ old('Kategori', $master_datum->kategori) == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
                         @endforeach
                     </select>

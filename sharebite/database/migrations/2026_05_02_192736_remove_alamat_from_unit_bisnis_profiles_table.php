@@ -32,6 +32,11 @@ return new class extends Migration
         });
     }
 
+        Schema::table('unit_bisnis_profiles', function (Blueprint $table) {
+            $table->dropColumn('alamat');
+        });
+    }
+
     public function down(): void
     {
         Schema::table('unit_bisnis_profiles', function (Blueprint $table) {
