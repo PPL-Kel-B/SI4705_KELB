@@ -15,34 +15,33 @@ class ManajemenUserController extends Controller
 
         // Statistik (Card Atas) - query ke tabel yang benar sesuai migrasi
         $stats = [
-            'total_bisnis'       => DB::table('unit_bisnis_profiles')->count(),
+            'total_bisnis'       => DB::table('users')->where('role', 'unit_bisnis')->count(),
             'pending_verifikasi' => DB::table('unit_bisnis_profiles')
                                       ->where('status_verifikasi', 'pending')
                                       ->count(),
-            // Alias untuk view yang menggunakan 'pending_verifikasi' label lama
-
-            'aktif_komunitas'    => DB::table('komunitas_profiles')->count()
-                                    + DB::table('individu_profiles')->count(),
+            'aktif_komunitas'    => DB::table('users')->whereIn('role', ['komunitas', 'individu'])->count(),
         ];
 
         // Logika Filter Tabel berdasarkan Tab
         if ($tab == 'komunitas') {
-            // Data komunitas dari komunitas_profiles join users
-            $komunitas = DB::table('komunitas_profiles')
-                ->join('users', 'komunitas_profiles.user_id', '=', 'users.id')
+            // Data komunitas dari users leftJoin komunitas_profiles
+            $komunitas = DB::table('users')
+                ->leftJoin('komunitas_profiles', 'users.id', '=', 'komunitas_profiles.user_id')
+                ->where('users.role', 'komunitas')
                 ->select(
                     'users.id',
-                    'komunitas_profiles.nama_komunitas as name',
+                    DB::raw('COALESCE(komunitas_profiles.nama_komunitas, users.name) as name'),
                     DB::raw("'Komunitas' as type"),
                     'users.email as Email',
                     'users.alamat',
                     'users.foto_profil',
-                    'komunitas_profiles.created_at'
+                    DB::raw('COALESCE(komunitas_profiles.created_at, users.created_at) as created_at')
                 )->get();
 
-            // Data individu dari individu_profiles join users
-            $individu = DB::table('individu_profiles')
-                ->join('users', 'individu_profiles.user_id', '=', 'users.id')
+            // Data individu dari users leftJoin individu_profiles
+            $individu = DB::table('users')
+                ->leftJoin('individu_profiles', 'users.id', '=', 'individu_profiles.user_id')
+                ->where('users.role', 'individu')
                 ->select(
                     'users.id',
                     'users.name as name',
@@ -50,13 +49,13 @@ class ManajemenUserController extends Controller
                     'users.email as Email',
                     'users.alamat',
                     'users.foto_profil',
-                    'individu_profiles.created_at'
+                    DB::raw('COALESCE(individu_profiles.created_at, users.created_at) as created_at')
                 )->get();
 
             $users = $komunitas->merge($individu);
         } elseif ($tab == 'verifikasi_nib') {
-            $users = DB::table('unit_bisnis_profiles')
-                ->join('users', 'unit_bisnis_profiles.user_id', '=', 'users.id')
+            $users = DB::table('users')
+                ->join('unit_bisnis_profiles', 'users.id', '=', 'unit_bisnis_profiles.user_id')
                 ->where('unit_bisnis_profiles.status_verifikasi', 'pending')
                 ->select(
                     'users.id',
@@ -69,18 +68,19 @@ class ManajemenUserController extends Controller
                     'unit_bisnis_profiles.created_at'
                 )->get();
         } else {
-            // Default: Unit Bisnis
-            $users = DB::table('unit_bisnis_profiles')
-                ->join('users', 'unit_bisnis_profiles.user_id', '=', 'users.id')
+            // Default: Unit Bisnis dari users leftJoin unit_bisnis_profiles
+            $users = DB::table('users')
+                ->leftJoin('unit_bisnis_profiles', 'users.id', '=', 'unit_bisnis_profiles.user_id')
+                ->where('users.role', 'unit_bisnis')
                 ->select(
                     'users.id',
-                    'unit_bisnis_profiles.nama_usaha as name',
-                    'unit_bisnis_profiles.jenis_usaha as type',
+                    DB::raw('COALESCE(unit_bisnis_profiles.nama_usaha, users.name) as name'),
+                    DB::raw('COALESCE(unit_bisnis_profiles.jenis_usaha, \'Restoran\') as type'),
                     'users.email as Email',
                     'users.alamat',
                     'users.foto_profil',
-                    'unit_bisnis_profiles.status_verifikasi',
-                    'unit_bisnis_profiles.created_at'
+                    DB::raw('COALESCE(unit_bisnis_profiles.status_verifikasi, \'terverifikasi\') as status_verifikasi'),
+                    DB::raw('COALESCE(unit_bisnis_profiles.created_at, users.created_at) as created_at')
                 )->get();
         }
 
