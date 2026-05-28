@@ -7,6 +7,9 @@ use App\Models\User;
 use App\Models\Pesanan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+use App\Models\MenuAktif;
+use Carbon\Carbon;
 
 class RegistUnitBisnisController extends Controller
 {
@@ -143,6 +146,7 @@ class RegistUnitBisnisController extends Controller
 
             return redirect()->route('login')
                              ->with('success', 'Pendaftaran Unit Bisnis berhasil! Akun Anda sedang dalam proses verifikasi.');
+            
         }
     }
 }
