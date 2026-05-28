@@ -67,7 +67,6 @@ class MenuAktif extends Model
     {
         return $this->status === 'aktif'
             && !$this->isStokHabis()
-<<<<<<< HEAD
             && !$this->isKadaluarsa()
             && $this->isTokoOpen();
     }
@@ -75,9 +74,6 @@ class MenuAktif extends Model
     public function isTokoOpen(): bool
     {
         return $this->unitBisnis ? $this->unitBisnis->isOpen() : true;
-=======
-            && !$this->isKadaluarsa();
->>>>>>> origin/Develop-v3
     }
 
     // Harga efektif yang dibayar user (0 jika gratis)

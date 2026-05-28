@@ -12,11 +12,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Pindahkan data alamat ke tabel users jika di users masih kosong
-        DB::statement("UPDATE users 
-                       JOIN unit_bisnis_profiles ON users.id = unit_bisnis_profiles.user_id 
-                       SET users.alamat = unit_bisnis_profiles.alamat 
-                       WHERE users.alamat IS NULL OR users.alamat = ''");
+        $profiles = DB::table('unit_bisnis_profiles')
+            ->whereNotNull('alamat')
+            ->where('alamat', '!=', '')
+            ->get();
+
+        foreach ($profiles as $profile) {
+            DB::table('users')
+                ->where('id', $profile->user_id)
+                ->where(function ($query) {
+                    $query->whereNull('alamat')->orWhere('alamat', '');
+                })
+                ->update(['alamat' => $profile->alamat]);
+        }
 
         Schema::table('unit_bisnis_profiles', function (Blueprint $table) {
             $table->dropColumn('alamat');

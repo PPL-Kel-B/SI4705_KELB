@@ -26,7 +26,6 @@
     22 => 'Illuminate\\View\\ViewServiceProvider',
     23 => 'Jenssegers\\Agent\\AgentServiceProvider',
     24 => 'Laravel\\Breeze\\BreezeServiceProvider',
-<<<<<<< HEAD
     25 => 'Laravel\\Dusk\\DuskServiceProvider',
     26 => 'Laravel\\Pail\\PailServiceProvider',
     27 => 'Laravel\\Tinker\\TinkerServiceProvider',
@@ -36,16 +35,6 @@
     31 => 'Termwind\\Laravel\\TermwindServiceProvider',
     32 => 'Pest\\Laravel\\PestServiceProvider',
     33 => 'App\\Providers\\AppServiceProvider',
-=======
-    25 => 'Laravel\\Pail\\PailServiceProvider',
-    26 => 'Laravel\\Tinker\\TinkerServiceProvider',
-    27 => 'Laravolt\\Avatar\\ServiceProvider',
-    28 => 'Carbon\\Laravel\\ServiceProvider',
-    29 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
-    30 => 'Termwind\\Laravel\\TermwindServiceProvider',
-    31 => 'Pest\\Laravel\\PestServiceProvider',
-    32 => 'App\\Providers\\AppServiceProvider',
->>>>>>> origin/Develop-v3
   ),
   'eager' => 
   array (
@@ -60,7 +49,6 @@
     8 => 'Illuminate\\Session\\SessionServiceProvider',
     9 => 'Illuminate\\View\\ViewServiceProvider',
     10 => 'Jenssegers\\Agent\\AgentServiceProvider',
-<<<<<<< HEAD
     11 => 'Laravel\\Dusk\\DuskServiceProvider',
     12 => 'Laravel\\Pail\\PailServiceProvider',
     13 => 'Laravolt\\Avatar\\ServiceProvider',
@@ -69,15 +57,6 @@
     16 => 'Termwind\\Laravel\\TermwindServiceProvider',
     17 => 'Pest\\Laravel\\PestServiceProvider',
     18 => 'App\\Providers\\AppServiceProvider',
-=======
-    11 => 'Laravel\\Pail\\PailServiceProvider',
-    12 => 'Laravolt\\Avatar\\ServiceProvider',
-    13 => 'Carbon\\Laravel\\ServiceProvider',
-    14 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
-    15 => 'Termwind\\Laravel\\TermwindServiceProvider',
-    16 => 'Pest\\Laravel\\PestServiceProvider',
-    17 => 'App\\Providers\\AppServiceProvider',
->>>>>>> origin/Develop-v3
   ),
   'deferred' => 
   array (
