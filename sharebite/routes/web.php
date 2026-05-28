@@ -10,6 +10,8 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\RegistIndividuController;
+use App\Http\Controllers\PembayaranController;
+
 use App\Http\Controllers\DashboardUnitBisnisController;
 /*
 |--------------------------------------------------------------------------
@@ -57,6 +59,11 @@ Route::prefix('register')->group(function () {
 Route::resource('registerkomunitas', KomunitasController::class)->names([
     'index' => 'registerkomunitas',
 ]);
+
+// =========================================================================
+// ROUTE PUBLIK UNTUK SCAN HP (TIDAK PERLU LOGIN AGAR HP BISA AKSES)
+// =========================================================================
+Route::get('/public/scan-qris/{slug}', [PembayaranController::class, 'simulasiScan'])->name('pembayaran.scan.public');
 
 // ==========================================
 // Authenticated Routes
@@ -134,6 +141,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');
         Route::get('/pengaturan/kebijakan/{type}', [\App\Http\Controllers\SettingsController::class, 'policy'])->name('pengaturan.policy');
         Route::delete('/pengaturan/session/{id}', [\App\Http\Controllers\SettingsController::class, 'logoutSession'])->name('pengaturan.logout_session');
+
+        // Route Pembayaran Utama
+        Route::get('/dashboard/{slug}/pembayaran', [PembayaranController::class, 'show'])->name('makanan.pembayaran');
+        
+        // Laptop diam-diam mengecek status scan ke sini
+        Route::get('/dashboard/{slug}/pembayaran/check', [PembayaranController::class, 'cekStatusScan'])->name('pembayaran.check');
+        
+        // Proses Pembayaran & Halaman Berhasil
+        Route::post('/dashboard/{slug}/pembayaran/proses', [PembayaranController::class, 'store'])->name('pembayaran.proses');
+        Route::get('/dashboard/{slug}/pembayaran/berhasil', [PembayaranController::class, 'berhasil'])->name('pembayaran.berhasil');
     });
 
     // Unit Bisnis Dashboard Routes
