@@ -11,6 +11,8 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
+        [x-cloak] { display: none !important; }
+
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: #F4F8F6;
@@ -183,16 +185,95 @@
 
             <!-- Right Side (Notifications & Profile) -->
             <div class="flex items-center gap-6">
-                <!-- Notification Bell -->
-                <button class="relative text-gray-500 hover:text-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                    <span
-                        class="absolute top-0 right-0 w-2.5 h-2.5 bg-[#f7b055] rounded-full border-2 border-[#F4F8F6]"></span>
-                </button>
+                <!-- Dropdown Notifikasi -->
+                <div class="relative animate-fade-in" x-data="{ open: false }">
+                    <button @click="open = !open" @click.outside="open = false"
+                        class="relative text-gray-500 hover:text-gray-700 transition focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        @if(auth()->check() && auth()->user()->unreadNotifications->count() > 0)
+                            <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-[#f7b055] rounded-full border-2 border-[#F4F8F6]"></span>
+                        @endif
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div x-show="open" 
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 text-left"
+                         x-cloak>
+                        
+                        <div class="p-4 border-b border-gray-50 flex items-center justify-between">
+                            <h3 class="font-extrabold text-gray-800 text-sm">Notifikasi</h3>
+                            @if(auth()->check() && auth()->user()->unreadNotifications->count() > 0)
+                                <form action="{{ route('notifications.read_all') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="text-xs font-bold text-[#1cb764] hover:text-[#148f4c] transition">
+                                        Tandai Semua Dibaca
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+
+                        <div class="max-h-64 overflow-y-auto">
+                            @if(auth()->check())
+                                @forelse(auth()->user()->notifications()->take(5)->get() as $notification)
+                                    <div class="p-4 border-b border-gray-50 hover:bg-gray-50 transition flex gap-3 relative {{ is_null($notification->read_at) ? 'bg-[#eefcf4]/30' : '' }}">
+                                        <!-- Icon berdasarkan tipe -->
+                                        <div class="shrink-0">
+                                            @if(($notification->data['type'] ?? '') === 'order')
+                                                <div class="w-8 h-8 rounded-full bg-green-50 text-green-500 flex items-center justify-center">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                                </div>
+                                            @elseif(($notification->data['type'] ?? '') === 'chat')
+                                                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                                </div>
+                                            @else
+                                                <div class="w-8 h-8 rounded-full bg-[#fcf8ee] text-[#f7b055] flex items-center justify-center">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <!-- Content -->
+                                        <div class="flex-1 min-w-0">
+                                            <a href="{{ $notification->data['action_url'] ?? '#' }}" class="block">
+                                                <p class="text-xs font-bold text-gray-800 truncate">{{ $notification->data['title'] ?? 'Notifikasi Baru' }}</p>
+                                                <p class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">{{ $notification->data['message'] ?? '' }}</p>
+                                            </a>
+                                            <p class="text-[9px] text-gray-400 mt-1 font-medium">{{ $notification->created_at->diffForHumans() }}</p>
+                                        </div>
+
+                                        <!-- Read indicator / action -->
+                                        @if(is_null($notification->read_at))
+                                            <form action="{{ route('notifications.read', $notification->id) }}" method="POST" class="shrink-0 self-center">
+                                                @csrf
+                                                <button type="submit" class="w-2.5 h-2.5 bg-[#1cb764] rounded-full hover:bg-gray-400 transition" title="Tandai sudah dibaca"></button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                @empty
+                                    <div class="p-8 text-center text-gray-400">
+                                        <svg class="w-8 h-8 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                        <p class="text-xs font-bold">Tidak ada notifikasi baru</p>
+                                    </div>
+                                @endforelse
+                            @else
+                                <div class="p-8 text-center text-gray-400">
+                                    <p class="text-xs font-bold">Silakan login terlebih dahulu</p>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Profile Info -->
                 <div class="hidden sm:flex items-center gap-3">
