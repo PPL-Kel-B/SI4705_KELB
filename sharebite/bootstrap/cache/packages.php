@@ -17,6 +17,7 @@
       0 => 'Laravel\\Breeze\\BreezeServiceProvider',
     ),
   ),
+<<<<<<< HEAD
   'laravel/dusk' => 
   array (
     'providers' => 
@@ -24,6 +25,8 @@
       0 => 'Laravel\\Dusk\\DuskServiceProvider',
     ),
   ),
+=======
+>>>>>>> origin/Develop-v3
   'laravel/pail' => 
   array (
     'providers' => 

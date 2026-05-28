@@ -4,7 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
+<<<<<<< HEAD
     "content-hash": "3cf7b4f6a2596eefd63767b3bfa79100",
+=======
+    "content-hash": "d1ef0bec48cb72211e3bfd2f63c563e3",
+>>>>>>> origin/Develop-v3
     "packages": [
         {
             "name": "brick/math",
@@ -6829,6 +6833,7 @@
             "time": "2026-03-10T19:59:01+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "laravel/dusk",
             "version": "v8.6.0",
             "source": {
@@ -6903,6 +6908,8 @@
             "time": "2026-04-15T14:50:40+00:00"
         },
         {
+=======
+>>>>>>> origin/Develop-v3
             "name": "laravel/pail",
             "version": "v1.2.6",
             "source": {
@@ -7885,6 +7892,7 @@
             "time": "2022-02-21T01:04:05+00:00"
         },
         {
+<<<<<<< HEAD
             "name": "php-webdriver/webdriver",
             "version": "1.16.0",
             "source": {
@@ -7951,6 +7959,8 @@
             "time": "2025-12-28T23:57:40+00:00"
         },
         {
+=======
+>>>>>>> origin/Develop-v3
             "name": "phpdocumentor/reflection-common",
             "version": "2.2.0",
             "source": {
@@ -9738,5 +9748,9 @@
         "php": "^8.3.6"
     },
     "platform-dev": {},
+<<<<<<< HEAD
     "plugin-api-version": "2.9.0"
+=======
+    "plugin-api-version": "2.6.0"
+>>>>>>> origin/Develop-v3
 }

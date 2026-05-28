@@ -10,7 +10,10 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\RegistIndividuController;
+<<<<<<< HEAD
 use App\Http\Controllers\UnitBisnisController;
+=======
+>>>>>>> origin/Develop-v3
 
 /*
 |--------------------------------------------------------------------------
@@ -117,6 +120,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/riwayat', function () {
             return view('unit_bisnis.riwayat');
         })->name('riwayat');
+<<<<<<< HEAD
         
         // Profil Unit Bisnis
         Route::get('/profil', [UnitBisnisController::class, 'showProfile'])->name('profil');
@@ -134,6 +138,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengaturan', [UnitBisnisController::class, 'showSettings'])->name('pengaturan');
         Route::post('/pengaturan/update', [UnitBisnisController::class, 'updateSettings'])->name('pengaturan.update');
         Route::post('/pengaturan/update-password', [UnitBisnisController::class, 'updatePassword'])->name('pengaturan.update-password');
+=======
+        Route::get('/profil', function () {
+            return view('unit_bisnis.profil');
+        })->name('profil');
+        Route::get('/pengaturan', function () {
+            return view('unit_bisnis.pengaturan');
+        })->name('pengaturan');
+>>>>>>> origin/Develop-v3
     });
 
     // Admin Dashboard Routes

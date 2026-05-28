@@ -195,6 +195,7 @@
                 </button>
 
                 <!-- Profile Info -->
+<<<<<<< HEAD
                 <a href="{{ route('unit.profil') }}"
                     class="hidden sm:flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
 
@@ -203,10 +204,16 @@
                             Unit Bisnis
                         </p>
 
+=======
+                <div class="hidden sm:flex items-center gap-3">
+                    <div class="text-right">
+                        <p class="text-[11px] text-gray-500 font-medium uppercase tracking-wider">Unit Bisnis</p>
+>>>>>>> origin/Develop-v3
                         <p class="text-sm font-extrabold text-[#0a2e1f]">
                             {{ Auth::check() ? Auth::user()->name : 'Arcamanik Hotel' }}
                         </p>
                     </div>
+<<<<<<< HEAD
 
                     @php
                         $userProfilePhoto = Auth::check() && Auth::user()->unitBisnisProfile
@@ -247,6 +254,11 @@
 
                 </a>
 
+=======
+                    <img src="https://ui-avatars.com/api/?name={{ Auth::check() ? urlencode(Auth::user()->name) : 'Arcamanik' }}&background=0a2e1f&color=fff&bold=true"
+                        alt="Avatar" class="w-11 h-11 rounded-full object-cover shadow-sm ring-2 ring-white">
+                </div>
+>>>>>>> origin/Develop-v3
             </div>
         </header>
 

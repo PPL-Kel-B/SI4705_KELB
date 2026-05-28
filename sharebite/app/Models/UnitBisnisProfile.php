@@ -12,6 +12,7 @@ class UnitBisnisProfile extends Model
     protected $fillable = [
         'user_id',
         'nama_usaha',
+<<<<<<< HEAD
         'nama_bisnis',
         'jenis_usaha',
         'tipe_bisnis',
@@ -35,6 +36,14 @@ class UnitBisnisProfile extends Model
         'notifikasi_aktif',
         'notifikasi_pesanan',
         'notifikasi_penjemputan',
+=======
+        'jenis_usaha',
+        'nib_file',
+        'status_verifikasi',
+        'reviewer_notes',
+        'total_makanan_terjual',
+        'total_berat_terjual',
+>>>>>>> origin/Develop-v3
     ];
 
     protected function casts(): array
@@ -49,6 +58,7 @@ class UnitBisnisProfile extends Model
     // Relations
     // -------------------------------------------------------
 
+<<<<<<< HEAD
     /**
      * Cek apakah toko sedang buka berdasarkan jam_buka dan jam_tutup.
      * Mendukung jam lintas tengah malam (misal: 22:00 - 03:00).
@@ -72,6 +82,8 @@ class UnitBisnisProfile extends Model
         }
     }
 
+=======
+>>>>>>> origin/Develop-v3
     public function user()
     {
         return $this->belongsTo(User::class);
