@@ -12,12 +12,29 @@ class UnitBisnisProfile extends Model
     protected $fillable = [
         'user_id',
         'nama_usaha',
+        'nama_bisnis',
         'jenis_usaha',
+        'tipe_bisnis',
+        'email_bisnis',
+        'no_telepon',
         'nib_file',
+        'foto_bisnis',
+        'foto_profile',
+        'alamat',
+        'lokasi_lat',
+        'lokasi_lng',
+        'radius_penjemputan',
+        'jam_buka',
+        'jam_tutup',
         'status_verifikasi',
+        'verified',
+        'tahun_bergabung',
         'reviewer_notes',
         'total_makanan_terjual',
         'total_berat_terjual',
+        'notifikasi_aktif',
+        'notifikasi_pesanan',
+        'notifikasi_penjemputan',
     ];
 
     protected function casts(): array
@@ -31,6 +48,29 @@ class UnitBisnisProfile extends Model
     // -------------------------------------------------------
     // Relations
     // -------------------------------------------------------
+
+    /**
+     * Cek apakah toko sedang buka berdasarkan jam_buka dan jam_tutup.
+     * Mendukung jam lintas tengah malam (misal: 22:00 - 03:00).
+     */
+    public function isOpen(): bool
+    {
+        if (!$this->jam_buka || !$this->jam_tutup) {
+            return true; // Default buka jika belum diset
+        }
+
+        $now   = now()->setTimezone('Asia/Jakarta')->format('H:i');
+        $buka  = $this->jam_buka;
+        $tutup = $this->jam_tutup;
+
+        if ($buka <= $tutup) {
+            // Jam normal, misal: 08:00 – 21:00
+            return $now >= $buka && $now <= $tutup;
+        } else {
+            // Lintas tengah malam, misal: 22:00 – 03:00
+            return $now >= $buka || $now <= $tutup;
+        }
+    }
 
     public function user()
     {

@@ -276,16 +276,70 @@
                 </div>
 
                 <!-- Profile Info -->
+<<<<<<< HEAD
+                <a href="{{ route('unit.profil') }}"
+                    class="hidden sm:flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
+
+                    <div class="text-right">
+                        <p class="text-[11px] text-gray-500 font-medium uppercase tracking-wider">
+                            Unit Bisnis
+                        </p>
+
+=======
                 <div class="hidden sm:flex items-center gap-3">
                     <div class="text-right">
                         <p class="text-[11px] text-gray-500 font-medium uppercase tracking-wider">Unit Bisnis</p>
+>>>>>>> origin/Develop-v3
                         <p class="text-sm font-extrabold text-[#0a2e1f]">
                             {{ Auth::check() ? Auth::user()->name : 'Arcamanik Hotel' }}
                         </p>
                     </div>
+<<<<<<< HEAD
+
+                    @php
+                        $userProfilePhoto = Auth::check() && Auth::user()->unitBisnisProfile
+                            ? Auth::user()->unitBisnisProfile->foto_bisnis
+                            : null;
+
+                        $hasPhoto = $userProfilePhoto &&
+                            $userProfilePhoto !== 'images/placeholder-bisnis.jpg';
+                    @endphp
+
+                    @if($hasPhoto)
+
+                        {{-- Jika sudah ada foto --}}
+                        <img src="{{ asset($userProfilePhoto) }}"
+                            alt="Avatar"
+                            class="w-11 h-11 rounded-full object-cover shadow-sm ring-2 ring-white">
+
+                    @else
+
+                        {{-- Jika belum ada foto --}}
+                        <div
+                            class="w-11 h-11 rounded-full bg-[#eefcf4] border border-dashed border-[#1cb764] flex items-center justify-center shadow-sm">
+
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-5 w-5 text-[#1cb764]"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                stroke-width="2.5">
+
+                                <path stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    d="M12 4v16m8-8H4" />
+                            </svg>
+                        </div>
+
+                    @endif
+
+                </a>
+
+=======
                     <img src="https://ui-avatars.com/api/?name={{ Auth::check() ? urlencode(Auth::user()->name) : 'Arcamanik' }}&background=0a2e1f&color=fff&bold=true"
                         alt="Avatar" class="w-11 h-11 rounded-full object-cover shadow-sm ring-2 ring-white">
                 </div>
+>>>>>>> origin/Develop-v3
             </div>
         </header>
 

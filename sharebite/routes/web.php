@@ -187,6 +187,23 @@ Route::middleware('auth')->group(function () {
         Route::get('/riwayat', function () {
             return view('unit_bisnis.riwayat');
         })->name('riwayat');
+
+        // Profil Unit Bisnis
+        Route::get('/profil', [UnitBisnisController::class, 'showProfile'])->name('profil');
+        Route::post('/profil/update', [UnitBisnisController::class, 'updateProfile'])->name('profil.update');
+
+        // Upload Foto Profile Unit Bisnis
+        Route::post('/profil/upload-foto', [UnitBisnisController::class, 'uploadFotoProfile'])
+             ->name('profil.upload-foto');
+
+        // Hapus Foto Profile Unit Bisnis
+        Route::delete('/profil/hapus-foto', [UnitBisnisController::class, 'hapusFotoProfile'])
+            ->name('profil.hapus-foto');
+            
+        // Pengaturan Unit Bisnis
+        Route::get('/pengaturan', [UnitBisnisController::class, 'showSettings'])->name('pengaturan');
+        Route::post('/pengaturan/update', [UnitBisnisController::class, 'updateSettings'])->name('pengaturan.update');
+        Route::post('/pengaturan/update-password', [UnitBisnisController::class, 'updatePassword'])->name('pengaturan.update-password');
         Route::get('/profil', function () {
             return view('unit_bisnis.profil');
         })->name('profil');

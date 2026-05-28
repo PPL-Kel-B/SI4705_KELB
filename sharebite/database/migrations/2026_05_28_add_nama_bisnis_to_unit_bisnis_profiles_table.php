@@ -8,19 +8,18 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('unit_bisnis_profiles', function (Blueprint $table) {
-
-            if (!Schema::hasColumn('unit_bisnis_profiles', 'foto_profile')) {
-                $table->text('reviewer_notes')->nullable();
-                $table->string('foto_profile')->nullable();
+            if (!Schema::hasColumn('unit_bisnis_profiles', 'nama_bisnis')) {
+                $table->string('nama_bisnis', 255)->nullable()->after('nama_usaha');
             }
-
         });
     }
 
     public function down(): void
     {
         Schema::table('unit_bisnis_profiles', function (Blueprint $table) {
-            $table->dropColumn('foto_profile');
+            if (Schema::hasColumn('unit_bisnis_profiles', 'nama_bisnis')) {
+                $table->dropColumn('nama_bisnis');
+            }
         });
     }
 };
