@@ -9,6 +9,16 @@ class Pesanan extends Model
 {
     use HasFactory;
 
+    protected static function booted()
+    {
+        static::created(function ($pesanan) {
+            $unitBisnisUser = $pesanan->unitBisnis->user ?? null;
+            if ($unitBisnisUser) {
+                $unitBisnisUser->notify(new \App\Notifications\PesananMasukNotification($pesanan));
+            }
+        });
+    }
+
     protected $fillable = [
         'menu_aktif_id',
         'unit_bisnis_id',

@@ -34,11 +34,9 @@ abstract class DuskTestCase extends BaseTestCase
         ])->unless($this->hasHeadlessDisabled(), function (Collection $items) {
             return $items->merge([
                 '--disable-gpu',
-                //'--headless=new', // Berjalan senyap di background menggunakan Chrome engine asli
+                '--headless=new',
             ]);
         })->all());
-
-        // BARIS EDGE SUDAH DIHAPUS DI SINI AGAR KEMBALI MENGGUNAKAN GOOGLE CHROME DEFAULT
 
         return RemoteWebDriver::create(
             $_ENV['DUSK_DRIVER_URL'] ?? env('DUSK_DRIVER_URL') ?? 'http://localhost:9515',
