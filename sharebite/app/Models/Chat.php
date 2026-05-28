@@ -9,6 +9,16 @@ class Chat extends Model
 {
     use HasFactory;
 
+    protected static function booted()
+    {
+        static::created(function ($chat) {
+            $receiver = $chat->receiver;
+            if ($receiver) {
+                $receiver->notify(new \App\Notifications\ChatMasukNotification($chat));
+            }
+        });
+    }
+
     protected $fillable = [
         'sender_id',
         'receiver_id',

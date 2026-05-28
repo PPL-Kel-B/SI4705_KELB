@@ -12,15 +12,19 @@ use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\RegistIndividuController;
 use App\Http\Controllers\PembayaranController;
 
+use App\Http\Controllers\DashboardUnitBisnisController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [\App\Http\Controllers\LandingController::class, 'index'])->name('home');
+Route::get('/mitra', [\App\Http\Controllers\LandingController::class, 'mitra'])->name('mitra');
+Route::get('/komunitas', [\App\Http\Controllers\LandingController::class, 'komunitas'])->name('komunitas');
+Route::get('/tentang-kami', function () {
+    return view('tentang_kami');
+})->name('tentang-kami');
 
 // ==========================================
 // Laravel Breeze Default Auth Routes
@@ -74,6 +78,54 @@ Route::middleware('auth')->group(function () {
     // Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+    // Notifications
+    Route::post('/notifications/{id}/read', function ($id) {
+        $notification = auth()->user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+        return back();
+    })->name('notifications.read');
+
+    Route::post('/notifications/read-all', function () {
+        auth()->user()->unreadNotifications->markAsRead();
+        return back();
+    })->name('notifications.read_all');
+
+    Route::get('/test-notifications', function () {
+        $user = auth()->user();
+        
+        // 1. MakananDekatNotification
+        $menuAktif = \App\Models\MenuAktif::first();
+        if ($menuAktif) {
+            $user->notify(new \App\Notifications\MakananDekatNotification($menuAktif));
+        }
+
+        // 2. PesananMasukNotification
+        $pesanan = \App\Models\Pesanan::first();
+        if ($pesanan) {
+            $user->notify(new \App\Notifications\PesananMasukNotification($pesanan));
+        }
+
+        // 3. UnitBisnisMendaftarNotification
+        $user->notify(new \App\Notifications\UnitBisnisMendaftarNotification($user));
+
+        // 4. ChatMasukNotification
+        $chat = \App\Models\Chat::first();
+        if ($chat) {
+            $user->notify(new \App\Notifications\ChatMasukNotification($chat));
+        } else {
+            $mockChat = new \App\Models\Chat([
+                'sender_id' => $user->id,
+                'receiver_id' => $user->id,
+                'pesan' => 'Halo, ini adalah pesan uji coba notifikasi chat!',
+                'waktu' => now(),
+            ]);
+            $mockChat->setRelation('sender', $user);
+            $user->notify(new \App\Notifications\ChatMasukNotification($mockChat));
+        }
+
+        return redirect()->back()->with('success', 'Uji coba notifikasi berhasil dikirim! Silakan periksa ikon lonceng.');
+    })->name('test_notifications');
+
     // User Dashboard Routes
     Route::prefix('user')->name('user.')->group(function () {
         Route::get('/dashboard', function () {
@@ -103,9 +155,7 @@ Route::middleware('auth')->group(function () {
 
     // Unit Bisnis Dashboard Routes
     Route::prefix('unit')->name('unit.')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('unit_bisnis.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [DashboardUnitBisnisController::class, 'index'])->name('dashboard');
 
         // Menu Aktif
         Route::get('/kelola-makanan', [\App\Http\Controllers\MenuAktifController::class, 'index'])->name('kelola_makanan');
