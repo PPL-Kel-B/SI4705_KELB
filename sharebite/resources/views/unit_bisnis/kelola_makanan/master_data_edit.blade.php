@@ -30,19 +30,12 @@
                 {{-- Kategori Makanan --}}
                 <div>
                     <label for="Kategori" class="block text-sm font-extrabold text-gray-900 mb-2">Kategori Makanan</label>
-                    <div class="relative">
-                        <select id="Kategori" name="Kategori"
-                                class="form-input w-full bg-white border border-gray-200 hover:border-[#1cb764] focus:border-[#1cb764] focus:ring-2 focus:ring-[#1cb764]/10 rounded-2xl pl-5 pr-10 py-4 text-sm font-semibold text-gray-700 outline-none appearance-none cursor-pointer transition-all">
-                            @foreach(['Makanan Berat', 'Snack / Cemilan', 'Minuman', 'Dessert', 'Makanan Sehat', 'Makanan Rumahan', 'Makanan Cepat Saji', 'Makanan Tradisional', 'Makanan Internasional'] as $kategori)
-                                <option value="{{ $kategori }}" {{ old('Kategori', $master_datum->kategori) == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
-                            @endforeach
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-gray-400">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </div>
-                    </div>
+                    <select id="Kategori" name="Kategori"
+                            class="form-input w-full bg-[#f4f8f6] border-none rounded-xl px-4 py-3.5 text-sm text-gray-800 focus:ring-2 focus:ring-[#1cb764] appearance-none cursor-pointer">
+                        @foreach(['Makanan Berat', 'Cemilan / Makanan Ringan', 'Minuman', 'Dessert'] as $kategori)
+                            <option value="{{ $kategori }}" {{ old('Kategori', $master_datum->kategori) == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+                        @endforeach
+                    </select>
                 </div>
 
                 {{-- Unggah Foto --}}
