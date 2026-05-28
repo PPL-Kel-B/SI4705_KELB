@@ -10,16 +10,22 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\RegistIndividuController;
+use App\Http\Controllers\RiwayatController; 
+use App\Http\Controllers\PembayaranController;
 
+use App\Http\Controllers\DashboardUnitBisnisController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [\App\Http\Controllers\LandingController::class, 'index'])->name('home');
+Route::get('/mitra', [\App\Http\Controllers\LandingController::class, 'mitra'])->name('mitra');
+Route::get('/komunitas', [\App\Http\Controllers\LandingController::class, 'komunitas'])->name('komunitas');
+Route::get('/tentang-kami', function () {
+    return view('tentang_kami');
+})->name('tentang-kami');
 
 // ==========================================
 // Laravel Breeze Default Auth Routes
@@ -55,6 +61,11 @@ Route::resource('registerkomunitas', KomunitasController::class)->names([
     'index' => 'registerkomunitas',
 ]);
 
+// =========================================================================
+// ROUTE PUBLIK UNTUK SCAN HP (TIDAK PERLU LOGIN AGAR HP BISA AKSES)
+// =========================================================================
+Route::get('/public/scan-qris/{slug}', [PembayaranController::class, 'simulasiScan'])->name('pembayaran.scan.public');
+
 // ==========================================
 // Authenticated Routes
 // ==========================================
@@ -68,14 +79,62 @@ Route::middleware('auth')->group(function () {
     // Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+    // Notifications
+    Route::post('/notifications/{id}/read', function ($id) {
+        $notification = auth()->user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+        return back();
+    })->name('notifications.read');
+
+    Route::post('/notifications/read-all', function () {
+        auth()->user()->unreadNotifications->markAsRead();
+        return back();
+    })->name('notifications.read_all');
+
+    Route::get('/test-notifications', function () {
+        $user = auth()->user();
+        
+        // 1. MakananDekatNotification
+        $menuAktif = \App\Models\MenuAktif::first();
+        if ($menuAktif) {
+            $user->notify(new \App\Notifications\MakananDekatNotification($menuAktif));
+        }
+
+        // 2. PesananMasukNotification
+        $pesanan = \App\Models\Pesanan::first();
+        if ($pesanan) {
+            $user->notify(new \App\Notifications\PesananMasukNotification($pesanan));
+        }
+
+        // 3. UnitBisnisMendaftarNotification
+        $user->notify(new \App\Notifications\UnitBisnisMendaftarNotification($user));
+
+        // 4. ChatMasukNotification
+        $chat = \App\Models\Chat::first();
+        if ($chat) {
+            $user->notify(new \App\Notifications\ChatMasukNotification($chat));
+        } else {
+            $mockChat = new \App\Models\Chat([
+                'sender_id' => $user->id,
+                'receiver_id' => $user->id,
+                'pesan' => 'Halo, ini adalah pesan uji coba notifikasi chat!',
+                'waktu' => now(),
+            ]);
+            $mockChat->setRelation('sender', $user);
+            $user->notify(new \App\Notifications\ChatMasukNotification($mockChat));
+        }
+
+        return redirect()->back()->with('success', 'Uji coba notifikasi berhasil dikirim! Silakan periksa ikon lonceng.');
+    })->name('test_notifications');
+
     // User Dashboard Routes
     Route::prefix('user')->name('user.')->group(function () {
         Route::get('/dashboard', function () {
             return view('user.dashboard');
         })->name('dashboard');
-        Route::get('/riwayat', function () {
-            return view('user.riwayat');
-        })->name('riwayat');
+        Route::get('/riwayat', [\App\Http\Controllers\RiwayatController::class, 'index'])->name('riwayat');
+        Route::get('/riwayat/{id}', [App\Http\Controllers\RiwayatController::class, 'show'])->name('riwayat.show');
+        Route::post('/riwayat/{id}/rate', [App\Http\Controllers\RiwayatController::class, 'storeRating'])->name('riwayat.storeRating');
         Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
         Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
@@ -88,13 +147,20 @@ Route::middleware('auth')->group(function () {
 
         // ROUTE SEMENTARA UNTUK TES TOMBOL (Nanti dihapus saat digabung)
         Route::get('/tes-tombol-profil/{menu_aktif_id?}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'simulasiDetail'])->name('tes-tombol-profil');
+        // Route Pembayaran Utama
+        Route::get('/dashboard/{slug}/pembayaran', [PembayaranController::class, 'show'])->name('makanan.pembayaran');
+        
+        // Laptop diam-diam mengecek status scan ke sini
+        Route::get('/dashboard/{slug}/pembayaran/check', [PembayaranController::class, 'cekStatusScan'])->name('pembayaran.check');
+        
+        // Proses Pembayaran & Halaman Berhasil
+        Route::post('/dashboard/{slug}/pembayaran/proses', [PembayaranController::class, 'store'])->name('pembayaran.proses');
+        Route::get('/dashboard/{slug}/pembayaran/berhasil', [PembayaranController::class, 'berhasil'])->name('pembayaran.berhasil');
     });
 
     // Unit Bisnis Dashboard Routes
     Route::prefix('unit')->name('unit.')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('unit_bisnis.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [DashboardUnitBisnisController::class, 'index'])->name('dashboard');
 
         // Menu Aktif
         Route::get('/kelola-makanan', [\App\Http\Controllers\MenuAktifController::class, 'index'])->name('kelola_makanan');

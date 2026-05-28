@@ -165,7 +165,7 @@ class MenuAktifController extends Controller
             $batasWaktu->addDay();
         }
 
-        MenuAktif::create([
+        $menuAktif = MenuAktif::create([
             'master_makanan_id' => $masterMakanan->id,
             'unit_bisnis_id' => $profile->id,
             'is_gratis' => $isGratis,
@@ -174,6 +174,13 @@ class MenuAktifController extends Controller
             'batas_pengambilan' => $batasWaktu,
             'status' => $request->stok_porsi <= 0 ? 'habis' : 'aktif',
         ]);
+
+        if ($menuAktif->status === 'aktif') {
+            $nearbyUsers = \App\Models\User::getUsersWithinRadius($user->latitude, $user->longitude, 5);
+            foreach ($nearbyUsers as $nearbyUser) {
+                $nearbyUser->notify(new \App\Notifications\MakananDekatNotification($menuAktif));
+            }
+        }
 
         return redirect()->route('unit.kelola_makanan')
                         ->with('success', 'Menu berhasil diaktifkan');
