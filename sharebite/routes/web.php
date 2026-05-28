@@ -10,7 +10,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\RegistIndividuController;
-
+use App\Http\Controllers\DashboardUnitBisnisController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -138,9 +138,7 @@ Route::middleware('auth')->group(function () {
 
     // Unit Bisnis Dashboard Routes
     Route::prefix('unit')->name('unit.')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('unit_bisnis.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [DashboardUnitBisnisController::class, 'index'])->name('dashboard');
 
         // Menu Aktif
         Route::get('/kelola-makanan', [\App\Http\Controllers\MenuAktifController::class, 'index'])->name('kelola_makanan');
