@@ -14,6 +14,7 @@ use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\PembayaranController;
 
 use App\Http\Controllers\DashboardUnitBisnisController;
+use App\Http\Controllers\UnitBisnisController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -43,9 +44,7 @@ Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 // ==========================================
 Route::prefix('register')->group(function () {
     // Komunitas
-    Route::get('/', function () {
-        return view('auth.register_komunitas');
-    });
+    Route::get('/', [KomunitasController::class, 'create'])->name('register');
     Route::post('/store', [KomunitasController::class, 'store'])->name('register.store');
 
     // Unit Bisnis
@@ -204,12 +203,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengaturan', [UnitBisnisController::class, 'showSettings'])->name('pengaturan');
         Route::post('/pengaturan/update', [UnitBisnisController::class, 'updateSettings'])->name('pengaturan.update');
         Route::post('/pengaturan/update-password', [UnitBisnisController::class, 'updatePassword'])->name('pengaturan.update-password');
-        Route::get('/profil', function () {
-            return view('unit_bisnis.profil');
-        })->name('profil');
-        Route::get('/pengaturan', function () {
-            return view('unit_bisnis.pengaturan');
-        })->name('pengaturan');
     });
 
     // Admin Dashboard Routes
