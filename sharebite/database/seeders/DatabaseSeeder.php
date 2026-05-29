@@ -46,5 +46,15 @@ class DatabaseSeeder extends Seeder
                 'no_hp' => '08123456781',
             ]
         );
+
+        User::updateOrCreate(
+            ['email' => 'individu@sharebite.com'],
+            [
+                'name' => 'Individu Peduli',
+                'password' => bcrypt('password'),
+                'role' => 'individu',
+                'no_hp' => '08123456783',
+            ]
+        );
     }
 }
