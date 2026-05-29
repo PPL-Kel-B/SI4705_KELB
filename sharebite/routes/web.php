@@ -204,12 +204,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengaturan', [UnitBisnisController::class, 'showSettings'])->name('pengaturan');
         Route::post('/pengaturan/update', [UnitBisnisController::class, 'updateSettings'])->name('pengaturan.update');
         Route::post('/pengaturan/update-password', [UnitBisnisController::class, 'updatePassword'])->name('pengaturan.update-password');
-        Route::get('/profil', function () {
-            return view('unit_bisnis.profil');
-        })->name('profil');
-        Route::get('/pengaturan', function () {
-            return view('unit_bisnis.pengaturan');
-        })->name('pengaturan');
     });
 
     // Admin Dashboard Routes
