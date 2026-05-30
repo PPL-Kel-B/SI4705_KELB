@@ -10,7 +10,7 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\KomunitasController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\RegistIndividuController;
-use App\Http\Controllers\RiwayatController; 
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\DashboardUnitBisnisController;
 use App\Http\Controllers\UnitBisnisController;
@@ -43,9 +43,7 @@ Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 // ==========================================
 Route::prefix('register')->group(function () {
     // Komunitas
-    Route::get('/', function () {
-        return view('auth.register_komunitas');
-    });
+    Route::get('/', [KomunitasController::class, 'create'])->name('register');
     Route::post('/store', [KomunitasController::class, 'store'])->name('register.store');
 
     // Unit Bisnis
@@ -143,6 +141,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengaturan/kebijakan/{type}', [\App\Http\Controllers\SettingsController::class, 'policy'])->name('pengaturan.policy');
         Route::delete('/pengaturan/session/{id}', [\App\Http\Controllers\SettingsController::class, 'logoutSession'])->name('pengaturan.logout_session');
 
+       Route::get('/unit-bisnis/{id}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'show'])->name('unit-bisnis.show');
+
+        // ROUTE SEMENTARA UNTUK TES TOMBOL (Nanti dihapus saat digabung)
+        Route::get('/tes-tombol-profil/{menu_aktif_id?}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'simulasiDetail'])->name('tes-tombol-profil');
         // Route Pembayaran Utama
         Route::get('/dashboard/{slug}/pembayaran', [PembayaranController::class, 'show'])->name('makanan.pembayaran');
         
@@ -204,9 +206,9 @@ Route::middleware('auth')->group(function () {
 
     // Admin Dashboard Routes
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('admin.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/laporan', [AdminDashboardController::class, 'report'])->name('laporan');
+        Route::get('/transaksi', [AdminDashboardController::class, 'allTransactions'])->name('transaksi');
         Route::get('/manajemen-pengguna', [ManajemenUserController::class, 'index'])->name('manajemen_pengguna');
         Route::get('/manajemen-pengguna/verifikasi/{id}', [ManajemenUserController::class, 'reviewNib'])->name('manajemen_pengguna.review_nib');
         Route::post('/manajemen-pengguna/verifikasi/{id}', [ManajemenUserController::class, 'processNib'])->name('manajemen_pengguna.process_nib');

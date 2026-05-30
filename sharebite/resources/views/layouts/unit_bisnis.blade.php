@@ -283,7 +283,6 @@
                         <p class="text-[11px] text-gray-500 font-medium uppercase tracking-wider">
                             Unit Bisnis
                         </p>
-
                         <p class="text-sm font-extrabold text-[#0a2e1f]">
                             {{ Auth::check() ? Auth::user()->name : 'Arcamanik Hotel' }}
                         </p>

@@ -21,7 +21,8 @@ return new class extends Migration
             DB::table('users')
                 ->where('id', $profile->user_id)
                 ->where(function ($query) {
-                    $query->whereNull('alamat')->orWhere('alamat', '');
+                    $query->whereNull('alamat')
+                          ->orWhere('alamat', '');
                 })
                 ->update(['alamat' => $profile->alamat]);
         }
