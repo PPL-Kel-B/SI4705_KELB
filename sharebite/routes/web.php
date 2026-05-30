@@ -12,8 +12,8 @@ use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\RegistIndividuController;
 use App\Http\Controllers\RiwayatController; 
 use App\Http\Controllers\PembayaranController;
-
 use App\Http\Controllers\DashboardUnitBisnisController;
+use App\Http\Controllers\UnitBisnisController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes

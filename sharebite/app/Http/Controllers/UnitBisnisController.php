@@ -309,12 +309,12 @@ class UnitBisnisController extends Controller
 
         $user = Auth::user();
 
-        if (!auth()->attempt(['email' => $user->email, 'password' => $request->current_password])) {
+        if (!Auth::attempt(['email' => $user->email, 'password' => $request->current_password])) {
             return back()->with('error', 'Kata sandi saat ini tidak sesuai');
         }
 
         $user->password = bcrypt($validated['password']);
-        $user->password_updated_at = now();
+        $user->password_updated_at = now()->toDateTimeString();
         $user->save();
 
         return redirect()->route('unit.profil')->with('success', 'Kata sandi berhasil diubah!');
