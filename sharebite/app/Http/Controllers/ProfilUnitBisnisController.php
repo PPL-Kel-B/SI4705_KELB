@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\UnitBisnisProfile;
 use App\Models\MenuAktif;
+use App\Models\BuktiDonasi;
+use App\Models\Rating;
 
 class ProfilUnitBisnisController extends Controller
 {
@@ -25,13 +27,19 @@ class ProfilUnitBisnisController extends Controller
                 'alamat' => $profile->user->alamat ?? 'Alamat belum diisi',
                 'deskripsi' => $profile->reviewer_notes ?? 'Unit bisnis ini berdedikasi meminimalisir food waste dengan membagikan makanan berkualitas.',
                 'total_donasi' => ($profile->total_makanan_terjual ?? 0) . ' Porsi',
-                'rating' => '5.0 (0 Ulasan)' // default rating
+                'rating' => '5.0 (0 Ulasan)', // default rating
+                'foto_profile' => $profile->foto_profile ? asset('storage/' . $profile->foto_profile) : null,
+                'jam_buka' => $profile->jam_buka ? date('H:i', strtotime($profile->jam_buka)) : '08:00',
+                'jam_tutup' => $profile->jam_tutup ? date('H:i', strtotime($profile->jam_tutup)) : '20:00',
+                'no_telepon' => $profile->no_telepon ?? $profile->user->no_hp ?? '-',
+                'email' => $profile->email_bisnis ?? $profile->user->email ?? '-'
             ];
 
             // Ambil makanan aktif real dari database untuk unit bisnis ini
             $makananReal = MenuAktif::with('masterMakanan')
                 ->where('unit_bisnis_id', $profile->id)
                 ->where('status', 'aktif')
+                ->where('batas_pengambilan', '>=', now())
                 ->get();
 
             $makananAktif = [];
@@ -43,7 +51,33 @@ class ProfilUnitBisnisController extends Controller
                     'porsi' => $item->stok_porsi,
                     'jarak' => '0.8 km', // mock jarak karena tidak ada koordinat di db
                     'foto' => $item->masterMakanan->foto ? asset('storage/' . $item->masterMakanan->foto) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
+                    'kategori' => $item->masterMakanan->kategori ?? 'Umum',
                 ];
+            }
+
+            $buktiDonasisReal = BuktiDonasi::whereHas('pesanan', function($q) use ($profile) {
+                $q->where('unit_bisnis_id', $profile->id);
+            })->latest()->take(4)->get();
+
+            $buktiDonasis = [];
+            foreach ($buktiDonasisReal as $bukti) {
+                if ($bukti->foto) {
+                    $buktiDonasis[] = asset('storage/' . $bukti->foto);
+                }
+            }
+
+            // Gabungkan foto dari rating (foto_bukti_berbagi) jika jumlah gambar di galeri kurang dari 4
+            if (count($buktiDonasis) < 4) {
+                $ratingsReal = Rating::where('unit_bisnis_id', $profile->id)
+                    ->whereNotNull('foto_bukti_berbagi')
+                    ->where('foto_bukti_berbagi', '!=', '')
+                    ->latest()
+                    ->take(4 - count($buktiDonasis))
+                    ->get();
+
+                foreach ($ratingsReal as $rating) {
+                    $buktiDonasis[] = asset('storage/' . $rating->foto_bukti_berbagi);
+                }
             }
 
             // Jika unit bisnis tidak punya makanan aktif di database, beri data mock agar tidak kosong
@@ -56,6 +90,7 @@ class ProfilUnitBisnisController extends Controller
                         'porsi' => 5,
                         'jarak' => '1.0 km',
                         'foto' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
+                        'kategori' => 'Cemilan / Makanan Ringan',
                     ]
                 ];
             }
@@ -68,7 +103,12 @@ class ProfilUnitBisnisController extends Controller
                 'alamat' => 'Jl. Kebon Jeruk No. 45, Jakarta Barat',
                 'deskripsi' => 'Paket salad buah premium yang terdiri dari potongan melon, anggur, semangka, dan stroberi segar. Disiapkan pagi ini untuk buffet makan siang dan tidak habis terjual demi meminimalisir food waste.',
                 'total_donasi' => '520 Porsi',
-                'rating' => '4.9 (120 Ulasan)'
+                'rating' => '4.9 (120 Ulasan)',
+                'foto_profile' => null,
+                'jam_buka' => '08:00',
+                'jam_tutup' => '21:00',
+                'no_telepon' => '0812-3456-7890',
+                'email' => 'contact@healthygarden.com'
             ];
 
             // MOCKING DATA MAKANAN AKTIF
@@ -80,6 +120,7 @@ class ProfilUnitBisnisController extends Controller
                     'porsi' => 12, 
                     'jarak' => '0.8 km',
                     'foto' => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80',
+                    'kategori' => 'Cemilan / Makanan Ringan',
                 ],
                 (object) [
                     'id' => 2, 
@@ -88,6 +129,7 @@ class ProfilUnitBisnisController extends Controller
                     'porsi' => 5, 
                     'jarak' => '1.2 km',
                     'foto' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
+                    'kategori' => 'Dessert',
                 ],
                 (object) [
                     'id' => 3, 
@@ -96,6 +138,7 @@ class ProfilUnitBisnisController extends Controller
                     'porsi' => 3, 
                     'jarak' => '1.5 km',
                     'foto' => 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80',
+                    'kategori' => 'Makanan Berat',
                 ],
                 (object) [
                     'id' => 4, 
@@ -104,11 +147,13 @@ class ProfilUnitBisnisController extends Controller
                     'porsi' => 8, 
                     'jarak' => '0.5 km',
                     'foto' => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80',
+                    'kategori' => 'Makanan Berat',
                 ],
             ];
+            $buktiDonasis = [];
         }
 
-        return view('user.profile_unit_bisnis', compact('unitBisnis', 'makananAktif'));
+        return view('user.profile_unit_bisnis', compact('unitBisnis', 'makananAktif', 'buktiDonasis'));
     }
 
     /**
@@ -117,9 +162,10 @@ class ProfilUnitBisnisController extends Controller
      */
     public function simulasiDetail($menu_aktif_id = null)
     {
-        // Ambil semua menu aktif dari DB beserta relasi
+        // Ambil semua menu aktif dari DB beserta relasi yang belum kadaluarsa
         $allActiveMenus = MenuAktif::with('masterMakanan', 'unitBisnis.user')
             ->where('status', 'aktif')
+            ->where('batas_pengambilan', '>=', now())
             ->latest()
             ->get();
 
@@ -150,6 +196,7 @@ class ProfilUnitBisnisController extends Controller
                 'unit_bisnis_id' => $activeMenu->unit_bisnis_id,
                 'nama_usaha' => $activeMenu->unitBisnis->nama_usaha,
                 'alamat' => $activeMenu->unitBisnis->user->alamat ?? 'Alamat belum diatur',
+                'foto_profile' => $activeMenu->unitBisnis->foto_profile ? asset('storage/' . $activeMenu->unitBisnis->foto_profile) : null,
             ];
         } else {
             // FALLBACK: Gunakan data mockup buah salad jika kosong
@@ -167,6 +214,7 @@ class ProfilUnitBisnisController extends Controller
                 'unit_bisnis_id' => 1,
                 'nama_usaha' => 'Healthy Garden Bistro',
                 'alamat' => 'Jl. Kebon Jeruk No. 45, Jakarta Barat',
+                'foto_profile' => null,
             ];
         }
 
