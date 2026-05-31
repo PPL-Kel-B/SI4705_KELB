@@ -149,7 +149,7 @@
                     
                     {{-- TOMBOL KUNJUNGI PROFIL --}}
                     <a href="{{ route('user.unit-bisnis.show', $makanan->unit_bisnis_id) }}" 
-                       class="bg-white border border-[#1cb764] text-[#1cb764] hover:bg-[#1cb764] hover:text-white font-extrabold text-xs px-5 py-2 rounded-full transition-all shadow-sm shrink-0">
+                       class="bg-white border-2 border-[#0a6833] text-[#0a6833] hover:bg-[#0a6833] hover:text-white font-extrabold text-base px-8 py-3 rounded-[1.75rem] transition-all duration-300 shadow-sm shrink-0">
                         Kunjungi Profil
                     </a>
                 </div>
