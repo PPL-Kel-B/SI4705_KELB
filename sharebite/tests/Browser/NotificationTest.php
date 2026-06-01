@@ -192,6 +192,7 @@ test('unit bisnis can toggle notification settings on business settings page (TC
         'user_id' => $user->id,
         'nama_usaha' => $user->name,
         'nama_bisnis' => $user->name,
+        'jenis_usaha' => 'Restoran',
         'email_bisnis' => $user->email,
         'no_telepon' => '08123456789',
         'lokasi_lat' => '-6.900000',

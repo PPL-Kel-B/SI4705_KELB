@@ -12,12 +12,17 @@
 <div x-data="{ 
     isSaving: false, 
     radiusValue: {{ $unitBisnis->radius_penjemputan ?? 15 }}, 
-    successMessage: '', 
-    showSuccess: false,
-    showError: false,
-    errorMessage: '',
+    successMessage: '{{ session('success') ?? '' }}', 
+    showSuccess: {{ session('success') ? 'true' : 'false' }},
+    showError: {{ (session('error') || $errors->any()) ? 'true' : 'false' }},
+    errorMessage: '{{ session('error') ?? ($errors->any() ? 'Terdapat kesalahan pada pengaturan. Silakan periksa kembali.' : '') }}',
     notifAktif: {{ ($unitBisnis->notifikasi_aktif ?? true) ? 'true' : 'false' }}
-}" class="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+}" 
+x-init="
+    if (showSuccess) { setTimeout(() => showSuccess = false, 4000); }
+    if (showError) { setTimeout(() => showError = false, 5000); }
+"
+class="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     
     {{-- Success Notification --}}
     <div x-show="showSuccess" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-[-8px]" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
@@ -95,7 +100,7 @@
                             {{-- Jam Buka --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 mb-2">Jam Buka</label>
-                                <input type="time" name="jam_buka" value="{{ old('jam_buka', $unitBisnis->jam_buka ?? '08:00') }}"
+                                <input type="time" name="jam_buka" value="{{ old('jam_buka', $unitBisnis->jam_buka ? substr($unitBisnis->jam_buka, 0, 5) : '08:00') }}"
                                     class="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-base font-extrabold text-[#0a2e1f] focus:border-[#1cb764] focus:ring-2 focus:ring-green-100 outline-none transition-all"
                                     required>
                                 @error('jam_buka')
@@ -106,7 +111,7 @@
                             {{-- Jam Tutup --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 mb-2">Jam Tutup</label>
-                                <input type="time" name="jam_tutup" value="{{ old('jam_tutup', $unitBisnis->jam_tutup ?? '21:00') }}"
+                                <input type="time" name="jam_tutup" value="{{ old('jam_tutup', $unitBisnis->jam_tutup ? substr($unitBisnis->jam_tutup, 0, 5) : '21:00') }}"
                                     class="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-base font-extrabold text-[#0a2e1f] focus:border-[#1cb764] focus:ring-2 focus:ring-green-100 outline-none transition-all"
                                     required>
                                 @error('jam_tutup')
@@ -314,44 +319,7 @@
         </div>
     </div>
 
-    @if (session('success'))
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const el = document.querySelector('[x-data]');
-                if (el && el.__x) {
-                    el.__x.$data.showSuccess = true;
-                    el.__x.$data.successMessage = "{{ session('success') }}";
-                    setTimeout(() => { el.__x.$data.showSuccess = false; }, 4000);
-                }
-            });
-        </script>
-    @endif
 
-    @if (session('error'))
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const el = document.querySelector('[x-data]');
-                if (el && el.__x) {
-                    el.__x.$data.showError = true;
-                    el.__x.$data.errorMessage = "{{ session('error') }}";
-                    setTimeout(() => { el.__x.$data.showError = false; }, 4000);
-                }
-            });
-        </script>
-    @endif
-
-    @if ($errors->any())
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const el = document.querySelector('[x-data]');
-                if (el && el.__x) {
-                    el.__x.$data.showError = true;
-                    el.__x.$data.errorMessage = "Terdapat kesalahan pada pengaturan. Silakan periksa kembali.";
-                    setTimeout(() => { el.__x.$data.showError = false; }, 5000);
-                }
-            });
-        </script>
-    @endif
 </div>
 
 <style>
