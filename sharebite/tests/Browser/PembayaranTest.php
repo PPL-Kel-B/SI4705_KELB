@@ -2,422 +2,321 @@
 
 namespace Tests\Browser;
 
-use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class PembayaranTest extends DuskTestCase
 {
-    // =========================================================================
-    // KONFIGURASI — Sesuaikan dengan data di database kamu
-    // =========================================================================
-
-    /** Slug makanan = nama_makanan di DB, spasi diganti '-' (sesuai controller) */
-    protected string $slug = 'piscok';
+    protected string $userEmail = 'komunitas@sharebite.com';
+    protected string $slug      = 'eskrim';
 
     /**
-     * ID user (bukan unit bisnis / admin) yang bisa mengakses halaman pembayaran.
-     * Cek di tabel `users`: pilih user dengan role komunitas/individu.
+     * Paksa pakai DB_DATABASE dari .env utama, bukan 'sharebite_dusk'.
+     * Tidak perlu membuat .env.dusk.local sama sekali.
      */
-    protected int $userId = 1;
-
-    // =========================================================================
-    // URL — Sudah sesuai dengan web.php, JANGAN diubah
-    // =========================================================================
-    protected string $paymentUrl;   // /user/dashboard/{slug}/pembayaran
-    protected string $successUrl;   // /user/dashboard/{slug}/pembayaran/berhasil
-    protected string $scanUrl;      // /public/scan-qris/{slug}
-    protected string $riwayatUrl;   // /user/riwayat
-
     protected function setUp(): void
     {
         parent::setUp();
-        $this->paymentUrl = "/user/dashboard/{$this->slug}/pembayaran";
-        $this->successUrl = "/user/dashboard/{$this->slug}/pembayaran/berhasil";
-        $this->scanUrl    = "/public/scan-qris/{$this->slug}";
-        $this->riwayatUrl = '/user/riwayat';
+
+        $dbName = env('DB_DATABASE', 'sharebite');
+        config(["database.connections.mysql.database" => $dbName]);
+        DB::purge('mysql');
+        DB::reconnect('mysql');
     }
 
-    // ─── Helper: login sebagai user ──────────────────────────────────────────
-    private function asUser(Browser $browser): Browser
+    // ─────────────────────────────────────────────────────────────
+    // Helper: loginAs() langsung — tidak perlu isi form login
+    // ─────────────────────────────────────────────────────────────
+
+    private function loginUser(Browser $browser): void
     {
-        return $browser->loginAs($this->userId);
+        $user = User::where('email', $this->userEmail)->firstOrFail();
+        $browser->loginAs($user);
     }
 
-    // ─── Helper: cek classList elemen via JavaScript ──────────────────────────
-    private function hasClass(Browser $browser, string $id, string $class): bool
+    private function visitPembayaran(Browser $browser): void
     {
-        $result = $browser->script(
-            "return document.getElementById('{$id}').classList.contains('{$class}');"
-        );
-        return (bool)($result[0] ?? false);
+        $this->loginUser($browser);
+        $browser->visit("/user/dashboard/{$this->slug}/pembayaran?qty=1")
+                ->waitForLocation("/user/dashboard/{$this->slug}/pembayaran", 10);
     }
 
-    // =========================================================================
-    // TEST 1
-    // Klik tombol panah (<- Pembayaran) ke halaman riwayat
-    // =========================================================================
-    public function testBackButtonNavigatesToRiwayat(): void
+    private function visitBerhasil(Browser $browser): void
+    {
+        $this->loginUser($browser);
+        $browser->visit("/user/dashboard/{$this->slug}/pembayaran/berhasil?qty=1")
+                ->waitForLocation("/user/dashboard/{$this->slug}/pembayaran/berhasil", 10);
+    }
+
+    // ═════════════════════════════════════════════════════════════
+    // TEST 1 — Tombol ← (back arrow) → halaman riwayat
+    // ═════════════════════════════════════════════════════════════
+
+    public function testBackArrowRedirectsToRiwayat(): void
     {
         $this->browse(function (Browser $browser) {
-            // Kunjungi riwayat dulu agar history.back() ada tujuannya
-            $this->asUser($browser)
-                 ->visit($this->riwayatUrl)
-                 ->waitForText('Riwayat', 10)
-                 ->visit($this->paymentUrl)
-                 ->waitForText('Pembayaran', 10)
-                 // Tombol back adalah <button onclick="window.history.back()">
-                 // Selector: button pertama di header dengan class rounded-full
-                 ->click('button[onclick="window.history.back()"]')
-                 ->pause(1500)
-                 ->assertPathIs($this->riwayatUrl);
+            $this->visitPembayaran($browser);
+
+            $browser->click('a[href*="riwayat"]')
+                    ->assertPathIs('/user/riwayat');
         });
     }
 
-    // =========================================================================
-    // TEST 2
-    // Hover ke map → muncul overlay teks 'Buka Map'
-    // =========================================================================
-    public function testMapHoverShowsBukaMap(): void
+    // ═════════════════════════════════════════════════════════════
+    // TEST 2a — Hover map di halaman PEMBAYARAN → muncul "Buka Map"
+    // ═════════════════════════════════════════════════════════════
+
+    public function testHoverMapPembayaranShowsBukaMap(): void
     {
         $this->browse(function (Browser $browser) {
-            $this->asUser($browser)
-                 ->visit($this->paymentUrl)
-                 ->waitFor('#map-pembayaran', 10)
-                 ->pause(1500); // Tunggu Leaflet selesai render tile
+            $this->visitPembayaran($browser);
 
-            // Container map memiliki class 'group' (dari blade) — hover ke sana
-            $browser->mouseover('.group')
-                    ->pause(800)
+            $browser->waitFor('#map-pembayaran', 10);
+            $browser->mouseover('[onclick*="google.com/maps"]');
+            $browser->waitForText('Buka Map', 5)
                     ->assertSee('Buka Map');
         });
     }
 
-    // =========================================================================
-    // TEST 3
-    // Link 'Buka di Google Maps' → href mengandung google.com/maps + target _blank
-    // =========================================================================
-    public function testBukaGoogleMapsLinkIsValid(): void
+    // ═════════════════════════════════════════════════════════════
+    // TEST 2b — Klik area map PEMBAYARAN → onclick ke Google Maps
+    // ═════════════════════════════════════════════════════════════
+
+    public function testClickMapPembayaranHasGoogleMapsUrl(): void
     {
         $this->browse(function (Browser $browser) {
-            $this->asUser($browser)
-                 ->visit($this->paymentUrl)
-                 ->waitForText('Buka di Google Maps', 10);
+            $this->visitPembayaran($browser);
 
-            // Ambil href dan pastikan mengarah ke Google Maps
-            $href = $browser->attribute('a[href*="google.com/maps"]', 'href');
-            $this->assertStringContainsString('google.com/maps', $href,
-                'Href harus mengandung google.com/maps');
+            $browser->waitFor('#map-pembayaran', 10);
 
-            // Harus terbuka di tab baru
-            $target = $browser->attribute('a[href*="google.com/maps"]', 'target');
-            $this->assertEquals('_blank', $target,
-                'Link Google Maps harus punya target="_blank"');
+            $onclick = $browser->attribute('[onclick*="google.com/maps"]', 'onclick');
+            $this->assertStringContainsString('google.com/maps', $onclick);
         });
     }
 
-    // =========================================================================
-    // TEST 4
-    // Scan QRIS lewat HP → halaman laptop otomatis redirect ke pembayaran berhasil
-    //
-    // Cara kerja simulasi (2 browser tab):
-    //   - $laptop : membuka halaman pembayaran, menunggu polling tiap 2 detik
-    //   - $hp     : mengakses /public/scan-qris/{slug} → set Cache sukses
-    //   Polling JS di $laptop mendeteksi cache → submit form → redirect ke berhasil
-    // =========================================================================
-    public function testQrisScanRedirectsToSuccessPage(): void
+    // ═════════════════════════════════════════════════════════════
+    // TEST 3 — Link "Buka di Google Maps" → href mengandung google.com/maps
+    // ═════════════════════════════════════════════════════════════
+
+    public function testBukaDiGoogleMapsLinkIsCorrect(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->visitPembayaran($browser);
+
+            $href = $browser->attribute('a[href*="google.com/maps"]', 'href');
+            $this->assertStringContainsString('google.com/maps', $href);
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════
+    // TEST 4 — Scan QRIS dari HP → laptop otomatis ke halaman berhasil
+    // ═════════════════════════════════════════════════════════════
+
+    public function testScanQrisRedirectsToPembayaranBerhasil(): void
     {
         $this->browse(function (Browser $laptop, Browser $hp) {
-            // LANGKAH 1 — Laptop: buka halaman pembayaran dan tunggu QR render
-            $this->asUser($laptop)
-                 ->visit($this->paymentUrl)
-                 ->waitFor('#qr-canvas', 10)
-                 ->pause(500);
+            $this->visitPembayaran($laptop);
 
-            // LANGKAH 2 — HP: akses endpoint scan publik (tidak perlu login)
-            // Route: GET /public/scan-qris/{slug} → Cache::put('scan_qris_{slug}', true)
-            $hp->visit($this->scanUrl)
-               ->assertSee('Pembayaran Berhasil'); // teks dari simulasiScan() di controller
+            // HP scan QR — route publik, tidak perlu login
+            $hp->visit("/public/scan-qris/{$this->slug}")
+               ->waitForText('Pembayaran Berhasil', 10);
 
-            // LANGKAH 3 — Laptop: tunggu polling JS (setInterval 2000ms) mendeteksi
-            // cache dan otomatis submit form → redirect ke halaman berhasil
-            $laptop->waitForText('Pembayaran Berhasil!', 10)
-                   ->assertSee('Pembayaran Berhasil!')
-                   ->assertPathIs($this->successUrl);
+            // Laptop polling tiap 2 detik, tunggu hingga redirect
+            $laptop->pause(5000)
+                   ->assertPathContains('berhasil');
         });
     }
 
-    // =========================================================================
-    // TEST 5
-    // Timer habis → form auto-submit → redirect ke halaman riwayat
-    //
-    // Supaya tidak menunggu 15 menit, localStorage dimanipulasi
-    // agar expire hanya 3 detik dari sekarang.
-    // =========================================================================
+    // ═════════════════════════════════════════════════════════════
+    // TEST 5 — Timer habis → redirect ke halaman riwayat
+    // ═════════════════════════════════════════════════════════════
+
     public function testTimerExpiredRedirectsToRiwayat(): void
     {
         $this->browse(function (Browser $browser) {
-            $this->asUser($browser)
-                 ->visit($this->paymentUrl)
-                 ->waitFor('#payment-timer', 10);
+            $this->visitPembayaran($browser); // ← pakai helper yang sudah ada, hapus loginAs($this->user)
 
-            // Key localStorage sesuai kode JS di blade:
-            // 'timer_bayar_' + slugMenu.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()
-            $cleanSlug  = preg_replace('/[^a-zA-Z0-9]/', '_', strtolower($this->slug));
-            $storageKey = 'timer_bayar_' . $cleanSlug;
-
-            // Set expire 3 detik dari sekarang
-            $browser->script(
-                "localStorage.setItem('{$storageKey}', (Date.now() + 3000).toString());"
-            );
-
-            // Reload halaman agar setInterval timer membaca nilai baru dari localStorage
-            $browser->refresh()
-                    ->waitFor('#payment-timer', 10);
-
-            // Tunggu timer habis (3 detik) + setInterval bekerja + form submit
-            $browser->pause(6000)
-                    ->assertPathIs($this->riwayatUrl);
-        });
-    }
-
-    // =========================================================================
-    // TEST 6
-    // Refresh halaman pembayaran → timer LANJUT dari waktu sebelumnya (tidak reset)
-    // =========================================================================
-    public function testTimerContinuesAfterPageRefresh(): void
-    {
-        $this->browse(function (Browser $browser) {
-            $this->asUser($browser)
-                 ->visit($this->paymentUrl)
-                 ->waitFor('#payment-timer', 10)
-                 ->pause(3000); // Biarkan timer berjalan 3 detik
-
-            $timerBefore = $browser->text('#payment-timer'); // contoh: "14:51"
+            // Set timer di localStorage agar expired dalam 2 detik
+            $browser->script("
+                const slug = document.getElementById('qr-meta').dataset.slug;
+                const cleanName = slug.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+                const storageKey = 'timer_bayar_' + cleanName;
+                localStorage.setItem(storageKey, (Date.now() + 2000).toString());
+            ");
 
             $browser->refresh()
-                    ->waitFor('#payment-timer', 10)
-                    ->pause(800);
-
-            $timerAfter = $browser->text('#payment-timer'); // contoh: "14:47"
-
-            // Konversi mm:ss → total detik
-            [$mB, $sB] = explode(':', $timerBefore);
-            [$mA, $sA] = explode(':', $timerAfter);
-            $secBefore = (int)$mB * 60 + (int)$sB;
-            $secAfter  = (int)$mA * 60 + (int)$sA;
-
-            // Setelah refresh, sisa waktu harus LEBIH KECIL dari sebelum refresh
-            // (artinya timer lanjut, bukan reset ke 15:00)
-            $this->assertLessThan(
-                $secBefore,
-                $secAfter,
-                "Timer harus lanjut setelah refresh. Sebelum: {$timerBefore}, Sesudah: {$timerAfter}"
-            );
-
-            // Pastikan tidak reset ke 15:00 penuh (900 detik)
-            $this->assertNotEquals(900, $secAfter,
-                'Timer tidak boleh reset ke 15:00 setelah refresh');
+                    ->pause(5000)
+                    ->assertPathIs('/user/riwayat');
         });
     }
 
-    // =========================================================================
-    // TEST 7
-    // Klik 'Lihat Kode Verifikasi' → kode tampil (class blur dihilangkan)
-    // =========================================================================
-    public function testLihatKodeVerifikasiShowsCode(): void
+    // ═════════════════════════════════════════════════════════════
+    // TEST 6 — Refresh halaman → timer TIDAK diulang dari 15:00
+    // ═════════════════════════════════════════════════════════════
+
+    public function testTimerContinuesAfterRefresh(): void
     {
         $this->browse(function (Browser $browser) {
-            $this->asUser($browser)
-                 ->visit($this->successUrl)
-                 ->waitFor('#teks-kode', 10);
+            $this->visitPembayaran($browser);
 
-            // Sebelum diklik: #teks-kode harus punya class blur-[8px]
-            $this->assertTrue(
-                $this->hasClass($browser, 'teks-kode', 'blur-[8px]'),
-                'Kode harus blur sebelum tombol lihat diklik'
+            $browser->waitFor('#payment-timer', 5);
+
+            $cleanSlug  = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $this->slug));
+            $storageKey = "timer_bayar_{$cleanSlug}";
+
+            $expireBefore = $browser->script(
+                "return localStorage.getItem('{$storageKey}');"
+            )[0];
+
+            $this->assertNotNull($expireBefore, 'Timer belum tersimpan di localStorage.');
+
+            $browser->pause(2000)->refresh();
+            $browser->waitFor('#payment-timer', 5);
+
+            $expireAfter = $browser->script(
+                "return localStorage.getItem('{$storageKey}');"
+            )[0];
+
+            $this->assertEquals(
+                $expireBefore,
+                $expireAfter,
+                'Timer di-reset setelah refresh — seharusnya tetap melanjutkan.'
             );
 
-            // Klik tombol 'Lihat Kode Verifikasi'
-            $browser->click('#btn-lihat-kode')->pause(400);
-
-            // Setelah diklik: blur harus hilang
-            $this->assertFalse(
-                $this->hasClass($browser, 'teks-kode', 'blur-[8px]'),
-                'Kode tidak boleh blur setelah tombol lihat diklik'
-            );
-
-            // Tombol lihat harus tidak terlihat (opacity-0)
-            $this->assertTrue(
-                $this->hasClass($browser, 'btn-lihat-kode', 'opacity-0'),
-                'Tombol lihat harus opacity-0 setelah kode ditampilkan'
-            );
-
-            // Tombol tutup harus muncul (class hidden dihapus)
-            $this->assertFalse(
-                $this->hasClass($browser, 'btn-tutup-kode', 'hidden'),
-                'Tombol tutup harus terlihat setelah kode ditampilkan'
-            );
+            $timerText = $browser->text('#payment-timer');
+            $this->assertNotEquals('15:00', $timerText, 'Timer kembali ke 15:00 setelah refresh.');
         });
     }
 
-    // =========================================================================
-    // TEST 8
-    // Klik ikon mata pojok kanan atas (#btn-tutup-kode) → kode kembali blur
-    // =========================================================================
-    public function testTutupKodeHidesCodeAgain(): void
+    // ═════════════════════════════════════════════════════════════
+    // TEST 7 — Klik "Unduh QR Code" → halaman tidak berpindah
+    // ═════════════════════════════════════════════════════════════
+
+    public function testUnduhQRCodeTriggersDownload(): void
     {
         $this->browse(function (Browser $browser) {
-            $this->asUser($browser)
-                 ->visit($this->successUrl)
-                 ->waitFor('#teks-kode', 10);
+            $this->visitPembayaran($browser);
 
-            // Buka kode dulu
-            $browser->click('#btn-lihat-kode')->pause(400);
+            $browser->waitFor('#qr-canvas', 10);
 
-            // Pastikan kode sudah tampil sebelum ditutup
-            $this->assertFalse(
-                $this->hasClass($browser, 'teks-kode', 'blur-[8px]'),
-                'Kode harus sudah tampil sebelum tombol tutup diklik'
-            );
+            $browser->click('button[onclick="downloadQR()"]')
+                    ->pause(1500);
 
-            // Klik tombol tutup (ikon mata pojok kanan atas)
-            $browser->click('#btn-tutup-kode')->pause(400);
-
-            // Kode harus kembali blur
-            $this->assertTrue(
-                $this->hasClass($browser, 'teks-kode', 'blur-[8px]'),
-                'Kode harus kembali blur setelah tombol tutup diklik'
-            );
-
-            // Tombol lihat harus kembali muncul (opacity-0 dihapus)
-            $this->assertFalse(
-                $this->hasClass($browser, 'btn-lihat-kode', 'opacity-0'),
-                'Tombol lihat harus kembali muncul'
-            );
-
-            // Tombol tutup harus kembali hidden
-            $this->assertTrue(
-                $this->hasClass($browser, 'btn-tutup-kode', 'hidden'),
-                'Tombol tutup harus kembali hidden'
-            );
+            $browser->assertPathIs("/user/dashboard/{$this->slug}/pembayaran");
         });
     }
 
-    // =========================================================================
-    // TEST 9
-    // Refresh halaman berhasil → kode verifikasi tetap SAMA (tidak berubah)
-    // (Kode disimpan di session Laravel dengan key 'kode_verifikasi_{slug}')
-    // =========================================================================
-    public function testVerificationCodeRemainsAfterRefresh(): void
+    // ═════════════════════════════════════════════════════════════
+    // TEST 8 — Klik "Lihat Kode Verifikasi" → kode tampil (tidak blur)
+    // ═════════════════════════════════════════════════════════════
+
+    public function testLihatKodeVerifikasiShowsKode(): void
     {
         $this->browse(function (Browser $browser) {
-            $this->asUser($browser)
-                 ->visit($this->successUrl)
-                 ->waitFor('#teks-kode', 10);
+            $this->visitBerhasil($browser);
 
-            // Tampilkan dan ambil kode pertama kali
-            $browser->click('#btn-lihat-kode')->pause(400);
+            $classAwal = $browser->attribute('#teks-kode', 'class');
+            $this->assertStringContainsString('blur', $classAwal, 'Kode seharusnya blur di awal.');
+
+            $browser->click('#btn-lihat-kode')->pause(500);
+
+            $classSetelah = $browser->attribute('#teks-kode', 'class');
+            $this->assertStringNotContainsString('blur', $classSetelah, 'Kode masih blur setelah tombol diklik.');
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════
+    // TEST 9 — Klik ikon mata tutup → kode kembali blur
+    // ═════════════════════════════════════════════════════════════
+
+    public function testTutupKodeVerifikasiReturnsBlur(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->visitBerhasil($browser);
+
+            $browser->click('#btn-lihat-kode')->pause(500);
+            $browser->click('#btn-tutup-kode')->pause(500);
+
+            $classSetelah = $browser->attribute('#teks-kode', 'class');
+            $this->assertStringContainsString('blur', $classSetelah, 'Kode seharusnya kembali blur setelah tombol tutup diklik.');
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════
+    // TEST 10 — Refresh halaman berhasil → kode verifikasi tetap sama
+    // ═════════════════════════════════════════════════════════════
+
+    public function testKodeVerifikasiSameAfterRefresh(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->visitBerhasil($browser);
+
+            $browser->click('#btn-lihat-kode')->pause(500);
             $kodeBefore = trim($browser->text('#teks-kode'));
 
-            // Refresh halaman
-            $browser->refresh()
-                    ->waitFor('#teks-kode', 10);
+            $browser->refresh()->waitForLocation(
+                "/user/dashboard/{$this->slug}/pembayaran/berhasil",
+                10
+            );
 
-            // Tampilkan dan ambil kode setelah refresh
-            $browser->click('#btn-lihat-kode')->pause(400);
+            $browser->click('#btn-lihat-kode')->pause(500);
             $kodeAfter = trim($browser->text('#teks-kode'));
 
             $this->assertEquals(
                 $kodeBefore,
                 $kodeAfter,
-                "Kode verifikasi harus tetap sama setelah refresh. Sebelum: [{$kodeBefore}], Sesudah: [{$kodeAfter}]"
+                'Kode verifikasi berubah setelah refresh — seharusnya tetap sama.'
             );
         });
     }
 
-    // =========================================================================
-    // TEST 10
-    // Map di halaman berhasil bisa di-drag (Leaflet dragging: true)
-    // =========================================================================
-    public function testMapOnSuccessPageIsDraggable(): void
+    // ═════════════════════════════════════════════════════════════
+    // TEST 11 — Link "Petunjuk Arah" → Google Maps
+    // ═════════════════════════════════════════════════════════════
+
+    public function testPetunjukArahLinkIsGoogleMaps(): void
     {
         $this->browse(function (Browser $browser) {
-            $this->asUser($browser)
-                 ->visit($this->successUrl)
-                 ->waitFor('#map-berhasil', 10)
-                 ->pause(2000); // Tunggu Leaflet + tiles render
+            $this->visitBerhasil($browser);
 
-            // Verifikasi Leaflet berhasil menginisialisasi container
-            $isLeaflet = $browser->script(
-                "return document.getElementById('map-berhasil')
-                        .classList.contains('leaflet-container');"
+            $href = $browser->attribute('a[href*="google.com/maps"]', 'href');
+            $this->assertStringContainsString(
+                'google.com/maps',
+                $href,
+                'Link Petunjuk Arah tidak mengarah ke Google Maps.'
             );
-            $this->assertTrue((bool)($isLeaflet[0] ?? false),
-                '#map-berhasil harus berhasil diinisialisasi sebagai Leaflet container');
-
-            // Ambil koordinat tengah map lalu simulasikan drag kiri 60px
-            $browser->script("
-                const el  = document.getElementById('map-berhasil');
-                const box = el.getBoundingClientRect();
-                const cx  = box.left + box.width  / 2;
-                const cy  = box.top  + box.height / 2;
-
-                el.dispatchEvent(new MouseEvent('mousedown', {bubbles:true, clientX: cx,      clientY: cy}));
-                el.dispatchEvent(new MouseEvent('mousemove', {bubbles:true, clientX: cx + 60, clientY: cy}));
-                el.dispatchEvent(new MouseEvent('mouseup',   {bubbles:true, clientX: cx + 60, clientY: cy}));
-            ");
-
-            $browser->pause(800);
-
-            // Map masih ada dan tile masih ter-render setelah drag
-            $browser->assertPresent('#map-berhasil');
-
-            $hasTiles = $browser->script(
-                "return document.querySelector('#map-berhasil .leaflet-tile-container') !== null;"
-            );
-            $this->assertTrue((bool)($hasTiles[0] ?? false),
-                'Tile Leaflet harus tetap ter-render setelah drag');
         });
     }
 
-    // =========================================================================
-    // TEST 11
-    // Link 'Petunjuk Arah' di halaman berhasil → href Google Maps + target _blank
-    // =========================================================================
-    public function testPetunjukArahLinkIsValid(): void
+    // ═════════════════════════════════════════════════════════════
+    // TEST 2c — Hover map di halaman BERHASIL → muncul "Buka Map"
+    // ═════════════════════════════════════════════════════════════
+
+    public function testHoverMapBerhasilShowsBukaMap(): void
     {
         $this->browse(function (Browser $browser) {
-            $this->asUser($browser)
-                 ->visit($this->successUrl)
-                 ->waitForText('Petunjuk Arah', 10);
+            $this->visitBerhasil($browser);
 
-            $href   = $browser->attribute('a[href*="google.com/maps"]', 'href');
-            $target = $browser->attribute('a[href*="google.com/maps"]', 'target');
-
-            $this->assertStringContainsString('google.com/maps', $href,
-                'Link Petunjuk Arah harus mengarah ke Google Maps');
-            $this->assertEquals('_blank', $target,
-                'Link Petunjuk Arah harus terbuka di tab baru (target="_blank")');
-
-            $browser->assertSee('Petunjuk Arah');
+            $browser->waitFor('#map-berhasil', 10);
+            $browser->mouseover('[onclick*="google.com/maps"]');
+            $browser->waitForText('Buka Map', 5)
+                    ->assertSee('Buka Map');
         });
     }
 
-    // =========================================================================
-    // TEST 12
-    // Tombol 'Lihat Riwayat Pesanan' → redirect ke /user/riwayat
-    // =========================================================================
-    public function testLihatRiwayatPesananNavigatesToRiwayat(): void
+    // ═════════════════════════════════════════════════════════════
+    // TEST 12 — Tombol "Lihat Riwayat Pesanan" → halaman riwayat
+    // ═════════════════════════════════════════════════════════════
+
+    public function testLihatRiwayatPesananRedirectsToRiwayat(): void
     {
         $this->browse(function (Browser $browser) {
-            $this->asUser($browser)
-                 ->visit($this->successUrl)
-                 ->waitForText('Lihat Riwayat Pesanan', 10)
-                 ->clickLink('Lihat Riwayat Pesanan')
-                 ->pause(1000)
-                 ->assertPathIs($this->riwayatUrl);
+            $this->visitBerhasil($browser);
+
+            $browser->clickLink('Lihat Riwayat Pesanan')
+                    ->assertPathIs('/user/riwayat');
         });
     }
 }

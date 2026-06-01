@@ -7,18 +7,21 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
 use App\Models\MenuAktif;
+use App\Models\Pesanan;    
+use App\Models\Pembayaran; 
 use Carbon\Carbon;
 
 class PembayaranController extends Controller
 {
     /**
-     * Menampilkan Halaman Pembayaran QRIS
+     * Menampilkan Halaman Pembayaran QRIS (Status: Menunggu Pembayaran)
      */
     public function show(Request $request, string $slug)
     {
         $qty = $request->input('qty', 1);
+        $user = auth()->user();
 
-        // Mengambil data makanan dari database, beserta relasinya
+        // Mengambil data makanan dari database
         $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])
                     ->whereHas('masterMakanan', function ($query) use ($slug) {
                         $query->where('nama_makanan', str_replace('-', ' ', $slug));
@@ -26,9 +29,49 @@ class PembayaranController extends Controller
                     ->firstOrFail();
 
         $subtotal = $makanan->harga_jual * $qty;
-        $ref = 'SB-' . strtoupper(substr(md5($slug . time()), 0, 8));
 
-        // Tambahkan 'slug' di dalam compact
+        // 1. Simpan/Cek data ke tabel Pesanan
+        // 1. Simpan/Cek data ke tabel Pesanan (Update jika ada, Create jika tidak)
+        $pesanan = Pesanan::where('user_id', $user->id)
+                    ->where('menu_aktif_id', $makanan->id)
+                    ->where('status', 'menunggu_pembayaran')
+                    ->first();
+
+        if ($pesanan) {
+            // Jika pesanan gantung sudah ada, UPDATE porsi dan harga terbarunya
+            $pesanan->update([
+                'jumlah_porsi' => $qty,
+                'total_harga'  => $subtotal,
+                'waktu_pesan'  => now(),
+            ]);
+        } else {
+            // Jika belum ada sama sekali, BUAT BARU
+            $pesanan = Pesanan::create([
+                'user_id'        => $user->id,
+                'menu_aktif_id'  => $makanan->id,
+                'status'         => 'menunggu_pembayaran',
+                'unit_bisnis_id' => $makanan->unit_bisnis_id,
+                'jumlah_porsi'   => $qty,
+                'total_harga'    => $subtotal,
+                'kode_unik'      => 'SB-' . rand(1000, 9999) . '-' . strtoupper(Str::random(3)),
+                'waktu_pesan'    => now(),
+            ]);
+        }
+
+        $ref = 'SB-' . strtoupper(substr(md5($pesanan->id . time()), 0, 8));
+
+        // 2. Simpan data ke tabel Pembayaran
+        $pembayaran = Pembayaran::firstOrCreate(
+            ['pesanan_id' => $pesanan->id],
+            [
+                'status' => 'menunggu', // Harus huruf kecil sesuai ENUM database
+                'qrcode' => $ref,
+            ]
+        );
+
+        // Gunakan kode qrcode dari database agar konsisten
+        $ref = $pembayaran->qrcode; 
+
         return view('user.pembayaran', compact('makanan', 'qty', 'subtotal', 'ref', 'slug'));
     }
 
@@ -39,12 +82,48 @@ class PembayaranController extends Controller
     {
         $status = $request->input('status'); 
         $qty = $request->input('qty', 1);
+        $user = auth()->user();
 
-        if ($status === 'Berhasil') {
-            return redirect()->route('user.pembayaran.berhasil', ['slug' => $slug, 'qty' => $qty]);
+        // Cari menu aktifnya
+        $makanan = MenuAktif::whereHas('masterMakanan', function ($query) use ($slug) {
+            $query->where('nama_makanan', str_replace('-', ' ', $slug));
+        })->firstOrFail();
+
+        // Cari pesanan yang sedang 'menunggu_pembayaran'
+        $pesanan = Pesanan::where('user_id', $user->id)
+                    ->where('menu_aktif_id', $makanan->id)
+                    ->where('status', 'menunggu_pembayaran')
+                    ->first();
+
+        if ($pesanan) {
+            if ($status === 'Berhasil') {
+                // Update tabel pesanans
+                $pesanan->update(['status' => 'proses']); 
+                
+                // Update tabel pembayarans 
+                Pembayaran::where('pesanan_id', $pesanan->id)->update([
+                    'status' => 'berhasil', 
+                    'waktu_bayar' => now(),
+                ]);
+
+                // ---> TAMBAHKAN 1 BARIS INI UNTUK MENGURANGI STOK <---
+                $makanan->decrement('stok_porsi', $pesanan->jumlah_porsi);
+
+                return redirect()->route('user.pembayaran.berhasil', ['slug' => $slug, 'qty' => $qty]);
+            } else {
+                // Update tabel pesanans
+                $pesanan->update(['status' => 'dibatalkan']);
+                
+                // Update tabel pembayarans (huruf kecil sesuai ENUM)
+                Pembayaran::where('pesanan_id', $pesanan->id)->update([
+                    'status' => 'gagal', 
+                ]);
+
+                return redirect()->route('user.riwayat')->with('status_pembayaran', 'Gagal');
+            }
         }
 
-        return redirect()->route('user.riwayat')->with('status_pembayaran', 'Gagal');
+        return redirect()->route('user.riwayat');
     }
 
     /**
@@ -53,28 +132,26 @@ class PembayaranController extends Controller
     public function berhasil(Request $request, string $slug)
     {
         $qty = $request->input('qty', 1);
+        $user = auth()->user();
 
-        // Mengambil data makanan dari database untuk halaman sukses
+        // Ambil data makanan
         $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])
                     ->whereHas('masterMakanan', function ($query) use ($slug) {
                         $query->where('nama_makanan', str_replace('-', ' ', $slug));
                     })
                     ->firstOrFail();
 
-        $subtotal = $makanan->harga_jual * $qty;
-        
-        // --- LOGIKA BARU: KODE VERIFIKASI PERMANEN (SESSION) ---
-        $sessionKey = 'kode_verifikasi_' . $slug; // Membuat kunci unik berdasarkan nama makanan
-        
-        if (session()->has($sessionKey)) {
-            // Jika kodenya sudah pernah dibuat, ambil dari memori (session)
-            $kode_verifikasi = session()->get($sessionKey);
-        } else {
-            // Jika belum ada, buat kode baru lalu simpan ke memori (session)
-            $kode_verifikasi = 'GP-' . rand(1000, 9999) . '-' . strtoupper(Str::random(3));
-            session()->put($sessionKey, $kode_verifikasi);
-        }
-        // -------------------------------------------------------
+        // Ambil pesanan yang baru saja sukses (status 'dibayar')
+        // Ambil pesanan yang baru saja sukses
+        $pesanan = Pesanan::where('user_id', $user->id)
+                    ->where('menu_aktif_id', $makanan->id)
+                    ->where('status', 'proses') // <--- UBAH 'dibayar' JADI 'proses'
+                    ->latest()
+                    ->firstOrFail();
+
+        $subtotal = $pesanan->total_harga; 
+        $kode_verifikasi = $pesanan->kode_unik; 
+        $qty = $pesanan->jumlah_porsi; // <--- Mengambil porsi asli yang tersimpan di database 
 
         return view('user.pembayaran_berhasil', compact('makanan', 'qty', 'subtotal', 'kode_verifikasi', 'slug'));
     }

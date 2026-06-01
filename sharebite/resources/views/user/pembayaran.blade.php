@@ -25,15 +25,15 @@
      style="display:none;">
 </div>
 
-<div class="min-h-screen bg-[#F0F7F2] p-6 lg:p-10 font-jakarta w-full relative">
+<div class="min-h-screen bg-[#F0F7F2] px-6 pb-6 pt-3 lg:px-10 lg:pb-10 lg:pt-3 font-jakarta w-full relative">
     
     {{-- Header --}}
     <div class="flex items-center gap-3 mb-8 w-full max-w-full mx-auto">
-        <button onclick="window.history.back()" class="w-9 h-9 bg-[#E3EFE7] text-[#189347] hover:bg-[#D1E6D8] rounded-full flex items-center justify-center transition">
+        <a href="{{ route('user.riwayat') }}" class="w-9 h-9 bg-[#E3EFE7] text-[#189347] hover:bg-[#D1E6D8] rounded-full flex items-center justify-center transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-        </button>
+        </a>
         <h1 class="text-[30px] font-extrabold text-gray-800">Pembayaran</h1>
     </div>
 
@@ -55,10 +55,31 @@
                     {{-- Konten Teks (Sejajar Tengah secara Vertikal) --}}
                     <div class="flex-1 flex justify-between items-center">
                         <div class="flex flex-col justify-center">
-                            {{-- Label Tersedia --}}
+                            {{-- Label Status Dinamis --}}
                             <div class="mb-2">
-                                <span class="bg-[#E4F2E8] text-[#189347] text-[10px] font-extrabold px-3 py-1 rounded-[8px] tracking-[0.1em] uppercase inline-block">
-                                    TERSEDIA
+                                @php
+                                    $statusTeks = '';
+                                    $statusWarna = '';
+
+                                    if ($makanan->status === 'aktif') {
+                                        // Tambahkan logika cek stok seperti di Menu Aktif
+                                        if ($makanan->stok_porsi <= 5) {
+                                            $statusTeks = 'SEGERA HABIS';
+                                            $statusWarna = 'bg-[#FFF4E5] text-[#D97706]'; // Warna Orange/Amber
+                                        } else {
+                                            $statusTeks = 'TERSEDIA';
+                                            $statusWarna = 'bg-[#E4F2E8] text-[#189347]'; // Warna Hijau
+                                        }
+                                    } elseif ($makanan->status === 'habis') {
+                                        $statusTeks = 'HABIS';
+                                        $statusWarna = 'bg-[#FEE2E2] text-[#EF4444]'; // Warna Merah
+                                    } else {
+                                        $statusTeks = strtoupper($makanan->status);
+                                        $statusWarna = 'bg-gray-200 text-gray-500'; // Warna Abu-abu (Ditutup)
+                                    }
+                                @endphp
+                                <span class="{{ $statusWarna }} text-[10px] font-extrabold px-3 py-1 rounded-[8px] tracking-[0.1em] uppercase inline-block">
+                                    {{ $statusTeks }}
                                 </span>
                             </div>
                             {{-- Nama Makanan --}}
@@ -106,7 +127,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-8-4.5-8-11.8A8 8 0 0112 1.2a8 8 0 018 8c0 7.3-8 11.8-8 11.8z" />
                         <circle cx="12" cy="9.2" r="2.5" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                    <h3 class="text-[14px] font-bold text-gray-500 tracking-[0.2em] uppercase">LOKASI PENJEMPUTAN</h3>
+                    <h3 class="text-[14px] font-bold text-gray-500 tracking-[0.2em] uppercase">LOKASI RESTO</h3>
                 </div>
                 
                 <div class="flex flex-col md:flex-row gap-6 flex-1 items-stretch">
@@ -214,8 +235,18 @@ document.addEventListener('DOMContentLoaded', () => {
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             const customIcon = L.divIcon({
                 className: 'custom-leaflet-marker',
-                html: `<div class="relative flex items-center justify-center w-16 h-16"><div class="absolute w-full h-full bg-[#189347]/20 rounded-full animate-ping"></div><div class="absolute w-10 h-10 bg-[#189347]/40 rounded-full"></div><div class="relative w-8 h-8 bg-[#189347] rounded-full shadow-md flex items-center justify-center border-2 border-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></div></div>`,
-                iconSize: [64, 64], iconAnchor: [32, 32]
+                html: `<div class="relative flex items-center justify-center w-24 h-24">
+                           <div class="absolute w-16 h-16 bg-[#189347]/30 rounded-full animate-pulse"></div>
+                           <div class="relative w-10 h-10 bg-[#189347] rounded-full shadow-lg flex items-center justify-center border-[3px] border-white">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                   <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+                                   <path d="M7 2v20"></path>
+                                   <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"></path>
+                               </svg>
+                           </div>
+                       </div>`,
+                iconSize: [96, 96], 
+                iconAnchor: [48, 48]
             });
             L.marker([lat, lng], {icon: customIcon}).addTo(map);
         }
