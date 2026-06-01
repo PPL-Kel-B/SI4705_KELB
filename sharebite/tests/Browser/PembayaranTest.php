@@ -153,7 +153,7 @@ class PembayaranTest extends DuskTestCase
     }
 
     // ═════════════════════════════════════════════════════════════
-    // TEST 6 — Refresh halaman → timer TIDAK diulang dari 15:00
+    // TEST 6 — Refresh halaman → timer TIDAK diulang dari 15 menit
     // ═════════════════════════════════════════════════════════════
 
     public function testTimerContinuesAfterRefresh(): void
