@@ -19,6 +19,12 @@ class ProfilUnitBisnisController extends Controller
         $profile = UnitBisnisProfile::with('user')->find($id);
 
         if ($profile) {
+            // Hitung rata-rata rating
+            $ratingsQuery = Rating::where('unit_bisnis_id', $profile->id);
+            $totalRatings = $ratingsQuery->count();
+            $averageRating = $totalRatings > 0 ? ($ratingsQuery->avg('skor_rating') ?? 5.0) : 5.0;
+            $ratingString = number_format($averageRating, 1) . ' (' . $totalRatings . ' Ulasan)';
+
             // Jika ada di database, gunakan data real
             $unitBisnis = (object) [
                 'id' => $profile->id,
@@ -27,7 +33,7 @@ class ProfilUnitBisnisController extends Controller
                 'alamat' => $profile->user->alamat ?? 'Alamat belum diisi',
                 'deskripsi' => $profile->reviewer_notes ?? 'Unit bisnis ini berdedikasi meminimalisir food waste dengan membagikan makanan berkualitas.',
                 'total_donasi' => ($profile->total_makanan_terjual ?? 0) . ' Porsi',
-                'rating' => '5.0 (0 Ulasan)', // default rating
+                'rating' => $ratingString,
                 'foto_profile' => $profile->foto_profile ? asset('storage/' . $profile->foto_profile) : null,
                 'jam_buka' => $profile->jam_buka ? date('H:i', strtotime($profile->jam_buka)) : '08:00',
                 'jam_tutup' => $profile->jam_tutup ? date('H:i', strtotime($profile->jam_tutup)) : '20:00',
@@ -57,7 +63,7 @@ class ProfilUnitBisnisController extends Controller
 
             $buktiDonasisReal = BuktiDonasi::whereHas('pesanan', function($q) use ($profile) {
                 $q->where('unit_bisnis_id', $profile->id);
-            })->latest()->take(4)->get();
+            })->latest()->take(20)->get();
 
             $buktiDonasis = [];
             foreach ($buktiDonasisReal as $bukti) {
@@ -66,13 +72,13 @@ class ProfilUnitBisnisController extends Controller
                 }
             }
 
-            // Gabungkan foto dari rating (foto_bukti_berbagi) jika jumlah gambar di galeri kurang dari 4
-            if (count($buktiDonasis) < 4) {
+            // Gabungkan foto dari rating (foto_bukti_berbagi) jika jumlah gambar di galeri kurang dari 20
+            if (count($buktiDonasis) < 20) {
                 $ratingsReal = Rating::where('unit_bisnis_id', $profile->id)
                     ->whereNotNull('foto_bukti_berbagi')
                     ->where('foto_bukti_berbagi', '!=', '')
                     ->latest()
-                    ->take(4 - count($buktiDonasis))
+                    ->take(20 - count($buktiDonasis))
                     ->get();
 
                 foreach ($ratingsReal as $rating) {
@@ -94,6 +100,12 @@ class ProfilUnitBisnisController extends Controller
                     ]
                 ];
             }
+
+            // Ambil semua data ulasan / rating real-time dari database beserta relasi user
+            $ulasans = Rating::with('user')
+                ->where('unit_bisnis_id', $profile->id)
+                ->latest()
+                ->get();
         } else {
             // FALLBACK: MOCKING DATA UNIT BISNIS jika id tidak ada di DB
             $unitBisnis = (object) [
@@ -151,9 +163,30 @@ class ProfilUnitBisnisController extends Controller
                 ],
             ];
             $buktiDonasis = [];
+
+            // MOCKING DATA ULASAN untuk fallback
+            $ulasans = [
+                (object) [
+                    'skor_rating' => 5,
+                    'catatan_pengalaman' => 'Makanan sangat lezat dan bersih! Porsinya pas banget untuk makan siang. Penjual sangat ramah dan proses penjemputan sangat cepat.',
+                    'created_at' => now()->subDays(1),
+                    'user' => (object) [
+                        'name' => 'Budi Santoso'
+                    ]
+                ],
+                (object) [
+                    'skor_rating' => 4,
+                    'catatan_pengalaman' => 'Sangat mengapresiasi kebersihan kemasannya. Sangat membantu masyarakat sekitar dalam mengurangi sampah makanan.',
+                    'created_at' => now()->subDays(3),
+                    'user' => (object) [
+                        'name' => 'Siti Aminah'
+                    ]
+                ]
+            ];
         }
 
-        return view('user.profile_unit_bisnis', compact('unitBisnis', 'makananAktif', 'buktiDonasis'));
+        $hideSearch = true;
+        return view('user.profile_unit_bisnis', compact('unitBisnis', 'makananAktif', 'buktiDonasis', 'hideSearch', 'ulasans'));
     }
 
     /**
