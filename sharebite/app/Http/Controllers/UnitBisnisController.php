@@ -83,25 +83,28 @@ class UnitBisnisController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            'nama_bisnis' => 'required|string|max:255',
-            'email_bisnis' => 'required|email|max:255',
-            'no_telepon' => 'required|regex:/^[0-9+\-() ]+$/',
+            'nama_bisnis' => 'nullable|string|max:255',
+            'email_bisnis' => 'nullable|email|max:255',
+            'no_telepon' => ['nullable', 'string', 'regex:/^[0-9+\-() ]+$/'],
             'tipe_bisnis' => 'nullable|string|max:100',
-            'alamat' => 'required|string|max:500',
+            'deskripsi' => 'nullable|string|max:1000',
+            'alamat' => 'nullable|string|max:500',
             'lokasi_lat' => 'nullable|numeric',
             'lokasi_lng' => 'nullable|numeric',
-            'foto_bisnis' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'foto_bisnis' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+            'header_image' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
             'delete_photo' => 'nullable|in:0,1',
+            'delete_header' => 'nullable|in:0,1',
         ], [
-            'nama_bisnis.required' => 'Nama bisnis harus diisi',
-            'email_bisnis.required' => 'Email bisnis harus diisi',
             'email_bisnis.email' => 'Email tidak valid',
-            'no_telepon.required' => 'Nomor telepon harus diisi',
             'no_telepon.regex' => 'Nomor telepon harus berupa angka (format: 08xx atau +62xxx)',
-            'tipe_bisnis.required' => 'Tipe bisnis harus dipilih',
-            'alamat.required' => 'Alamat harus diisi',
-            'foto_bisnis.image' => 'File harus berupa gambar',
-            'foto_bisnis.max' => 'Ukuran gambar maksimal 2MB',
+            'deskripsi.max' => 'Deskripsi maksimal 1000 karakter',
+            'foto_bisnis.image' => 'File foto profil harus berupa gambar.',
+            'foto_bisnis.mimes' => 'Format foto profil tidak didukung. Gunakan format: JPG atau PNG.',
+            'foto_bisnis.max' => 'Ukuran foto profil maksimal 10MB.',
+            'header_image.image' => 'File header harus berupa gambar.',
+            'header_image.mimes' => 'Format gambar header tidak didukung. Gunakan format: JPG atau PNG.',
+            'header_image.max' => 'Ukuran gambar header maksimal 10MB.',
         ]);
 
         $unitBisnis = UnitBisnisProfile::firstOrCreate(
@@ -117,14 +120,18 @@ class UnitBisnisController extends Controller
             ]
         );
 
-        $user->name = $validated['nama_bisnis'];
-        $user->alamat = $validated['alamat'];
-        $user->no_hp = $validated['no_telepon'];
-
+        if (!empty($validated['nama_bisnis'])) {
+            $user->name = $validated['nama_bisnis'];
+        }
+        if (!empty($validated['alamat'])) {
+            $user->alamat = $validated['alamat'];
+        }
+        if (!empty($validated['no_telepon'])) {
+            $user->no_hp = $validated['no_telepon'];
+        }
         if (!empty($validated['lokasi_lat'])) {
             $user->latitude = $validated['lokasi_lat'];
         }
-
         if (!empty($validated['lokasi_lng'])) {
             $user->longitude = $validated['lokasi_lng'];
         }
@@ -153,11 +160,38 @@ class UnitBisnisController extends Controller
             $validated['foto_bisnis'] = 'images/bisnis/' . $filename;
         }
 
-        $profileData = $validated;
-        $profileData['nama_usaha'] = $validated['nama_bisnis'];
+        if ($request->input('delete_header') == '1') {
+            $this->deleteOldHeaderImage($unitBisnis);
+            $validated['header_image'] = null;
+        }
+
+        if ($request->hasFile('header_image')) {
+            $this->deleteOldHeaderImage($unitBisnis);
+
+            $file = $request->file('header_image');
+            $filename = 'header_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+
+            $file->move($uploadPath, $filename);
+
+            $validated['header_image'] = 'images/bisnis/' . $filename;
+        }
+
+        $profileData = array_filter($validated, fn($v) => $v !== null);
+
+        if (!empty($validated['nama_bisnis'])) {
+            $profileData['nama_usaha'] = $validated['nama_bisnis'];
+        }
+
+        // header_image bisa null saat dihapus — tetap masukkan
+        if (array_key_exists('header_image', $validated)) {
+            $profileData['header_image'] = $validated['header_image'];
+        }
 
         unset($profileData['alamat']);
+        unset($profileData['lokasi_lat']);
+        unset($profileData['lokasi_lng']);
         unset($profileData['delete_photo']);
+        unset($profileData['delete_header']);
 
         $unitBisnis->update($profileData);
 
@@ -236,6 +270,20 @@ class UnitBisnisController extends Controller
             str_contains($unitBisnis->foto_bisnis, 'images/bisnis/')
         ) {
             $filePath = public_path($unitBisnis->foto_bisnis);
+
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+    }
+
+    private function deleteOldHeaderImage($unitBisnis)
+    {
+        if (
+            $unitBisnis->header_image &&
+            str_contains($unitBisnis->header_image, 'images/bisnis/')
+        ) {
+            $filePath = public_path($unitBisnis->header_image);
 
             if (file_exists($filePath)) {
                 unlink($filePath);
