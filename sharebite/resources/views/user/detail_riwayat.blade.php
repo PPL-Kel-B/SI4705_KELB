@@ -6,7 +6,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 @section('content')
-<div class="p-2 min-h-screen font-sans antialiased text-gray-800">
+<div class="p-2 min-h-screen font-jakarta antialiased text-gray-800">
     
     <div class="flex items-center gap-4 mb-6">
         <a href="{{ route('user.riwayat') }}" class="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition flex items-center justify-center shadow-sm">
@@ -46,7 +46,6 @@
             </div>
         </div>
 
-        {{-- KONTEN SEBELAH KANAN: Ditambahkan h-full, pb-6 agar teks bawah terdorong naik dan aman --}}
         <div class="flex flex-col justify-between w-full lg:w-[55%] p-8 md:p-12 lg:p-14 lg:pb-16 min-h-full">
             <div>
                 <div class="flex justify-between items-start gap-4 mb-2">
@@ -71,7 +70,6 @@
                 </div>
             </div>
 
-            
             <div class="flex justify-between items-center border-t border-gray-100 pt-5 mt-auto mb-4">
                 <div class="flex items-center gap-2 text-[#137333] font-bold text-sm">
                     <div class="w-5 h-5 rounded-full bg-[#E6F4EA] flex items-center justify-center shrink-0">
@@ -89,12 +87,10 @@
 
     @if((isset($ratingTerisi) && $ratingTerisi) || $pesanan->status == 'batal' || $pesanan->status == 'dibatalkan')
         @if($pesanan->status == 'batal' || $pesanan->status == 'dibatalkan')
-            {{-- Tampilan Kotak Informasi khusus untuk Pesanan yang Dibatalkan --}}
             <div class="bg-red-50 border border-red-200 rounded-[2rem] p-8 text-center text-red-700 font-bold text-sm">
                 Donasi ini telah dibatalkan. Anda tidak dapat mengirimkan bukti berbagi maupun penilaian rating.
             </div>
         @else
-            {{-- Tampilan Lama jika Rating Sudah Terisi --}}
             <div class="bg-gray-50 border border-gray-200 rounded-[2rem] p-8 text-center text-gray-500 font-bold text-sm">
                 Anda telah mengirimkan bukti berbagi dan penilaian rating untuk donasi ini.
             </div>
@@ -112,14 +108,14 @@
                     </h3>
                     
                     <div id="dropzone" onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-[#E7ECE8] hover:border-[#1cb764] rounded-2xl bg-gray-50/50 p-8 flex flex-col items-center justify-center text-center group cursor-pointer transition flex-grow">
-                        <input type="file" id="file-input" name="bukti_berbagi" accept=".png, .jpg, .jpeg" class="hidden" onchange="handleFileSelect(this.files)">
+                        <input type="file" id="file-input" name="bukti_berbagi" accept=".png, .jpg, .jpeg, .mp4" class="hidden" onchange="handleFileSelect(this.files)">
 
                         <div class="w-12 h-12 rounded-full bg-[#E7ECE8]/60 flex items-center justify-center text-[#046A38] group-hover:bg-[#E6F4EA] transition mb-3">
                             <svg id="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.375A1.5 1.5 0 0 0 1.875 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
                         </div>
                         
                         <h4 id="upload-headline" class="text-sm font-black text-gray-800 mb-1">Pilih File atau seret ke sini</h4>
-                        <p id="upload-subline" class="text-[11px] text-gray-400 font-bold max-w-xs mb-4">Tarik dan lepas foto bukti distribusi di sini (PNG, JPG, JPEG)</p>
+                        <p id="upload-subline" class="text-[11px] text-gray-400 font-bold max-w-xs mb-4">Tarik dan lepas foto bukti distribusi di sini (PNG, JPG, JPEG, MP4 - Maks 20MB)</p>
                         <button type="button" class="px-4 py-2 bg-[#046A38] hover:bg-[#03532B] text-white text-xs font-black rounded-xl shadow-sm transition">Pilih File</button>
                     </div>
                 </div>
@@ -177,19 +173,35 @@
     }
 
     function validateAndDisplayFile(file) {
-        const allowedExtensions = ['image/png', 'image/jpeg', 'image/jpg'];
+        const allowedExtensions = ['image/png', 'image/jpeg', 'image/jpg', 'video/mp4'];
+        
+        // 1. Validasi Format Ekstensi
         if (!allowedExtensions.includes(file.type)) {
-            // REVISI ALERT 1: Mengubah alert bawaan menjadi SweetAlert2 kustom
             Swal.fire({
                 icon: 'error',
                 title: 'Format File Salah!',
-                text: 'Hanya diperbolehkan mengunggah file gambar dengan format PNG, JPG, atau JPEG.',
+                text: 'Hanya diperbolehkan mengunggah file gambar dengan format PNG, JPG, atau JPEG dan video MP4.',
                 confirmButtonColor: '#046A38',
                 customClass: { popup: 'rounded-[2rem]' }
             });
             fileInput.value = '';
             return;
         }
+
+        // REVISI: 2. Validasi Batas Maksimal Ukuran File (Contoh: 20 MB = 20 * 1024 * 1024 bytes)
+        const maxSizeInBytes = 20 * 1024 * 1024; 
+        if (file.size > maxSizeInBytes) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Ukuran File Terlalu Besar!',
+                text: 'Batas maksimal ukuran file yang diperbolehkan adalah 20 MB.',
+                confirmButtonColor: '#D93025',
+                customClass: { popup: 'rounded-[2rem]' }
+            });
+            fileInput.value = ''; // Reset input file jika terlalu besar
+            return;
+        }
+
         headline.innerText = "File Siap Diunggah!";
         headline.classList.remove('text-gray-800');
         headline.classList.add('text-[#046A38]');
@@ -214,7 +226,6 @@
     const ratingInput = document.getElementById('skor_rating_input');
     const starElements = document.querySelectorAll('[data-star]');
 
-    // Didaftarkan sebagai fungsi window agar tetap terbaca interaktif oleh event onclick di SVG Blade kamu
     window.setRating = function(val) {
         currentSelectedRating = val;
         ratingInput.value = val;
@@ -262,7 +273,7 @@
                 Swal.fire({
                     icon: 'warning',
                     title: 'Bukti Berbagi Kosong!',
-                    text: 'Silakan sertakan foto bukti berbagi terlebih dahulu.',
+                    text: 'Silakan sertakan foto atau video bukti berbagi terlebih dahulu.',
                     confirmButtonColor: '#1cb764',
                     customClass: { popup: 'rounded-[2rem]' }
                 });

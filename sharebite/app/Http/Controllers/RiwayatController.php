@@ -119,7 +119,7 @@ class RiwayatController extends Controller
         $request->validate([
             'skor_rating' => 'required|integer|between:1,5',
             'catatan_pengalaman' => 'nullable|string',
-            'bukti_berbagi' => 'required|image|mimes:png,jpg,jpeg|max:2048',
+            'bukti_berbagi' => 'required|image|mimes:png,jpg,jpeg,mp4|max:5000',
         ]);
 
         // 2. Ambil data pesanan untuk mendapatkan unit_bisnis_id
