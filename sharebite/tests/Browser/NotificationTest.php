@@ -162,3 +162,59 @@ test('UnitBisnisMendaftarNotification generates correct email preview and conten
     expect($mailMessage->actionText)->toContain('Verifikasi NIB');
     expect($mailMessage->actionUrl)->toContain('/admin/manajemen-pengguna');
 });
+
+test('user can toggle notification settings on general settings page (TC-SET-01)', function () {
+    $user = User::factory()->create([
+        'role' => 'individu',
+        'notif_donasi' => true,
+    ]);
+
+    $this->browse(function (Browser $browser) use ($user) {
+        $browser->loginAs($user)
+            ->visit('/user/pengaturan')
+            ->waitForText('Pengaturan')
+            ->assertSee('Donasi Baru')
+            ->click('button[class*="relative inline-flex h-8 w-14"]')
+            ->waitForText('Pengaturan notifikasi berhasil diperbarui!')
+            ->assertSee('Pengaturan notifikasi berhasil diperbarui!');
+    });
+
+    $user->refresh();
+    expect((bool)$user->notif_donasi)->toBeFalse();
+});
+
+test('unit bisnis can toggle notification settings on business settings page (TC-SET-02)', function () {
+    $user = User::factory()->create([
+        'role' => 'unit_bisnis',
+    ]);
+
+    $profile = UnitBisnisProfile::create([
+        'user_id' => $user->id,
+        'nama_usaha' => $user->name,
+        'nama_bisnis' => $user->name,
+        'email_bisnis' => $user->email,
+        'no_telepon' => '08123456789',
+        'lokasi_lat' => '-6.900000',
+        'lokasi_lng' => '107.600000',
+        'verified' => true,
+        'tahun_bergabung' => 2023,
+        'notifikasi_aktif' => true,
+        'notifikasi_pesanan' => true,
+        'notifikasi_penjemputan' => true,
+    ]);
+
+    $this->browse(function (Browser $browser) use ($user) {
+        $browser->loginAs($user)
+            ->visit('/unit/pengaturan')
+            ->waitForText('Pengaturan Operasional')
+            ->assertSee('Aktifkan Notifikasi')
+            ->click('label[class*="relative inline-flex items-center cursor-pointer"]')
+            ->click('#settings-form button[type="submit"]')
+            ->waitForLocation('/unit/pengaturan')
+            ->assertSee('Pengaturan berhasil diperbarui!');
+    });
+
+    $profile->refresh();
+    expect((bool)$profile->notifikasi_aktif)->toBeFalse();
+});
+

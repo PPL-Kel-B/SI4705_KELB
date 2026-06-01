@@ -19,6 +19,12 @@ class PesananMasukNotification extends Notification
 
     public function via($notifiable): array
     {
+        if ($notifiable instanceof \App\Models\User && $notifiable->role === 'unit_bisnis') {
+            $profile = $notifiable->unitBisnisProfile;
+            if ($profile && (!$profile->notifikasi_aktif || !$profile->notifikasi_pesanan)) {
+                return [];
+            }
+        }
         return ['database'];
     }
 

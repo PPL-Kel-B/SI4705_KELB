@@ -141,6 +141,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');
         Route::get('/pengaturan/kebijakan/{type}', [\App\Http\Controllers\SettingsController::class, 'policy'])->name('pengaturan.policy');
         Route::delete('/pengaturan/session/{id}', [\App\Http\Controllers\SettingsController::class, 'logoutSession'])->name('pengaturan.logout_session');
+        Route::post('/pengaturan/update', [\App\Http\Controllers\SettingsController::class, 'update'])->name('pengaturan.update');
 
        Route::get('/unit-bisnis/{id}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'show'])->name('unit-bisnis.show');
 
