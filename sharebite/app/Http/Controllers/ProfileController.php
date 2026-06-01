@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage; // Ditambahkan untuk menghapus file di storage
 
 use App\Models\KomunitasProfile;
 
@@ -107,6 +108,10 @@ class ProfileController extends Controller
         }
 
         if ($request->hasFile('foto_profil')) {
+            // Hapus foto profil lama dari storage jika user mengunggah foto baru
+            if ($user->foto_profil) {
+                Storage::disk('public')->delete($user->foto_profil);
+            }
             $path = $request->file('foto_profil')->store('profile-photos', 'public');
             $user->foto_profil = $path;
         }
@@ -151,5 +156,26 @@ class ProfileController extends Controller
         }
 
         return Redirect::to($backUrl);
+    }
+
+    /**
+     * Menghapus foto profil user / unit bisnis dan memperbarui database menjadi null
+     */
+    public function destroyPhoto(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->foto_profil) {
+            // 1. Hapus file fisik foto profil dari folder storage/app/public
+            Storage::disk('public')->delete($user->foto_profil);
+
+            // 2. Set nilai kolom foto_profil di database menjadi null
+            $user->foto_profil = null;
+            $user->save();
+
+            return Redirect::back()->with('success', 'Foto profil berhasil dihapus!');
+        }
+
+        return Redirect::back()->with('error', 'Anda tidak memiliki foto profil untuk dihapus.');
     }
 }

@@ -119,4 +119,41 @@ class User extends Authenticatable
     {
         return $this->hasMany(Chat::class, 'receiver_id');
     }
+
+    // -------------------------------------------------------
+    // Helper untuk Geolocation / Radius
+    // -------------------------------------------------------
+
+    public static function getUsersWithinRadius($latitude, $longitude, $radiusKm = 5, $roles = ['individu', 'komunitas'])
+    {
+        if (is_null($latitude) || is_null($longitude)) {
+            return collect();
+        }
+
+        $users = self::whereIn('role', $roles)
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get();
+
+        return $users->filter(function ($user) use ($latitude, $longitude, $radiusKm) {
+            $distance = self::calculateDistance($latitude, $longitude, $user->latitude, $user->longitude);
+            return $distance <= $radiusKm;
+        });
+    }
+
+    public static function calculateDistance($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371; // km
+
+        $dLat = deg2rad((float) $lat2 - (float) $lat1);
+        $dLon = deg2rad((float) $lon2 - (float) $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos(deg2rad((float) $lat1)) * cos(deg2rad((float) $lat2)) *
+             sin($dLon / 2) * sin($dLon / 2);
+        
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        
+        return $earthRadius * $c;
+    }
 }
