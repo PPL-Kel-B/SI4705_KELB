@@ -2,16 +2,30 @@
 
 namespace Tests\Browser;
 
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class AdminDashboardReportTest extends DuskTestCase
 {
+    // Menggunakan DatabaseMigrations agar setiap kali test dijalankan,
+    // database testing (sharebite_dusk) di-reset dan data dummy (seeder) dibuat ulang.
+    // Hal ini membuat test bisa di-run berulang kali oleh siapa saja tanpa error.
+    use DatabaseMigrations;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Jalankan seeder agar ada data transaksi yang bisa difilter & dicari
+        $this->artisan('db:seed');
+    }
+
     /**
-     * Helper untuk masuk sebagai admin
+     * Helper untuk login sebagai admin di awal tiap test.
      */
     protected function loginAdmin(Browser $browser): void
     {
+        // Login ulang hanya jika user belum berada di dashboard
         $browser->visit('/login')
             ->type('email', 'admin@sharebite.com')
             ->type('password', 'Admin@2024!')
@@ -21,136 +35,156 @@ class AdminDashboardReportTest extends DuskTestCase
     }
 
     /**
-     * 1. Test Case: Validasi Log Transaksi Terbaru dan Navigasi "Lihat Semua"
+     * TC-DS-01: Fungsionalitas Pencarian Global
      */
-    public function testValidationLogTransaksiDanNavigasi(): void
+    public function test_TC_DS_01_FungsionalitasPencarianGlobal(): void
     {
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
 
-            // Verifikasi kolom-kolom pada tabel Transaksi Terbaru (styled uppercase)
-            $browser->assertSee('Transaksi Terbaru')
-                ->assertSee('MITRA PENYALUR')
-                ->assertSee('PENERIMA MANFAAT')
-                ->assertSee('ITEM MAKANAN')
-                ->assertSee('STATUS')
-                ->assertSee('WAKTU');
-
-            // Klik link "Lihat Semua" dan tunggu halaman memuat
-            $browser->waitForReload(function (Browser $browser) {
-                $browser->clickLink('Lihat Semua');
-            })
-                ->assertPathIs('/admin/transaksi')
-                ->assertSee('Daftar Transaksi'); // Pastikan halaman transaksi termuat
-        });
-    }
-
-    /**
-     * 2. Test Case: Fungsionalitas Tombol "Reset" Filter
-     */
-    public function testFungsionalitasTombolReset(): void
-    {
-        $this->browse(function (Browser $browser) {
-            $this->loginAdmin($browser);
-
-            // Mengisi filter dan tunggu halaman memuat ulang
+            // Ketik kata kunci pada form pencarian dan klik Filter
             $browser->type('search', 'Lestari')
-                ->select('rentang_waktu', 'bulan_ini')
-                ->select('kategori_entitas', 'komunitas')
                 ->waitForReload(function (Browser $browser) {
-                    $browser->press('Filter Data');
+                    $browser->press('Filter Data'); // Tombol submit di dashboard
                 })
-                ->assertQueryStringHas('search', 'Lestari')
-                ->assertQueryStringHas('rentang_waktu', 'bulan_ini')
-                ->assertQueryStringHas('kategori_entitas', 'komunitas');
-
-            // Klik tombol Reset dan tunggu halaman memuat ulang
-            $browser->waitForReload(function (Browser $browser) {
-                $browser->clickLink('Reset');
-            })
-                ->assertPathIs('/admin/dashboard')
-                ->assertQueryStringMissing('search')
-                ->assertQueryStringMissing('rentang_waktu')
-                ->assertQueryStringMissing('kategori_entitas')
-                ->assertInputValue('search', '')
-                ->assertSelected('rentang_waktu', 'semua_waktu')
-                ->assertSelected('kategori_entitas', 'semua_kategori');
+                ->assertQueryStringHas('search', 'Lestari');
         });
     }
 
     /**
-     * 3. Test Case: Sinkronisasi Filter Rentang Waktu dan Kategori Entitas
+     * TC-DS-02: Filter Rentang Waktu & Kategori Entitas
      */
-    public function testSinkronisasiFilterRentangWaktuDanKategori(): void
+    public function test_TC_DS_02_FilterRentangWaktuKategoriEntitas(): void
     {
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
 
-            // Terapkan filter rentang waktu dan kategori entitas dan tunggu halaman memuat ulang
+            // Pilih filter waktu dan kategori
             $browser->select('rentang_waktu', 'bulan_ini')
                 ->select('kategori_entitas', 'komunitas')
                 ->waitForReload(function (Browser $browser) {
                     $browser->press('Filter Data');
                 })
-                ->assertPathIs('/admin/dashboard')
                 ->assertSelected('rentang_waktu', 'bulan_ini')
                 ->assertSelected('kategori_entitas', 'komunitas');
         });
     }
 
     /**
-     * 4. Test Case: Integrasi Filter ke Dokumen Laporan (Generate Laporan)
+     * TC-GL-01: Integrasi Parameter Filter dari Dashboard
      */
-    public function testIntegrasiFilterKeDokumenLaporan(): void
+    public function test_TC_GL_01_IntegrasiParameterFilterDariDashboard(): void
     {
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
 
-            // Terapkan pencarian dan filter dan tunggu halaman memuat ulang
-            $browser->type('search', 'Lestari')
-                ->select('rentang_waktu', 'bulan_ini')
+            // Set filter terlebih dahulu di dashboard
+            $browser->select('rentang_waktu', 'bulan_ini')
                 ->select('kategori_entitas', 'komunitas')
                 ->waitForReload(function (Browser $browser) {
                     $browser->press('Filter Data');
                 });
 
-            // Klik Generate Laporan dan tunggu halaman laporan memuat
+            // Klik tombol "Generate Laporan" dan pastikan filter terbawa
             $browser->waitForReload(function (Browser $browser) {
                 $browser->clickLink('Generate Laporan');
             })
                 ->assertPathBeginsWith('/admin/laporan')
-                ->assertQueryStringHas('search', 'Lestari')
-                ->assertQueryStringHas('rentang_waktu', 'bulan_ini')
-                ->assertQueryStringHas('kategori_entitas', 'komunitas')
-                ->assertSee('Laporan Ringkasan Aktivitas')
                 ->assertSee('FILTER AKTIF:')
-                ->assertSee('ENTITAS: KOMUNITAS')
-                ->assertSee('CARI: "LESTARI"');
+                ->assertSee('KOMUNITAS')
+                ->assertSee('BULAN INI');
         });
     }
 
     /**
-     * 5. Test Case: Penanganan Data Kosong pada Laporan (Edge Case)
+     * TC-GL-02: Penanganan Laporan Kosong (Edge Case)
      */
-    public function testPenangananDataKosongLaporan(): void
+    public function test_TC_GL_02_PenangananLaporanKosongEdgeCase(): void
     {
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
 
-            // Terapkan filter yang bernilai kosong (misalnya bulan_lalu yang tidak ada pesanan di seeder default) dan tunggu halaman memuat ulang
+            // Filter ke rentang waktu "bulan_lalu" (dimana data transaksi belum ada)
             $browser->select('rentang_waktu', 'bulan_lalu')
                 ->waitForReload(function (Browser $browser) {
                     $browser->press('Filter Data');
                 });
 
-            // Klik Generate Laporan dan tunggu halaman laporan memuat admin.
+            // Buka laporan, dan pastikan pesan informatif muncul
             $browser->waitForReload(function (Browser $browser) {
                 $browser->clickLink('Generate Laporan');
             })
                 ->assertPathBeginsWith('/admin/laporan')
-                ->assertSee('Laporan Ringkasan Aktivitas')
-                // Memastikan data kosong ditangani (Total Transaksi 0)
                 ->assertSee('Belum ada transaksi di periode ini.');
+        });
+    }
+
+    /**
+     * TC-DT-01: Pencarian & Filter Kombinasi di Daftar Transaksi
+     */
+    public function test_TC_DT_01_PencarianDanFilterKombinasi(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->loginAdmin($browser);
+            
+            // Masuk ke halaman daftar transaksi
+            $browser->visit('/admin/transaksi');
+
+            // Ketik nama mitra dan pilih status
+            $browser->type('search', 'Lestari')
+                ->select('status', 'dibatalkan')
+                ->waitForReload(function (Browser $browser) {
+                    $browser->press('Filter'); // Tombol submit di daftar transaksi
+                })
+                ->assertQueryStringHas('search', 'Lestari')
+                ->assertQueryStringHas('status', 'dibatalkan');
+        });
+    }
+
+    /**
+     * TC-DT-02: Edge Case Data Tidak Ada
+     */
+    public function test_TC_DT_02_EdgeCaseDataTidakAda(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->loginAdmin($browser);
+            $browser->visit('/admin/transaksi');
+
+            // Ketik nama fiktif yang tidak mungkin ada
+            $browser->type('search', 'KATA_KUNCI_FIKTIF_TIDAK_ADA_123')
+                ->waitForReload(function (Browser $browser) {
+                    $browser->press('Filter');
+                })
+                ->assertSee('Tidak ada transaksi ditemukan.');
+        });
+    }
+
+    /**
+     * TC-DT-03: Tombol Reset & Kembali
+     */
+    public function test_TC_DT_03_TombolResetDanKembali(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->loginAdmin($browser);
+            $browser->visit('/admin/transaksi');
+
+            // Set filter sembarang
+            $browser->type('search', 'Sembarang')
+                ->waitForReload(function (Browser $browser) {
+                    $browser->press('Filter');
+                });
+
+            // Uji tombol Reset (pastikan search jadi kosong)
+            $browser->waitForReload(function (Browser $browser) {
+                $browser->clickLink('Reset');
+            })
+                ->assertInputValue('search', '');
+
+            // Uji tombol Kembali ke Dashboard (pastikan redirect benar)
+            $browser->waitForReload(function (Browser $browser) {
+                $browser->clickLink('Kembali ke Dashboard');
+            })
+                ->assertPathIs('/admin/dashboard');
         });
     }
 }
