@@ -38,8 +38,17 @@
                 <div class="w-10 h-10 rounded-xl bg-[#eefcf4] text-[#1cb764] flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
                 </div>
-                <span class="bg-[#eefcf4] text-[#1cb764] text-xs font-bold px-2 py-1 rounded-md">+12%</span>
+                @if($totalPesanan > 0)
+                    <span class="bg-[#E8F7EE] text-[#1CB764] px-3 py-1 rounded-xl text-sm font-bold">
+                        +{{ $salesGrowth }}%
+                    </span>
+                @else
+                    <span class="bg-gray-100 text-gray-400 px-3 py-1 rounded-xl text-sm font-bold">
+                        Belum Ada
+                    </span>
+                @endif
             </div>
+            <p class="text-sm text-gray-500 mt-1">Total Pesanan</p>
             <p class="text-2xl font-extrabold text-gray-800">{{ number_format($totalPesanan) }}</p>
         </div>
 
@@ -49,8 +58,24 @@
                 <div class="w-10 h-10 rounded-xl bg-[#fcf3e8] text-[#f7b055] flex items-center justify-center">
                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
                 </div>
-                <span class="bg-[#fcf3e8] text-[#f7b055] text-xs font-bold px-2 py-1 rounded-md">Teratas</span>
+                @php
+                    if ($ratingResto >= 4.5) {
+                        $ratingLabel = 'Terbaik';
+                        $ratingClass = 'bg-[#FCF3E8] text-[#F7B055]';
+                    } elseif ($ratingResto >= 3.5) {
+                        $ratingLabel = 'Baik';
+                        $ratingClass = 'bg-[#E8F7EE] text-[#1CB764]';
+                    } elseif ($ratingResto > 0) {
+                        $ratingLabel = 'Kurang Baik';
+                        $ratingClass = 'bg-red-50 text-red-500';
+                    } else {
+                        $ratingLabel = 'Belum Dinilai';
+                        $ratingClass = 'bg-gray-100 text-gray-400';
+                    }
+                @endphp
+                <span class="{{ $ratingClass }} px-3 py-1 rounded-xl text-sm font-bold">{{ $ratingLabel }}</span>
             </div>
+            <p class="text-sm text-gray-500 mt-1">Rating Resto</p>
             <p class="text-2xl font-extrabold text-gray-800">{{ number_format($ratingResto, 1) }}<span class="text-sm text-gray-400">/5.0</span></p>
         </div>
 
@@ -60,8 +85,17 @@
                 <div class="w-10 h-10 rounded-xl bg-[#eefcf4] text-[#1cb764] flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 </div>
-                <span class="bg-[#eefcf4] text-[#1cb764] text-xs font-bold px-2 py-1 rounded-md">Bulan Ini</span>
+                @if($totalPendapatan > 0)
+                    <span class="bg-[#E8F7EE] text-[#1CB764] px-3 py-1 rounded-xl text-sm font-bold">
+                        {{ now()->translatedFormat('F') }}
+                    </span>
+                @else
+                    <span class="bg-gray-100 text-gray-400 px-3 py-1 rounded-xl text-sm font-bold">
+                        Belum Ada
+                    </span>
+                @endif
             </div>
+            <p class="text-sm text-gray-500 mt-1">Total Pendapatan</p>
             <p class="text-2xl font-extrabold text-gray-800">Rp {{ $totalPendapatan >= 1000000 ? number_format($totalPendapatan / 1000000, 1) . 'M' : number_format($totalPendapatan / 1000, 0) . 'K' }}</p>
         </div>
 
@@ -71,14 +105,36 @@
                 <div class="w-10 h-10 rounded-xl bg-[#eefcf4] text-[#1cb764] flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                 </div>
-                <span class="bg-[#eefcf4] text-[#1cb764] text-xs font-bold px-2 py-1 rounded-md">Stabil</span>
+                @php
+                    if ($totalPendapatan == 0) {
+                        $growthLabel = 'Belum Ada Data';
+                        $growthClass = 'bg-gray-100 text-gray-400';
+                    } elseif ($salesGrowth >= 20) {
+                        $growthLabel = 'Sangat Meningkat';
+                        $growthClass = 'bg-[#E8F7EE] text-[#1CB764]';
+                    } elseif ($salesGrowth > 0) {
+                        $growthLabel = 'Meningkat';
+                        $growthClass = 'bg-[#E8F7EE] text-[#1CB764]';
+                    } elseif ($salesGrowth == 0) {
+                        $growthLabel = 'Stabil';
+                        $growthClass = 'bg-blue-50 text-blue-500';
+                    } elseif ($salesGrowth > -20) {
+                        $growthLabel = 'Kurang Stabil';
+                        $growthClass = 'bg-yellow-50 text-yellow-600';
+                    } else {
+                        $growthLabel = 'Menurun';
+                        $growthClass = 'bg-red-50 text-red-500';
+                    }
+                @endphp
+                <span class="{{ $growthClass }} px-3 py-1 rounded-xl text-sm font-bold">{{ $growthLabel }}</span>
             </div>
+            <p class="text-sm text-gray-500 mt-1">Sales Growth</p>
             <p class="text-2xl font-extrabold text-gray-800">{{ $salesGrowth }}%</p>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
         <!-- Graph Section (Full width) -->
         <div class="lg:col-span-3">
@@ -88,9 +144,9 @@
                         <h2 class="text-xl font-extrabold text-gray-800">Jumlah Penjualan Per Bulan</h2>
                         <p class="text-xs text-gray-500 mt-1">Volume porsi makanan yang berhasil diredistribusikan</p>
                     </div>
-                    <div class="flex gap-2">
-                        <button class="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">2023</button>
-                        <button class="px-3 py-1 bg-[#0a2e1f] text-white rounded-full text-xs font-bold">2024</button>
+                    <div class="bg-[#0D4D36] text-white px-5 py-2 rounded-full text-sm font-bold">
+                        {{ now()->year }}
+                    </div>
                     </div>
                 </div>
 
@@ -133,19 +189,23 @@
         </div>
 
         <!-- Left: Pesanan Masuk (2/3 width) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         <div class="lg:col-span-2">
-            <div class="bg-white rounded-3xl p-6 shadow-sm">
+            <div class="bg-white rounded-3xl p-6 shadow-sm h-full">
                 <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-extrabold text-gray-800">Pesanan Masuk</h2>
-                    <a href="{{ route('unit.pesanan') }}" class="text-[#1cb764] text-xs font-bold hover:underline flex items-center gap-1">
-                        Lihat Semua 
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    <h2 class="text-xl font-extrabold text-gray-800">
+                        Pesanan Masuk
+                    </h2>
+
+                    <a href="{{ route('unit.pesanan') }}"
+                    class="text-[#1cb764] text-xs font-bold">
+                        Lihat Semua →
                     </a>
                 </div>
                 <div class="space-y-4">
                     @forelse($pesananMasuk as $pesanan)
                         @php
-                            $namaMakanan = $pesanan->menuAktif?->masterMakanan?->nama ?? 'Menu tidak tersedia';
+                            $namaMakanan = $pesanan->menuAktif?->masterMakanan?->nama_makanan ?? 'Menu tidak tersedia';
                             $foto        = $pesanan->menuAktif?->masterMakanan?->foto;
                             $fotoUrl     = $foto ? asset('storage/' . $foto) : null;
                             $porsi       = $pesanan->jumlah_porsi;
@@ -160,36 +220,75 @@
                             };
                         @endphp
 
-                        <div class="flex items-center justify-between p-3 bg-[#F4F8F6] rounded-2xl border border-gray-50">
-                            <div class="flex items-center gap-4">
-                                <div class="w-16 h-16 bg-gray-200 rounded-xl shrink-0 overflow-hidden">
+                        <a href="{{ route('unit.pesanan') }}"
+                            class="group flex items-center justify-between
+                                bg-[#F4F8F6]
+                                rounded-2xl
+                                p-4
+                                hover:shadow-md
+                                hover:-translate-y-1
+                                transition-all duration-300">
+
+                            {{-- KIRI --}}
+                            <div class="flex items-center gap-4 min-w-0">
+
+                                <div class="w-16 h-16 rounded-2xl overflow-hidden bg-[#D8F3E3] shrink-0">
                                     @if($fotoUrl)
-                                        <img src="{{ $fotoUrl }}" alt="{{ $namaMakanan }}" class="w-full h-full object-cover"
-                                            onerror="this.style.display='none'; this.parentElement.style.background='#d1fae5';">
+                                        <img
+                                            src="{{ $fotoUrl }}"
+                                            alt="{{ $namaMakanan }}"
+                                            class="w-full h-full object-cover transition duration-300 group-hover:scale-105"
+                                        >
                                     @else
-                                        <div class="w-full h-full bg-[#d1fae5] flex items-center justify-center">
-                                            <svg class="w-6 h-6 text-[#1cb764]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        <div class="w-full h-full flex items-center justify-center">
+                                            <svg class="w-6 h-6 text-[#1CB764]"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round"
+                                                    stroke-linejoin="round"
+                                                    stroke-width="2"
+                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01"/>
                                             </svg>
                                         </div>
                                     @endif
                                 </div>
-                                <div>
-                                    <h3 class="font-bold text-sm text-gray-800">{{ $namaMakanan }}</h3>
-                                    <p class="text-xs text-gray-500 mt-0.5">{{ $porsi }} Porsi &bull; Dipesan {{ $waktu }}</p>
+
+                                <div class="min-w-0">
+                                    <h3 class="font-semibold text-[#1A1A1A] truncate">
+                                        {{ $namaMakanan }}
+                                    </h3>
+
+                                    <p class="text-sm text-gray-500">
+                                        {{ $porsi }} Porsi • Dipesan {{ $waktu }}
+                                    </p>
                                 </div>
+
                             </div>
-                            <div class="flex items-center gap-4">
-                                <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }} text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider whitespace-nowrap">
+
+                            {{-- KANAN --}}
+                            <div class="flex items-center gap-3 shrink-0">
+
+                                <span class="{{ $statusConfig['bg'] }} {{ $statusConfig['text'] }}
+                                            text-xs font-semibold
+                                            px-3 py-1 rounded-full">
                                     {{ $statusConfig['label'] }}
                                 </span>
-                                <a href="{{ route('unit.pesanan') }}" class="text-gray-400 hover:text-gray-600">
-                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                                    </svg>
-                                </a>
+
+                                <svg
+                                    class="w-5 h-5 text-gray-400 opacity-0
+                                        group-hover:opacity-100
+                                        transition duration-300"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M9 5l7 7-7 7"/>
+                                </svg>
                             </div>
-                        </div>
+                        </a>
                     @empty
                         {{-- Tampilkan jika belum ada pesanan --}}
                         <div class="flex flex-col items-center justify-center py-10 text-center">
@@ -207,10 +306,9 @@
         </div>
 
         <!-- Right: Kelola Menu Aktif (1/3 width) -->
-        <div>
-            <div class="bg-white rounded-3xl p-6 shadow-sm h-full flex flex-col">
+        <div class="self-start">
+            <div class="bg-white rounded-3xl p-6 shadow-sm">
                 <h2 class="text-xl font-extrabold text-gray-800 mb-6">Kelola Menu Aktif</h2>
-                
                 <div class="space-y-4 flex-1">
                     <!-- Status 1: Tersedia — count dari controller -->
                     <div class="bg-[#F4F8F6] border border-gray-100 rounded-2xl p-4">
@@ -257,5 +355,6 @@
                 </a>
             </div>
         </div>
+    </div>
 </div>
 @endsection

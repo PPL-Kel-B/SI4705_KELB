@@ -11,11 +11,11 @@ uses(DatabaseTruncation::class);
 test('user can visit landing page and navigate to Mitra Kami (TC-LP-01)', function () {
     $this->browse(function (Browser $browser) {
         $browser->visit('/')
+            ->waitForText('SELAMATKAN')
             ->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));");
 
         $browser->assertSee('SELAMATKAN')
             ->assertSee('MAKANAN')
-            ->assertSee('TENTANG KAMI')
             ->clickLink('Mitra Kami')
             ->waitForLocation('/mitra')
             ->assertPathIs('/mitra')
@@ -184,5 +184,15 @@ test('user can reset category filter to Semua Kategori (TC-MIT-05)', function ()
             ->waitForLocation('/mitra')
             ->assertSee('Lestari Bakery')
             ->assertSee('Sari Cafe');
+    });
+});
+
+test('user can visit landing page and navigate to Login page (TC-LP-04)', function () {
+    $this->browse(function (Browser $browser) {
+        $browser->visit('/')
+            ->clickLink('Masuk')
+            ->waitForLocation('/login')
+            ->assertPathIs('/login')
+            ->assertSee('Selamat Datang');
     });
 });

@@ -33,13 +33,13 @@
             </svg>
         </div>
         <h1 class="text-[32px] font-extrabold text-gray-800 tracking-tight">Pembayaran Berhasil!</h1>
-        <p class="text-gray-500 font-medium mt-2 text-[15px]">Pesanan Anda telah dikonfirmasi. Tunjukkan kode di bawah ke staf gerai.</p>
+        <p class="text-gray-500 font-medium mt-2 text-[15px]">Pesanan Anda telah dikonfirmasi. Tunjukkan kode di bawah ke staf resto.</p>
     </div>
 
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full max-w-full mx-auto mb-10">
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 w-full max-w-full mx-auto mb-10 items-stretch">
 
         {{-- KOLOM KIRI --}}
-        <div class="xl:col-span-8 flex flex-col gap-6">
+        <div class="xl:col-span-8 flex flex-col gap-6 h-full">
             
             <div class="bg-white p-8 lg:p-10 rounded-[32px] shadow-sm border border-green-50 flex flex-col items-center text-center">
                 <span class="text-[12px] font-extrabold text-gray-400 tracking-[0.15em] uppercase mb-4">KODE VERIFIKASI PENGAMBILAN</span>
@@ -70,7 +70,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-8-4.5-8-11.8A8 8 0 0112 1.2a8 8 0 018 8c0 7.3-8 11.8-8 11.8z" />
                             <circle cx="12" cy="9.2" r="2.5" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        <h3 class="text-[17px] font-extrabold text-gray-900">Lokasi Pengambilan</h3>
+                        <h3 class="text-[17px] font-extrabold text-gray-900">Lokasi Pengambilan Pesanan</h3>
                     </div>
                     
                     <a href="https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}" target="_blank" class="text-[#189347] text-[13px] font-bold flex items-center gap-1.5 hover:underline">
@@ -83,21 +83,25 @@
                 
                 {{-- Nama Resto & Alamat Singkat --}}
                 <p class="text-gray-500 font-medium text-[14px] mb-6 pl-8">
-                    {{ $makanan->unitBisnis->user->name ?? 'Gerai ShareBite' }}, {{ $makanan->unitBisnis->user->alamat ?? 'Alamat gerai belum diatur' }}
+                    {{ $makanan->unitBisnis->user->name ?? 'Resto ShareBite' }}, {{ $makanan->unitBisnis->user->alamat ?? 'Alamat resto belum diatur' }}
                 </p>
                 
-                {{-- MAP WRAPPER FULL WIDTH --}}
-                <div class="relative w-full h-[250px] bg-gray-100 rounded-[20px] overflow-hidden border border-gray-100 shadow-inner z-0">
+                {{-- MAP WRAPPER --}}
+                <div onclick="window.open('https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}', '_blank')" class="relative w-full flex-1 min-h-[120px] bg-gray-100 rounded-[20px] overflow-hidden border border-gray-100 shadow-inner z-0 cursor-pointer group">
                     <div id="map-berhasil" class="absolute inset-0 z-0"></div>
+                    <div class="absolute inset-0 z-10 bg-black/5 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
+                        <div class="bg-white/90 backdrop-blur-sm px-5 py-2.5 rounded-full text-[13px] font-extrabold text-[#189347] shadow-md flex items-center gap-2 transform scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                            Buka Map
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         {{-- KOLOM KANAN --}}
-        <div class="xl:col-span-4 flex flex-col gap-6">
+        <div class="xl:col-span-4 flex flex-col gap-6 h-full">
             <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50">
-                
-                {{-- INI TAMBAHAN JUDUL & BADGE PAID-NYA --}}
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-[17px] font-extrabold text-gray-800 tracking-tight">Ringkasan Pesanan</h3>
                     <span class="bg-[#eefcf4] border border-[#b3dfc3] text-[#189347] text-[11px] font-extrabold px-4 py-1.5 rounded-full tracking-widest uppercase shadow-sm">PAID</span>
@@ -111,44 +115,47 @@
                 </div>
                 <div class="pt-5 border-t border-gray-140 flex justify-between items-center">
                     <span class="text-[14px] text-gray-500 font-bold">Total Pembayaran</span>
-                    <span class="text-[22px] font-extrabold text-[#189347]">Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
+                    <span class="text-[22px] font-extrabold text-[#189347]">
+                        @if($makanan->is_gratis)
+                            GRATIS
+                        @else
+                            Rp {{ number_format($subtotal, 0, ',', '.') }}
+                        @endif
+                    </span>
                 </div>
             </div>
 
+            {{-- KOTAK LANGKAH PENGAMBILAN --}}
             <div class="bg-white p-8 rounded-[32px] shadow-sm border border-gray-50 h-fit flex flex-col z-10 relative">
-                
-                {{-- Judul dengan Aksen Garis Vertikal --}}
                 <div class="flex items-center gap-3 mb-5 z-10 relative">
                     <div class="w-1.5 h-6 bg-[#0B6A38] rounded-full"></div>
                     <h3 class="text-[18px] font-extrabold text-gray-900 tracking-tight">Langkah Pengambilan</h3>
                 </div>
 
-                {{-- List Langkah --}}
                 <div class="relative space-y-6 z-10 ml-5">
-                    {{-- Garis tebal penghubung di belakang (Dimulai dari top-5 agar sembunyi di balik angka 1) --}}
                     <div class="absolute left-5 top-5 bottom-5 w-1 bg-[#F0F7F2] -ml-[2px] z-0 rounded-full"></div>
 
-                    {{-- Langkah 1 --}}
                     <div class="flex items-start gap-5 relative z-10">
-                        <div class="w-10 h-10 bg-[#0B6A38] text-white rounded-full flex items-center justify-center font-bold text-[16px] shadow-[0_6px_16px_rgba(11,106,56,0.3)] shrink-0 ring-4 ring-white z-10">
-                            1
-                        </div>
+                        <div class="w-10 h-10 bg-[#0B6A38] text-white rounded-full flex items-center justify-center font-bold text-[16px] shadow-[0_6px_16px_rgba(11,106,56,0.3)] shrink-0 ring-4 ring-white z-10">1</div>
                         <p class="text-gray-900 font-bold text-[15px] mt-2 leading-relaxed">
-                            Datang ke gerai sebelum batas waktu pengambilan berakhir.
+                            Datang ke resto sebelum batas waktu pengambilan berakhir.
                         </p>
                     </div>
 
-                    {{-- Langkah 2 --}}
                     <div class="flex items-start gap-5 relative z-10">
-                        <div class="w-10 h-10 bg-[#0B6A38] text-white rounded-full flex items-center justify-center font-bold text-[16px] shadow-[0_6px_16px_rgba(11,106,56,0.3)] shrink-0 ring-4 ring-white z-10">
-                            2
-                        </div>
+                        <div class="w-10 h-10 bg-[#0B6A38] text-white rounded-full flex items-center justify-center font-bold text-[16px] shadow-[0_6px_16px_rgba(11,106,56,0.3)] shrink-0 ring-4 ring-white z-10">2</div>
                         <p class="text-gray-900 font-bold text-[15px] mt-1 leading-relaxed">
-                            Klik <span class="font-extrabold text-[#189347]">Lihat Kode Verifikasi</span>, lalu tunjukkan kode tersebut kepada staf gerai.
+                            Klik Lihat Kode Verifikasi, lalu tunjukkan kode tersebut kepada staf resto.
+                        </p>
+                    </div>
+
+                    <div class="flex items-start gap-5 relative z-10">
+                        <div class="w-10 h-10 bg-[#0B6A38] text-white rounded-full flex items-center justify-center font-bold text-[16px] shadow-[0_6px_16px_rgba(11,106,56,0.3)] shrink-0 ring-4 ring-white z-10">3</div>
+                        <p class="text-gray-900 font-bold text-[15px] mt-2 leading-relaxed">
+                            Makanan siap diambil.
                         </p>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -180,11 +187,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const lat = {{ $makanan->unitBisnis->user->latitude ?? -6.193125 }};
     const lng = {{ $makanan->unitBisnis->user->longitude ?? 106.76483 }};
     
-    // Zoom control di-false agar UI map terlihat lebih bersih seperti desain
     const map = L.map('map-berhasil', { zoomControl: false, dragging: true, scrollWheelZoom: false }).setView([lat, lng], 16);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
     
-    // Desain Custom Marker Sendok & Garpu dengan efek pulse hijau
     const customIcon = L.divIcon({ 
         className: 'custom-leaflet-marker', 
         html: `<div class="relative flex items-center justify-center w-24 h-24">
