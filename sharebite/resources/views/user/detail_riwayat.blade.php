@@ -59,24 +59,68 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div class="bg-[#E7ECE8]/40 border border-gray-100 rounded-xl p-4">
+                    <div class="bg-[#E6F4EA]/40 border border-gray-100 rounded-xl p-4">
                         <span class="block text-[10px] font-black uppercase text-gray-400 tracking-wider mb-1">Tanggal Donasi</span>
                         <span class="text-sm font-black text-gray-800">{{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->translatedFormat('d F Y') }}</span>
                     </div>
-                    <div class="bg-[#E7ECE8]/40 border border-gray-100 rounded-xl p-4">
+                    <div class="bg-[#E6F4EA]/40 border border-gray-100 rounded-xl p-4">
                         <span class="block text-[10px] font-black uppercase text-gray-400 tracking-wider mb-1">Porsi</span>
-                        <span class="text-sm font-black text-gray-800">{{ $pesanan->jumlah ?? 2 }} Porsi</span>
+                        <span class="text-sm font-black text-gray-800">{{ $pesanan->jumlah_porsi ?? 0 }} Porsi</span>
                     </div>
                 </div>
+
+                @if(in_array($pesanan->status, ['batal', 'dibatalkan']))
+                    {{-- TAMPILAN JIKA STATUS DONASI BATAL / DIBATALKAN --}}
+                    <div class="bg-red-50/60 border border-red-100 rounded-xl p-4">
+                        <span class="block text-[10px] font-black uppercase text-red-400 tracking-wider mb-2">Informasi Transaksi</span>
+                        <div class="flex justify-between items-center text-xs font-semibold text-gray-600 mb-1.5">
+                            <span>Status Transaksi</span>
+                            <span class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded-lg text-[10px] tracking-wide">DIBATALKAN</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs font-semibold text-gray-600">
+                            <span>Waktu Pembatalan</span>
+                            <span class="text-gray-800 font-semibold">{{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->translatedFormat('d M Y, H:i') }} WIB</span>
+                        </div>
+                    </div>
+                @else
+                    {{-- TAMPILAN NORMAL (SELESAI / PROSES / MENUNGGU PEMBAYARAN) --}}
+                    <div class="bg-[#E6F4EA]/40 border border-gray-100 rounded-xl p-4">
+                        <span class="block text-[10px] font-black uppercase text-gray-400 tracking-wider mb-2">Informasi Transaksi</span>
+                        <div class="flex justify-between items-center text-xs font-semibold text-gray-600 mb-1.5">
+                            <span>Metode Pembayaran</span>
+                            <span class="text-gray-800 font-semibold">QRIS</span>
+                        </div>
+                        <div class="flex justify-between items-center text-xs font-semibold text-gray-600">
+                            <span>Waktu Pemesanan</span>
+                            <span class="text-gray-800 font-semibold">{{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->translatedFormat('d M Y, H:i') }} WIB</span>
+                        </div>
+                    </div>
+                @endif
             </div>
 
-            <div class="flex justify-between items-center border-t border-gray-100 pt-5 mt-auto mb-4">
-                <div class="flex items-center gap-2 text-[#137333] font-bold text-sm">
-                    <div class="w-5 h-5 rounded-full bg-[#E6F4EA] flex items-center justify-center shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.5 2.5a.75.75 0 0 0 1.14-.083l3.75-5.25Z" clip-rule="evenodd" /></svg>
+            <div class="flex justify-between items-center border-t border-white pt-5 mt-auto mb-4">
+                {{-- REVISI: Hanya tampilkan 'Verifikasi Berhasil' jika status BUKAN batal / dibatalkan --}}
+                @if(!in_array($pesanan->status, ['batal', 'dibatalkan']))
+                    <div class="flex items-center gap-2 text-[#137333] font-bold text-sm">
+                        <div class="w-5 h-5 rounded-full bg-[#E6F4EA] flex items-center justify-center shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5">
+                                <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.5 2.5a.75.75 0 0 0 1.14-.083l3.75-5.25Z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span>Verifikasi Berhasil</span>
                     </div>
-                    <span>Verifikasi Berhasil</span>
-                </div>
+                @else
+                    {{-- Opsional: Tampilan penanda jika dibatalkan agar layout kiri-kanan tidak kosong/pincang --}}
+                    <div class="flex items-center gap-2 text-red-600 font-bold text-sm">
+                        <div class="w-5 h-5 rounded-full bg-red-50 flex items-center justify-center shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5">
+                                <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <span>Pesanan Dibatalkan</span>
+                    </div>
+                @endif
+
                 <div class="text-right">
                     <span class="block text-[9px] font-bold uppercase text-gray-400 tracking-widest">ID:</span>
                     <span class="text-xs font-bold text-gray-600">SB-{{ $pesanan->id ?? '882910' }}</span>
@@ -107,16 +151,28 @@
                         Unggah Bukti Berbagi
                     </h3>
                     
-                    <div id="dropzone" onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-[#E7ECE8] hover:border-[#1cb764] rounded-2xl bg-gray-50/50 p-8 flex flex-col items-center justify-center text-center group cursor-pointer transition flex-grow">
+                    <div id="dropzone" onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-[#E7ECE8] hover:border-[#1cb764] rounded-2xl bg-gray-50/50 p-6 flex flex-col items-center justify-center text-center group cursor-pointer transition flex-grow relative overflow-hidden min-h-[220px]">
                         <input type="file" id="file-input" name="bukti_berbagi" accept=".png, .jpg, .jpeg, .mp4" class="hidden" onchange="handleFileSelect(this.files)">
 
-                        <div class="w-12 h-12 rounded-full bg-[#E7ECE8]/60 flex items-center justify-center text-[#046A38] group-hover:bg-[#E6F4EA] transition mb-3">
-                            <svg id="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.375A1.5 1.5 0 0 0 1.875 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                        <div id="upload-prompt" class="flex flex-col items-center justify-center">
+                            <div class="w-12 h-12 rounded-full bg-[#E7ECE8]/60 flex items-center justify-center text-[#046A38] group-hover:bg-[#E6F4EA] transition mb-3">
+                                <svg id="upload-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.375A1.5 1.5 0 0 0 1.875 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                            </div>
+                            <h4 id="upload-headline" class="text-sm font-black text-gray-800 mb-1">Pilih File atau seret ke sini</h4>
+                            <p id="upload-subline" class="text-[11px] text-gray-400 font-bold max-w-xs mb-4">Tarik dan lepas foto bukti distribusi di sini (PNG, JPG, JPEG, MP4 - Maks 20MB)</p>
+                            <button type="button" class="px-4 py-2 bg-[#046A38] hover:bg-[#03532B] text-white text-xs font-black rounded-xl shadow-sm transition">Pilih File</button>
                         </div>
-                        
-                        <h4 id="upload-headline" class="text-sm font-black text-gray-800 mb-1">Pilih File atau seret ke sini</h4>
-                        <p id="upload-subline" class="text-[11px] text-gray-400 font-bold max-w-xs mb-4">Tarik dan lepas foto bukti distribusi di sini (PNG, JPG, JPEG, MP4 - Maks 20MB)</p>
-                        <button type="button" class="px-4 py-2 bg-[#046A38] hover:bg-[#03532B] text-white text-xs font-black rounded-xl shadow-sm transition">Pilih File</button>
+
+                        <div id="preview-container" class="hidden absolute inset-0 w-full h-full bg-white flex flex-col items-center justify-center p-4">
+                            <img id="image-preview" src="" class="hidden w-full h-full object-contain rounded-2xl">
+                            
+                            <video id="video-preview" src="" class="hidden w-full h-full object-contain rounded-2xl" controls></video>
+
+                            <div class="absolute bottom-3 left-3 right-3 bg-gray-900/70 backdrop-blur-sm text-white px-3 py-1.5 rounded-xl text-[11px] font-semibold flex justify-between items-center">
+                                <span id="preview-filename" class="truncate max-w-[70%]">nama_file.jpg</span>
+                                <span onclick="event.stopPropagation(); resetUpload();" class="text-red-400 hover:text-red-300 font-bold cursor-pointer transition ml-2 shrink-0">Hapus</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -168,6 +224,13 @@
     const headline = document.getElementById('upload-headline');
     const subline = document.getElementById('upload-subline');
 
+    // Tambahan elemen DOM baru untuk menangani preview
+    const uploadPrompt = document.getElementById('upload-prompt');
+    const previewContainer = document.getElementById('preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const videoPreview = document.getElementById('video-preview');
+    const previewFilename = document.getElementById('preview-filename');
+
     function handleFileSelect(files) {
         if (files.length > 0) { validateAndDisplayFile(files[0]); }
     }
@@ -188,7 +251,7 @@
             return;
         }
 
-        // REVISI: 2. Validasi Batas Maksimal Ukuran File (Contoh: 20 MB = 20 * 1024 * 1024 bytes)
+        // 2. Validasi Batas Maksimal Ukuran File (20 MB)
         const maxSizeInBytes = 20 * 1024 * 1024; 
         if (file.size > maxSizeInBytes) {
             Swal.fire({
@@ -198,14 +261,53 @@
                 confirmButtonColor: '#D93025',
                 customClass: { popup: 'rounded-[2rem]' }
             });
-            fileInput.value = ''; // Reset input file jika terlalu besar
+            fileInput.value = ''; 
             return;
         }
 
-        headline.innerText = "File Siap Diunggah!";
-        headline.classList.remove('text-gray-800');
-        headline.classList.add('text-[#046A38]');
-        subline.innerText = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        // --- LOGIKA BARU: PROSES MENAMPILKAN PREVIEW ---
+        const fileUrl = URL.createObjectURL(file);
+        
+        if (uploadPrompt) uploadPrompt.classList.add('hidden'); 
+        if (previewContainer) previewContainer.classList.remove('hidden'); 
+        if (previewFilename) {
+            previewFilename.innerText = `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+        }
+
+        if (file.type === 'video/mp4') {
+            if (imagePreview) imagePreview.classList.add('hidden');
+            if (videoPreview) {
+                videoPreview.classList.remove('hidden');
+                videoPreview.src = fileUrl;
+            }
+        } else {
+            if (videoPreview) videoPreview.classList.add('hidden');
+            if (imagePreview) {
+                imagePreview.classList.remove('hidden');
+                imagePreview.src = fileUrl;
+            }
+        }
+
+        // Tetap mempertahankan teks status bawaan di balik layar jika dibutuhkan
+        if (headline) {
+            headline.innerText = "File Siap Diunggah!";
+            headline.classList.remove('text-gray-800');
+            headline.classList.add('text-[#046A38]');
+        }
+        if (subline) subline.innerText = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    }
+
+    // Fungsi Baru untuk Reset Upload saat tombol Hapus di-klik
+    window.resetUpload = function() {
+        fileInput.value = ''; 
+        if (imagePreview) imagePreview.src = '';
+        if (videoPreview) {
+            videoPreview.src = '';
+            videoPreview.classList.add('hidden');
+        }
+        if (imagePreview) imagePreview.classList.add('hidden');
+        if (previewContainer) previewContainer.classList.add('hidden');
+        if (uploadPrompt) uploadPrompt.classList.remove('hidden'); 
     }
 
     if (dropzone) {

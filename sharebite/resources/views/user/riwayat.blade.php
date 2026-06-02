@@ -141,8 +141,11 @@
 
                 <tr class="border-b border-gray-100/70 transition cursor-pointer hover:bg-gray-50/80" 
                     onclick="window.location='{{ $urlTujuan }}'">
-                    <td class="py-7 text-gray-500 font-semibold">
-                        {{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->translatedFormat('d M Y') }}
+                    <td class="py-7 text-gray-500 font-semibold vertical-align-middle">
+                        <div class="flex flex-col justify-center">
+                            <span class="text-gray-700 text-xs font-bold">{{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->translatedFormat('d M Y') }}</span>
+                            <span class="text-[11px] text-gray-400 font-medium mt-1">{{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->format('H:i') }} WIB</span>
+                        </div>
                     </td>
                     
                     <td class="py-7 flex items-center gap-3">

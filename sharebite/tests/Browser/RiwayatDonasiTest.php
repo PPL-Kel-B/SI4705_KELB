@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Config;
 // SKENARIO 1: Mengetes Keamanan Hak Akses Riwayat Per Akun (Anti-IDOR)
 // =========================================================================
 test('skenario 1 keamanan riwayat per akun', function () {
-    Config::set('database.connections.mysql.database', 'sharebite');
+    Config::set('database.connections.mysql.database', 'sharebite_dusk');
     Config::set('database.connections.mysql.username', 'root');
     Config::set('database.connections.mysql.password', ''); 
     Config::set('database.default', 'mysql');
@@ -35,7 +35,7 @@ test('skenario 1 keamanan riwayat per akun', function () {
 // SKENARIO 2: Mengetes Fitur Filter Status Pesanan (4 Status)
 // =========================================================================
 test('skenario 2 filter status pesanan', function () {
-    Config::set('database.connections.mysql.database', 'sharebite');
+    Config::set('database.connections.mysql.database', 'sharebite_dusk'); // <--- SUDAH DIPERBAIKI
     Config::set('database.connections.mysql.username', 'root');
     Config::set('database.connections.mysql.password', ''); 
     Config::set('database.default', 'mysql');
@@ -61,7 +61,7 @@ test('skenario 2 filter status pesanan', function () {
         // -----------------------------------------------------------------
         $browser->clickLink('Proses') 
                 ->pause(1500)
-                ->assertQueryStringHas('status', 'proses') // Sekarang fokus mencari teks 'proses'
+                ->assertQueryStringHas('status', 'proses') 
                 ->assertDontSeeIn('tbody', 'selesai')
                 ->assertDontSeeIn('tbody', 'menunggu_pembayaran')
                 ->assertDontSeeIn('tbody', 'dibatalkan');
@@ -69,7 +69,7 @@ test('skenario 2 filter status pesanan', function () {
         // -----------------------------------------------------------------
         // C. PENGUJIAN FILTER: MENUNGGU PEMBAYARAN
         // -----------------------------------------------------------------
-        $browser->clickLink('Menunggu Pembayaran') // Sesuaikan dengan nama link/tombol di UI-mu
+        $browser->clickLink('Menunggu Pembayaran') 
                 ->pause(1500)
                 ->assertQueryStringHas('status', 'menunggu_pembayaran')
                 ->assertDontSeeIn('tbody', 'selesai')
@@ -92,17 +92,16 @@ test('skenario 2 filter status pesanan', function () {
 // SKENARIO 3: Mengetes Validasi Ekstensi dan Ukuran File Upload (Max 2MB)
 // =========================================================================
 test('skenario 3 validasi format dan ukuran upload', function () {
-    Config::set('database.connections.mysql.database', 'sharebite');
+    Config::set('database.connections.mysql.database', 'sharebite_dusk'); // <--- SUDAH DIPERBAIKI
     Config::set('database.connections.mysql.username', 'root');
     Config::set('database.connections.mysql.password', ''); 
     Config::set('database.default', 'mysql');
 
     $user = User::find(10);
-    $idPesananSelesaiBelumDiisi = 19; // 
+    $idPesananSelesaiBelumDiisi = 19; 
 
     $this->browse(function (Browser $browser) use ($user, $idPesananSelesaiBelumDiisi) {
         $browser->loginAs($user)
-                // Langsung lompati halaman tabel riwayat, tembak langsung detail donasinya
                 ->visit("http://127.0.0.1:8001/user/riwayat/{$idPesananSelesaiBelumDiisi}")
                 ->waitFor('#dropzone')
 
@@ -119,13 +118,13 @@ test('skenario 3 validasi format dan ukuran upload', function () {
 // SKENARIO 4: Mengetes Validasi Form Kosong (SweetAlert2 Memblokir Pengiriman)
 // =========================================================================
 test('skenario 4 validasi mandatory form testimoni', function () {
-    Config::set('database.connections.mysql.database', 'sharebite');
+    Config::set('database.connections.mysql.database', 'sharebite_dusk'); // <--- SUDAH DIPERBAIKI
     Config::set('database.connections.mysql.username', 'root');
     Config::set('database.connections.mysql.password', ''); 
     Config::set('database.default', 'mysql');
 
     $user = User::find(10);
-    $idPesananSelesaiBelumDiisi = 19; 
+    $idPesananSelesaiBelumDiisi = 13; 
 
     $this->browse(function (Browser $browser) use ($user, $idPesananSelesaiBelumDiisi) {
         $browser->loginAs($user)
@@ -147,13 +146,13 @@ test('skenario 4 validasi mandatory form testimoni', function () {
 // SKENARIO 5: Sukses Kirim Testimoni & Berubah Menjadi Tampilan Terkunci
 // =========================================================================
 test('skenario 5 sukses kirim testimoni hingga lock form', function () {
-    Config::set('database.connections.mysql.database', 'sharebite');
+    Config::set('database.connections.mysql.database', 'sharebite_dusk'); // <--- SUDAH DIPERBAIKI
     Config::set('database.connections.mysql.username', 'root');
     Config::set('database.connections.mysql.password', ''); 
     Config::set('database.default', 'mysql');
 
     $user = User::find(10);
-    $idPesananSelesaiBelumDiisi = 19; 
+    $idPesananSelesaiBelumDiisi = 14; 
 
     $this->browse(function (Browser $browser) use ($user, $idPesananSelesaiBelumDiisi) {
         $browser->loginAs($user)

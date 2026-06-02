@@ -64,7 +64,7 @@ class PembayaranController extends Controller
         if ($status === 'Berhasil') {
             // Ubah status di database lokal phpMyAdmin menjadi 'dibayar' atau 'proses'
             DB::table('pesanans')->where('id', $id)->update([
-                'status' => 'proses',
+                'status' => 'dibayar',
                 'updated_at' => now()
             ]);
 
