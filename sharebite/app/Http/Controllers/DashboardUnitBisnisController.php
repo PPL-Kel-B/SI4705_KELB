@@ -34,20 +34,13 @@ class DashboardUnitBisnisController extends Controller
 
         // ── Kelola Menu Aktif ──────────────────────
         $menuAktifCount = MenuAktif::where('unit_bisnis_id', $unitBisnisId)
-                            ->where('status', 'aktif')
-                            ->where('stok_porsi', '>', 3)
-                            ->where('batas_pengambilan', '>', $now)
-                            ->count();
+            ->where('status', 'aktif')
+            ->count();
 
         $menuHabisCount = MenuAktif::where('unit_bisnis_id', $unitBisnisId)
-                            ->where('status', 'aktif')
-                            ->where('stok_porsi', '>', 0)
-                            ->where(function ($q) use ($now) {
-                                $q->where('stok_porsi', '<=', 3)
-                                  ->orWhere('batas_pengambilan', '<=', $now->copy()->addHours(2));
-                            })
-                            ->count();
-
+            ->where('status', 'aktif')
+            ->where('stok_porsi', '<=', 3)
+            ->count();
         // ── Total Pesanan ──────────────────────────
         $totalPesanan = Pesanan::where('unit_bisnis_id', $unitBisnisId)->count();
 

@@ -19,6 +19,9 @@ class MakananDekatNotification extends Notification
 
     public function via($notifiable): array
     {
+        if (isset($notifiable->notif_donasi) && !$notifiable->notif_donasi) {
+            return [];
+        }
         return ['database'];
     }
 

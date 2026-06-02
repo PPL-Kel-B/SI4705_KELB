@@ -3,7 +3,7 @@
 @section('title', 'Riwayat')
 
 @section('content')
-<div class="p-2 min-h-screen font-sans antialiased text-gray-800">
+<div class="p-2 min-h-screen font-jakarta antialiased text-gray-800">
     
     <div class="mb-8">
         <h1 class="text-4xl font-black text-[#1cb764] tracking-tight">Riwayat Donasi</h1>
@@ -114,7 +114,7 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-[2rem] shadow-sm border border-gray-150 p-8 overflow-x-auto min-h-[46rem] flex flex-col justify-between">
+    <div class="bg-white rounded-[2rem] shadow-sm border border-gray-150 p-8 overflow-x-auto h-auto flex flex-col justify-between mt-4">
         <table class="w-full text-left border-collapse min-w-[850px]">
             <thead>
                 <tr class="text-gray-400 uppercase text-[11px] font-bold tracking-widest border-b border-gray-100">
@@ -127,10 +127,25 @@
             </thead>
             <tbody class="text-xs font-bold text-gray-800">
                 @forelse($pesanans as $pesanan)
+                @php
+                    $statusPesanan = $pesanan->status;
+
+                    if ($statusPesanan == 'menunggu_pembayaran') {
+                        $urlTujuan = route('user.pembayaran', $pesanan->id);
+                    } elseif (in_array($statusPesanan, ['proses', 'siap_diambil', 'dibayar'])) {
+                        $urlTujuan = route('user.pembayaran.berhasil', $pesanan->id);
+                    } else {
+                        $urlTujuan = route('user.riwayat.show', $pesanan->id);
+                    }
+                @endphp
+
                 <tr class="border-b border-gray-100/70 transition cursor-pointer hover:bg-gray-50/80" 
-                    onclick="window.location='{{ route('user.riwayat.show', $pesanan->id) }}'">
-                    <td class="py-7 text-gray-500 font-semibold">
-                        {{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->translatedFormat('d M Y') }}
+                    onclick="window.location='{{ $urlTujuan }}'">
+                    <td class="py-7 text-gray-500 font-semibold vertical-align-middle">
+                        <div class="flex flex-col justify-center">
+                            <span class="text-gray-700 text-xs font-bold">{{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->translatedFormat('d M Y') }}</span>
+                            <span class="text-[11px] text-gray-400 font-medium mt-1">{{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->format('H:i') }} WIB</span>
+                        </div>
                     </td>
                     
                     <td class="py-7 flex items-center gap-3">
@@ -141,20 +156,15 @@
                             if ($status == 'selesai') {
                                 $statusStyle = 'background-color: #E6F4EA; color: #137333;';
                             } elseif ($status == 'menunggu_pembayaran') {
-                                // ORANGE
                                 $statusStyle = 'background-color: #FFF3E0; color: #B85C00;';
                             } elseif ($status == 'proses' || $status == 'siap_diambil' || $status == 'dibayar') {
-                                // KUNING PROSES
                                 $statusStyle = 'background-color: #FDF4E7; color: #B06000;';
                             } else {
-                                // MERAH BATAL
                                 $statusStyle = 'background-color: #FCE8E6; color: #D93025;';
                             }
                         @endphp
 
-                        {{-- Ikon Berdasarkan Kategori dengan Warna Dinamis Sesuai Status --}}
                         @if(strpos($kategori, 'berat') !== false)
-                            {{-- Makanan Berat: Ikon Kotak Makan (Bento/Lunch Box) --}}
                             <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="{{ $statusStyle }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                     <rect x="3" y="7" width="18" height="13" rx="3" />
@@ -162,14 +172,12 @@
                                 </svg>
                             </div>
                         @elseif(strpos($kategori, 'ringan') !== false || strpos($kategori, 'cemilan') !== false)
-                            {{-- Makanan Ringan: Ikon Burger / Sandwich Berlapis --}}
                             <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="{{ $statusStyle }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h18M4 12a8 8 0 0 1 16 0M3 15h18M5 15a4 4 0 0 0 14 0M4 18h16a1 1 0 0 1 1 1v1H3v-1a1 1 0 0 1 1-1Z" />
                                 </svg>
                             </div>
                         @elseif(strpos($kategori, 'dessert') !== false)
-                            {{-- Dessert: Ikon Potongan Kue Segitiga (Cake Slice) --}}
                             <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="{{ $statusStyle }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a1 1 0 0 0-.6-.9L12 3 3.6 7.1A1 1 0 0 0 3 8v8a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3ZM3 12h18M12 3v16" />
@@ -177,7 +185,6 @@
                                 </svg>
                             </div>
                         @elseif(strpos($kategori, 'minuman') !== false)
-                            {{-- Minuman: Ikon Gelas Teh dengan Kantung Teh/Sedotan --}}
                             <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="{{ $statusStyle }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h12l-1.5 15a2 2 0 0 1-2 1.8h-5A2 2 0 0 1 6 18L4.5 3Z" />
@@ -185,7 +192,6 @@
                                 </svg>
                             </div>
                         @else
-                            {{-- Default: Sendok Garpu Minimalis --}}
                             <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="{{ $statusStyle }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 2v20M17 5v6a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3V5M7 2v3M17 2v3" />
@@ -194,7 +200,6 @@
                         @endif
 
                         @php
-                            // Human-friendly short label
                             if (strpos($kategori, 'berat') !== false) { $label = 'Makanan Berat'; }
                             elseif (strpos($kategori, 'ringan') !== false || strpos($kategori, 'cemilan') !== false) { $label = 'Cemilan'; }
                             elseif (strpos($kategori, 'dessert') !== false) { $label = 'Dessert'; }

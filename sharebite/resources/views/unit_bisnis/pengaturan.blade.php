@@ -9,16 +9,21 @@
 @endphp
 
 @section('content')
-<div x-data="{ 
-    isSaving: false, 
-    radiusValue: {{ $unitBisnis->radius_penjemputan ?? 15 }}, 
-    successMessage: '', 
-    showSuccess: false,
-    showError: false,
-    errorMessage: '',
+<div x-data="{
+    isSaving: false,
+    radiusValue: {{ $unitBisnis->radius_penjemputan ?? 15 }},
+    successMessage: '{{ session('success') ?? '' }}',
+    showSuccess: {{ session('success') ? 'true' : 'false' }},
+    showError: {{ (session('error') || $errors->any()) ? 'true' : 'false' }},
+    errorMessage: '{{ session('error') ?? ($errors->any() ? 'Terdapat kesalahan pada pengaturan. Silakan periksa kembali.' : '') }}',
     notifAktif: {{ ($unitBisnis->notifikasi_aktif ?? true) ? 'true' : 'false' }}
-}" class="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    
+}"
+x-init="
+    if (showSuccess) { setTimeout(() => showSuccess = false, 4000); }
+    if (showError) { setTimeout(() => showError = false, 5000); }
+"
+class="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
     {{-- Success Notification --}}
     <div x-show="showSuccess" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-[-8px]" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
         class="fixed top-4 right-4 z-50 bg-[#eefcf4] border border-green-200 rounded-2xl p-4 shadow-xl max-w-sm" x-cloak>
@@ -69,7 +74,7 @@
             <form method="POST" action="{{ route('unit.pengaturan.update') }}" @submit="isSaving = true" id="settings-form">
                 @csrf
                 <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-8">
-                    
+
                     {{-- Section Header --}}
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-2xl bg-[#eefcf4] flex items-center justify-center shrink-0">
@@ -95,7 +100,7 @@
                             {{-- Jam Buka --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 mb-2">Jam Buka</label>
-                                <input type="time" name="jam_buka" value="{{ old('jam_buka', $unitBisnis->jam_buka ?? '08:00') }}"
+                                <input type="time" name="jam_buka" value="{{ old('jam_buka', $unitBisnis->jam_buka ? substr($unitBisnis->jam_buka, 0, 5) : '08:00') }}"
                                     class="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-base font-extrabold text-[#0a2e1f] focus:border-[#1cb764] focus:ring-2 focus:ring-green-100 outline-none transition-all"
                                     required>
                                 @error('jam_buka')
@@ -106,7 +111,7 @@
                             {{-- Jam Tutup --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 mb-2">Jam Tutup</label>
-                                <input type="time" name="jam_tutup" value="{{ old('jam_tutup', $unitBisnis->jam_tutup ?? '21:00') }}"
+                                <input type="time" name="jam_tutup" value="{{ old('jam_tutup', $unitBisnis->jam_tutup ? substr($unitBisnis->jam_tutup, 0, 5) : '21:00') }}"
                                     class="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-base font-extrabold text-[#0a2e1f] focus:border-[#1cb764] focus:ring-2 focus:ring-green-100 outline-none transition-all"
                                     required>
                                 @error('jam_tutup')
@@ -137,7 +142,7 @@
 
                         {{-- Slider --}}
                         <div class="relative pt-2">
-                            <input type="range" name="radius_penjemputan" min="1" max="50" 
+                            <input type="range" name="radius_penjemputan" min="1" max="50"
                                 x-model="radiusValue"
                                 class="radius-slider w-full h-2 rounded-lg appearance-none cursor-pointer"
                                 style="background: linear-gradient(to right, #1cb764, #16a34a);">
@@ -208,12 +213,12 @@
             </div>
 
             {{-- Pusat Bantuan Card (Orange Gradient) --}}
-            <div class="rounded-3xl p-8 border border-orange-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)] relative overflow-hidden" 
+            <div class="rounded-3xl p-8 border border-orange-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)] relative overflow-hidden"
                  style="background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);">
                 {{-- Decorative circles --}}
                 <div class="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10"></div>
                 <div class="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/5"></div>
-                
+
                 <div class="relative z-10 space-y-5">
                     {{-- Icon --}}
                     <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -260,24 +265,24 @@
             {{-- Nama Entitas --}}
             <div>
                 <label class="text-[10px] font-extrabold text-[#7c9a8d] uppercase tracking-wider block mb-2">Nama Entitas</label>
-                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-[#0a2e1f]">
-                    {{ $unitBisnis->nama_usaha ?? 'Nama Usaha' }}
+                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm {{ $unitBisnis->nama_usaha ? 'font-bold text-[#0a2e1f]' : 'text-gray-400 italic' }}">
+                    {{ $unitBisnis->nama_usaha ?: 'Belum diisi' }}
                 </div>
             </div>
 
             {{-- Email Bisnis --}}
             <div>
                 <label class="text-[10px] font-extrabold text-[#7c9a8d] uppercase tracking-wider block mb-2">Email Bisnis</label>
-                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-[#0a2e1f] break-all">
-                    {{ $unitBisnis->email_bisnis ?? 'email@bisnis.com' }}
+                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm break-all {{ $unitBisnis->email_bisnis ? 'font-bold text-[#0a2e1f]' : 'text-gray-400 italic' }}">
+                    {{ $unitBisnis->email_bisnis ?: 'Belum diisi' }}
                 </div>
             </div>
 
             {{-- Nomor Hotline --}}
             <div>
                 <label class="text-[10px] font-extrabold text-[#7c9a8d] uppercase tracking-wider block mb-2">Nomor Hotline</label>
-                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-[#0a2e1f]">
-                    {{ $unitBisnis->no_telepon ?? '+62 812-3456-7890' }}
+                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm {{ $unitBisnis->no_telepon ? 'font-bold text-[#0a2e1f]' : 'text-gray-400 italic' }}">
+                    {{ $unitBisnis->no_telepon ?: 'Belum diisi' }}
                 </div>
             </div>
         </div>
@@ -314,44 +319,10 @@
         </div>
     </div>
 
-    @if (session('success'))
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const el = document.querySelector('[x-data]');
-                if (el && el.__x) {
-                    el.__x.$data.showSuccess = true;
-                    el.__x.$data.successMessage = "{{ session('success') }}";
-                    setTimeout(() => { el.__x.$data.showSuccess = false; }, 4000);
-                }
-            });
-        </script>
-    @endif
+<<<<<<< HEAD
 
-    @if (session('error'))
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const el = document.querySelector('[x-data]');
-                if (el && el.__x) {
-                    el.__x.$data.showError = true;
-                    el.__x.$data.errorMessage = "{{ session('error') }}";
-                    setTimeout(() => { el.__x.$data.showError = false; }, 4000);
-                }
-            });
-        </script>
-    @endif
-
-    @if ($errors->any())
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const el = document.querySelector('[x-data]');
-                if (el && el.__x) {
-                    el.__x.$data.showError = true;
-                    el.__x.$data.errorMessage = "Terdapat kesalahan pada pengaturan. Silakan periksa kembali.";
-                    setTimeout(() => { el.__x.$data.showError = false; }, 5000);
-                }
-            });
-        </script>
-    @endif
+=======
+>>>>>>> 4a7a54eb95ec1b6c3e6fd86c247fadf5627c9ae9
 </div>
 
 <style>
