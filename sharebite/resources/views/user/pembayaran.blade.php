@@ -14,14 +14,14 @@
 
 {{-- ── Data Metadata untuk JavaScript ── --}}
 <div id="qr-meta"
-     data-slug="{{ $slug }}"
+     data-slug="{{ $id }}"
      data-nama="{{ $makanan->masterMakanan->nama_makanan ?? 'Pesanan' }}"
-     data-harga="{{ $makanan->harga_jual ?? 0 }}"
+     data-harga="{{ $makanan->is_gratis ? 0 : ($makanan->harga_jual ?? 0) }}"
      data-qty="{{ $qty ?? 1 }}"
      data-lat="{{ $makanan->unitBisnis->user->latitude ?? -6.193125 }}" 
      data-lng="{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}"
      data-ref="{{ $ref ?? 'SB-00000000' }}"
-     data-total="Rp {{ number_format($subtotal ?? 0, 0, ',', '.') }}"
+     data-total="{{ $makanan->is_gratis ? 'GRATIS' : 'Rp ' . number_format($subtotal ?? 0, 0, ',', '.') }}"
      style="display:none;">
 </div>
 
@@ -43,7 +43,7 @@
         {{-- KOLOM KIRI --}}
         <div class="xl:col-span-8 flex flex-col gap-6 h-full">
 
-            {{-- Card 1: Item Makanan (DIPERBARUI) --}}
+            {{-- Card 1: Item Makanan --}}
             <div class="bg-white p-6 lg:p-7 rounded-[28px] shadow-sm">
                 <div class="flex gap-7 items-center">
                     {{-- Foto Makanan --}}
@@ -52,41 +52,27 @@
                          alt="Menu" 
                          class="w-[110px] h-[110px] object-cover rounded-[22px] flex-shrink-0 shadow-sm">
                     
-                    {{-- Konten Teks (Sejajar Tengah secara Vertikal) --}}
+                    {{-- Konten Teks --}}
                     <div class="flex-1 flex justify-between items-center">
                         <div class="flex flex-col justify-center">
                             {{-- Label Status Dinamis --}}
                             <div class="mb-2">
                                 @php
-                                    $statusTeks = '';
-                                    $statusWarna = '';
-
-                                    if ($makanan->status === 'aktif') {
-                                        // Tambahkan logika cek stok seperti di Menu Aktif
-                                        if ($makanan->stok_porsi <= 5) {
-                                            $statusTeks = 'SEGERA HABIS';
-                                            $statusWarna = 'bg-[#FFF4E5] text-[#D97706]'; // Warna Orange/Amber
-                                        } else {
-                                            $statusTeks = 'TERSEDIA';
-                                            $statusWarna = 'bg-[#E4F2E8] text-[#189347]'; // Warna Hijau
-                                        }
-                                    } elseif ($makanan->status === 'habis') {
-                                        $statusTeks = 'HABIS';
-                                        $statusWarna = 'bg-[#FEE2E2] text-[#EF4444]'; // Warna Merah
+                                    if ($makanan->stok_porsi <= 5) {
+                                        $statusTeks = 'SEGERA HABIS';
+                                        $statusWarna = 'bg-[#FFF4E5] text-[#D97706]';
                                     } else {
-                                        $statusTeks = strtoupper($makanan->status);
-                                        $statusWarna = 'bg-gray-200 text-gray-500'; // Warna Abu-abu (Ditutup)
+                                        $statusTeks = 'TERSEDIA';
+                                        $statusWarna = 'bg-[#E4F2E8] text-[#189347]';
                                     }
                                 @endphp
                                 <span class="{{ $statusWarna }} text-[10px] font-extrabold px-3 py-1 rounded-[8px] tracking-[0.1em] uppercase inline-block">
                                     {{ $statusTeks }}
                                 </span>
                             </div>
-                            {{-- Nama Makanan --}}
                             <h2 class="font-extrabold text-gray-900 text-[22px] leading-tight mb-1">
                                 {{ $makanan->masterMakanan->nama_makanan ?? 'Nama Makanan' }}
                             </h2>
-                            {{-- Jumlah Porsi (Teks Polos tanpa Sandbox) --}}
                             <p class="text-gray-500 font-semibold text-[14px]">
                                 {{ $qty ?? 1 }} Porsi
                             </p>
@@ -95,7 +81,11 @@
                         {{-- Bagian Harga --}}
                         <div class="text-right">
                             <span class="text-[#189347] font-extrabold text-[22px]">
-                                Rp {{ number_format($makanan->harga_jual ?? 0, 0, ',', '.') }}
+                                @if($makanan->is_gratis)
+                                    GRATIS
+                                @else
+                                    Rp {{ number_format($makanan->harga_jual ?? 0, 0, ',', '.') }}
+                                @endif
                             </span>
                         </div>
                     </div>
@@ -107,16 +97,22 @@
                 <h3 class="text-[11px] font-extrabold text-gray-400 mb-5 tracking-widest uppercase">RINCIAN PEMBAYARAN</h3>
                 <div class="flex justify-between items-center mb-3 text-gray-500 font-medium text-[14px]">
                     <span>Subtotal ({{ $qty ?? 1 }} Porsi)</span>
-                    <span class="font-extrabold text-gray-800">Rp {{ number_format($subtotal ?? 0, 0, ',', '.') }}</span>
+                    <span class="font-extrabold text-gray-800">
+                        @if($makanan->is_gratis) GRATIS @else Rp {{ number_format($subtotal ?? 0, 0, ',', '.') }} @endif
+                    </span>
                 </div>
                 <div class="flex justify-between items-center mb-5 text-gray-500 font-medium text-[14px]">
                     <span>Biaya Layanan</span>
-                    <span class="font-extrabold text-[#189347]">Rp 0</span>
+                    <span class="font-extrabold text-[#189347]">
+                        @if($makanan->is_gratis) GRATIS @else Rp 0 @endif
+                    </span>
                 </div>
                 <hr class="border-gray-70 mb-5">
                 <div class="flex justify-between items-center">
                     <span class="font-extrabold text-gray-800 text-[17px]">Total Pembayaran</span>
-                    <span class="font-extrabold text-[24px] text-[#189347] tracking-tight">Rp {{ number_format($subtotal ?? 0, 0, ',', '.') }}</span>
+                    <span class="font-extrabold text-[24px] text-[#189347] tracking-tight">
+                        @if($makanan->is_gratis) GRATIS @else Rp {{ number_format($subtotal ?? 0, 0, ',', '.') }} @endif
+                    </span>
                 </div>
             </div>
 
@@ -191,10 +187,10 @@
             </div>
 
             <div class="hidden">
-                <form action="{{ route('user.pembayaran.proses', $slug) }}" method="POST">
+                <form action="{{ route('user.pembayaran.proses', $id) }}" method="POST">
                     @csrf <input type="hidden" name="status" value="Berhasil"> <input type="hidden" name="qty" value="{{ $qty ?? 1 }}">
                 </form>
-                <form id="form-batal-otomatis" action="{{ route('user.pembayaran.proses', $slug) }}" method="POST">
+                <form id="form-batal-otomatis" action="{{ route('user.pembayaran.proses', $id) }}" method="POST">
                     @csrf <input type="hidden" name="status" value="Gagal"> <input type="hidden" name="qty" value="{{ $qty ?? 1 }}">
                 </form>
             </div>
@@ -213,11 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         const canvas = document.getElementById('qr-canvas');
         if(canvas) {
-            // Laravel otomatis memasukkan URL utuh berdasarkan yang sedang diakses saat ini
-            // Mengambil rute dari Laravel (parameter 'false' agar hanya mengambil path belakangnya saja)
-            let pathUrl = "{{ route('pembayaran.scan.public', ['slug' => $slug], false) }}";
-            
-            // Gabungkan domain yang sedang aktif di browser (Ngrok/IP/Localhost) dengan path rute
+            let pathUrl = "{{ route('pembayaran.scan.public', ['id' => $id], false) }}";
             let finalUrl = window.location.origin + pathUrl;
             
             QRCode.toCanvas(canvas, finalUrl, { width: 300, margin: 1, color: { dark: '#000000', light: '#ffffff' } });
@@ -282,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {}
 
     setInterval(() => {
-        fetch("{{ route('user.pembayaran.check', ['slug' => $slug]) }}")
+        fetch("{{ route('user.pembayaran.check', ['id' => $id]) }}")
         .then(response => response.json())
         .then(data => {
             if (data.status === 'sukses') {

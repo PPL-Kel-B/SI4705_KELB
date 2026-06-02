@@ -5,16 +5,19 @@ namespace Tests\Browser;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 use App\Models\User;
+use App\Models\MenuAktif;
 use Illuminate\Support\Facades\DB;
 
 class PembayaranTest extends DuskTestCase
 {
     protected string $userEmail = 'komunitas@sharebite.com';
-    protected string $slug      = 'eskrim';
+    protected string $namaMenu  = 'eskrim'; // nama_makanan di tabel master_makanans
+
+    /** ID MenuAktif yang akan diambil saat setUp */
+    protected int $menuId;
 
     /**
      * Paksa pakai DB_DATABASE dari .env utama, bukan 'sharebite_dusk'.
-     * Tidak perlu membuat .env.dusk.local sama sekali.
      */
     protected function setUp(): void
     {
@@ -24,10 +27,15 @@ class PembayaranTest extends DuskTestCase
         config(["database.connections.mysql.database" => $dbName]);
         DB::purge('mysql');
         DB::reconnect('mysql');
+
+        // Ambil ID MenuAktif berdasarkan nama makanan
+        $this->menuId = MenuAktif::whereHas('masterMakanan', function ($q) {
+            $q->where('nama_makanan', $this->namaMenu);
+        })->firstOrFail()->id;
     }
 
     // ─────────────────────────────────────────────────────────────
-    // Helper: loginAs() langsung — tidak perlu isi form login
+    // Helper: login dan kunjungi halaman pembayaran
     // ─────────────────────────────────────────────────────────────
 
     private function loginUser(Browser $browser): void
@@ -39,15 +47,15 @@ class PembayaranTest extends DuskTestCase
     private function visitPembayaran(Browser $browser): void
     {
         $this->loginUser($browser);
-        $browser->visit("/user/dashboard/{$this->slug}/pembayaran?qty=1")
-                ->waitForLocation("/user/dashboard/{$this->slug}/pembayaran", 10);
+        $browser->visit("/user/dashboard/{$this->menuId}/pembayaran?qty=1")
+                ->waitForLocation("/user/dashboard/{$this->menuId}/pembayaran", 10);
     }
 
     private function visitBerhasil(Browser $browser): void
     {
         $this->loginUser($browser);
-        $browser->visit("/user/dashboard/{$this->slug}/pembayaran/berhasil?qty=1")
-                ->waitForLocation("/user/dashboard/{$this->slug}/pembayaran/berhasil", 10);
+        $browser->visit("/user/dashboard/{$this->menuId}/pembayaran/berhasil?qty=1")
+                ->waitForLocation("/user/dashboard/{$this->menuId}/pembayaran/berhasil", 10);
     }
 
     // ═════════════════════════════════════════════════════════════
@@ -120,7 +128,7 @@ class PembayaranTest extends DuskTestCase
             $this->visitPembayaran($laptop);
 
             // HP scan QR — route publik, tidak perlu login
-            $hp->visit("/public/scan-qris/{$this->slug}")
+            $hp->visit("/public/scan-qris/{$this->menuId}")
                ->waitForText('Pembayaran Berhasil', 10);
 
             // Laptop polling tiap 2 detik, tunggu hingga redirect
@@ -136,24 +144,25 @@ class PembayaranTest extends DuskTestCase
     public function testTimerExpiredRedirectsToRiwayat(): void
     {
         $this->browse(function (Browser $browser) {
-            $this->visitPembayaran($browser); // ← pakai helper yang sudah ada, hapus loginAs($this->user)
+            $this->visitPembayaran($browser);
 
-            // Set timer di localStorage agar expired dalam 2 detik
+            // data-slug di HTML sekarang berisi $id (angka), bukan teks slug
+            // storage key = 'timer_bayar_<id>' karena replace [^a-zA-Z0-9] tidak mengubah angka
+            $storageKey = 'timer_bayar_' . $this->menuId;
+
+            // Paksa timer expired dalam 2 detik lewat localStorage
             $browser->script("
-                const slug = document.getElementById('qr-meta').dataset.slug;
-                const cleanName = slug.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-                const storageKey = 'timer_bayar_' + cleanName;
-                localStorage.setItem(storageKey, (Date.now() + 2000).toString());
+                localStorage.setItem('{$storageKey}', (Date.now() + 2000).toString());
             ");
 
             $browser->refresh()
-                    ->pause(5000)
+                    ->pause(5000) // tunggu timer habis (2 dtk) + form submit + redirect
                     ->assertPathIs('/user/riwayat');
         });
     }
 
     // ═════════════════════════════════════════════════════════════
-    // TEST 6 — Refresh halaman → timer TIDAK diulang dari 15 menit
+    // TEST 6 — Refresh halaman → timer TIDAK diulang dari 15:00
     // ═════════════════════════════════════════════════════════════
 
     public function testTimerContinuesAfterRefresh(): void
@@ -163,8 +172,9 @@ class PembayaranTest extends DuskTestCase
 
             $browser->waitFor('#payment-timer', 5);
 
-            $cleanSlug  = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $this->slug));
-            $storageKey = "timer_bayar_{$cleanSlug}";
+            // Storage key sesuai logika JS: replace non-alphanumeric → '_', lalu lowercase
+            // Karena $menuId adalah angka, hasilnya tetap angka itu sendiri
+            $storageKey = 'timer_bayar_' . $this->menuId;
 
             $expireBefore = $browser->script(
                 "return localStorage.getItem('{$storageKey}');"
@@ -204,7 +214,7 @@ class PembayaranTest extends DuskTestCase
             $browser->click('button[onclick="downloadQR()"]')
                     ->pause(1500);
 
-            $browser->assertPathIs("/user/dashboard/{$this->slug}/pembayaran");
+            $browser->assertPathIs("/user/dashboard/{$this->menuId}/pembayaran");
         });
     }
 
@@ -257,7 +267,7 @@ class PembayaranTest extends DuskTestCase
             $kodeBefore = trim($browser->text('#teks-kode'));
 
             $browser->refresh()->waitForLocation(
-                "/user/dashboard/{$this->slug}/pembayaran/berhasil",
+                "/user/dashboard/{$this->menuId}/pembayaran/berhasil",
                 10
             );
 
