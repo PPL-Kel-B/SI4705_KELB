@@ -5,27 +5,74 @@ namespace Tests\Browser;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Illuminate\Support\Facades\DB;
 
 class AdminDashboardReportTest extends DuskTestCase
 {
     // Menggunakan DatabaseMigrations agar setiap kali test dijalankan,
-    // database testing (sharebite_dusk) di-reset dan data dummy (seeder) dibuat ulang.
-    // Hal ini membuat test bisa di-run berulang kali oleh siapa saja tanpa error.
+    // database testing (sharebite_dusk) di-reset dan data dummy dibuat ulang.
     use DatabaseMigrations;
 
     protected function setUp(): void
     {
         parent::setUp();
-        // Jalankan seeder agar ada data transaksi yang bisa difilter & dicari
+        // 1. Jalankan seeder bawaan (untuk User Admin, Komunitas, Unit Bisnis)
         $this->artisan('db:seed');
+
+        // 2. Insert dummy profile & pesanans untuk menguji Paginasi dan Filter (TC-DT-03 & TC-DT-02)
+        // Kita matikan sementara FOREIGN_KEY_CHECKS agar insert data pesanan lebih mudah
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        
+        // Buat dummy unit bisnis profile untuk user ID 2 (Lestari Food)
+        DB::table('unit_bisnis_profiles')->insertOrIgnore([
+            'id' => 999,
+            'user_id' => 2,
+            'nama_usaha' => 'Lestari Food',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Buat dummy master makanan & menu aktif agar relasi valid
+        DB::table('master_makanans')->insertOrIgnore([
+            'id' => 999,
+            'unit_bisnis_id' => 999,
+            'nama_makanan' => 'Nasi Goreng Spesial',
+            'kategori' => 'Makanan Utama',
+            'created_at' => now(),
+        ]);
+
+        DB::table('menu_aktifs')->insertOrIgnore([
+            'id' => 999,
+            'master_makanan_id' => 999,
+            'unit_bisnis_id' => 999,
+            'created_at' => now(),
+        ]);
+
+        // Buat 12 dummy transaksi (pesanan) agar paginasi > 10 data aktif (halaman 1 dan 2)
+        for ($i = 1; $i <= 12; $i++) {
+            DB::table('pesanans')->insert([
+                'menu_aktif_id' => 999,
+                'unit_bisnis_id' => 999,
+                'user_id' => 3, // Komunitas Berbagi
+                'jumlah_porsi' => 1,
+                'total_harga' => 0,
+                // Berikan 1 transaksi status batal agar bisa difilter di TC-DT-02
+                'status' => ($i == 1) ? 'dibatalkan' : 'selesai',
+                'kode_unik' => 'DUMMY_TRX_' . $i,
+                'waktu_pesan' => now()->subMinutes($i),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 
     /**
-     * Helper untuk login sebagai admin di awal tiap test.
+     * Helper untuk login sebagai admin.
      */
     protected function loginAdmin(Browser $browser): void
     {
-        // Login ulang hanya jika user belum berada di dashboard
         $browser->visit('/login')
             ->type('email', 'admin@sharebite.com')
             ->type('password', 'Admin@2024!')
@@ -33,6 +80,10 @@ class AdminDashboardReportTest extends DuskTestCase
             ->press('#loginBtn')
             ->waitForLocation('/admin/dashboard');
     }
+
+    /* -------------------------------------------------------------------------
+     * 1. Test Case Dashboard (TC-DS)
+     * ------------------------------------------------------------------------- */
 
     /**
      * TC-DS-01: Fungsionalitas Pencarian Global
@@ -42,10 +93,9 @@ class AdminDashboardReportTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
 
-            // Ketik kata kunci pada form pencarian dan klik Filter
             $browser->type('search', 'Lestari')
                 ->waitForReload(function (Browser $browser) {
-                    $browser->press('Filter Data'); // Tombol submit di dashboard
+                    $browser->press('Filter Data');
                 })
                 ->assertQueryStringHas('search', 'Lestari');
         });
@@ -59,7 +109,6 @@ class AdminDashboardReportTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
 
-            // Pilih filter waktu dan kategori
             $browser->select('rentang_waktu', 'bulan_ini')
                 ->select('kategori_entitas', 'komunitas')
                 ->waitForReload(function (Browser $browser) {
@@ -71,6 +120,30 @@ class AdminDashboardReportTest extends DuskTestCase
     }
 
     /**
+     * TC-DS-03: Edge Case: Filter Tidak Relevan
+     */
+    public function test_TC_DS_03_EdgeCaseFilterTidakRelevan(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->loginAdmin($browser);
+
+            // Ubah kategori menjadi Unit Bisnis yang tidak memiliki keterkaitan metrik Total Komunitas
+            $browser->select('kategori_entitas', 'unit_bisnis')
+                ->waitForReload(function (Browser $browser) {
+                    $browser->press('Filter Data');
+                });
+
+            // Metrik Total Komunitas seharusnya menampilkan '-' karena di-hide/kosong
+            $text = $browser->script('return document.querySelector(".grid > div:nth-child(2) h3").innerText;')[0];
+            $this->assertEquals('-', trim($text));
+        });
+    }
+
+    /* -------------------------------------------------------------------------
+     * 2. Test Case Generate Laporan (TC-GL)
+     * ------------------------------------------------------------------------- */
+
+    /**
      * TC-GL-01: Integrasi Parameter Filter dari Dashboard
      */
     public function test_TC_GL_01_IntegrasiParameterFilterDariDashboard(): void
@@ -78,14 +151,12 @@ class AdminDashboardReportTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
 
-            // Set filter terlebih dahulu di dashboard
             $browser->select('rentang_waktu', 'bulan_ini')
                 ->select('kategori_entitas', 'komunitas')
                 ->waitForReload(function (Browser $browser) {
                     $browser->press('Filter Data');
                 });
 
-            // Klik tombol "Generate Laporan" dan pastikan filter terbawa
             $browser->waitForReload(function (Browser $browser) {
                 $browser->clickLink('Generate Laporan');
             })
@@ -104,13 +175,12 @@ class AdminDashboardReportTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
 
-            // Filter ke rentang waktu "bulan_lalu" (dimana data transaksi belum ada)
+            // Pilih bulan lalu agar tidak ada data riwayat (dummy data semua di bulan ini)
             $browser->select('rentang_waktu', 'bulan_lalu')
                 ->waitForReload(function (Browser $browser) {
                     $browser->press('Filter Data');
                 });
 
-            // Buka laporan, dan pastikan pesan informatif muncul
             $browser->waitForReload(function (Browser $browser) {
                 $browser->clickLink('Generate Laporan');
             })
@@ -119,22 +189,41 @@ class AdminDashboardReportTest extends DuskTestCase
         });
     }
 
+    /* -------------------------------------------------------------------------
+     * 3. Test Case Daftar Transaksi (TC-DT)
+     * ------------------------------------------------------------------------- */
+
     /**
-     * TC-DT-01: Pencarian & Filter Kombinasi di Daftar Transaksi
+     * TC-DT-01: Navigasi dari Dashboard
      */
-    public function test_TC_DT_01_PencarianDanFilterKombinasi(): void
+    public function test_TC_DT_01_NavigasiDariDashboard(): void
     {
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
-            
-            // Masuk ke halaman daftar transaksi
+
+            // Klik 'Lihat Semua' pada tabel Transaksi Terbaru
+            $browser->waitForReload(function (Browser $browser) {
+                $browser->clickLink('Lihat Semua');
+            })
+                ->assertPathIs('/admin/transaksi')
+                ->assertSee('Daftar Transaksi');
+        });
+    }
+
+    /**
+     * TC-DT-02: Pencarian & Filter Kombinasi
+     */
+    public function test_TC_DT_02_PencarianDanFilterKombinasi(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->loginAdmin($browser);
             $browser->visit('/admin/transaksi');
 
-            // Ketik nama mitra dan pilih status
+            // Ketik nama mitra (Lestari) dan pilih status (Batal)
             $browser->type('search', 'Lestari')
                 ->select('status', 'dibatalkan')
                 ->waitForReload(function (Browser $browser) {
-                    $browser->press('Filter'); // Tombol submit di daftar transaksi
+                    $browser->press('Filter');
                 })
                 ->assertQueryStringHas('search', 'Lestari')
                 ->assertQueryStringHas('status', 'dibatalkan');
@@ -142,15 +231,36 @@ class AdminDashboardReportTest extends DuskTestCase
     }
 
     /**
-     * TC-DT-02: Edge Case Data Tidak Ada
+     * TC-DT-03: Navigasi Nomor Page
      */
-    public function test_TC_DT_02_EdgeCaseDataTidakAda(): void
+    public function test_TC_DT_03_NavigasiNomorPage(): void
     {
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
             $browser->visit('/admin/transaksi');
 
-            // Ketik nama fiktif yang tidak mungkin ada
+            // Karena kita inject 12 data dummy, akan ada halaman ke-2 (karena max 10 per page)
+            // Klik menggunakan script JS agar tidak terkena error element not interactable (hidden tailwind mobile pagination)
+            $browser->waitForReload(function (Browser $browser) {
+                $browser->script("
+                    const link = document.querySelector('.sm\\\\:flex-1 a[href*=\"page=2\"]') || document.querySelector('a[href*=\"page=2\"]');
+                    if(link) link.click();
+                ");
+            })
+                ->assertQueryStringHas('page', '2');
+        });
+    }
+
+    /**
+     * TC-DT-04: Edge Case: Data Tidak Ada
+     */
+    public function test_TC_DT_04_EdgeCaseDataTidakAda(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->loginAdmin($browser);
+            $browser->visit('/admin/transaksi');
+
+            // Ketik kata pencarian acak/fiktif
             $browser->type('search', 'KATA_KUNCI_FIKTIF_TIDAK_ADA_123')
                 ->waitForReload(function (Browser $browser) {
                     $browser->press('Filter');
@@ -160,9 +270,9 @@ class AdminDashboardReportTest extends DuskTestCase
     }
 
     /**
-     * TC-DT-03: Tombol Reset & Kembali
+     * TC-DT-05: Tombol Reset & Kembali
      */
-    public function test_TC_DT_03_TombolResetDanKembali(): void
+    public function test_TC_DT_05_TombolResetDanKembali(): void
     {
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
@@ -174,13 +284,13 @@ class AdminDashboardReportTest extends DuskTestCase
                     $browser->press('Filter');
                 });
 
-            // Uji tombol Reset (pastikan search jadi kosong)
+            // Klik tombol Reset
             $browser->waitForReload(function (Browser $browser) {
                 $browser->clickLink('Reset');
             })
                 ->assertInputValue('search', '');
 
-            // Uji tombol Kembali ke Dashboard (pastikan redirect benar)
+            // Klik Kembali ke Dashboard
             $browser->waitForReload(function (Browser $browser) {
                 $browser->clickLink('Kembali ke Dashboard');
             })
