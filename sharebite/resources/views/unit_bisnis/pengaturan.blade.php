@@ -9,14 +9,31 @@
 @endphp
 
 @section('content')
-<div x-data="{ 
-    isSaving: false, 
-    radiusValue: {{ $unitBisnis->radius_penjemputan ?? 15 }}, 
-    successMessage: '', 
+<div x-data="{
+    isSaving: false,
+    radiusValue: {{ $unitBisnis->radius_penjemputan ?? 15 }},
+    successMessage: '',
     showSuccess: false,
     showError: false,
     errorMessage: '',
-    notifAktif: {{ ($unitBisnis->notifikasi_aktif ?? true) ? 'true' : 'false' }}
+    notifAktif: {{ ($unitBisnis->notifikasi_aktif ?? true) ? 'true' : 'false' }},
+    init() {
+        @if(session('success'))
+            this.showSuccess = true;
+            this.successMessage = @js(session('success'));
+            setTimeout(() => { this.showSuccess = false; }, 4000);
+        @endif
+        @if(session('error'))
+            this.showError = true;
+            this.errorMessage = @js(session('error'));
+            setTimeout(() => { this.showError = false; }, 4000);
+        @endif
+        @if($errors->any())
+            this.showError = true;
+            this.errorMessage = 'Terdapat kesalahan pada pengaturan. Silakan periksa kembali.';
+            setTimeout(() => { this.showError = false; }, 5000);
+        @endif
+    }
 }" class="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     
     {{-- Success Notification --}}
@@ -260,24 +277,24 @@
             {{-- Nama Entitas --}}
             <div>
                 <label class="text-[10px] font-extrabold text-[#7c9a8d] uppercase tracking-wider block mb-2">Nama Entitas</label>
-                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-[#0a2e1f]">
-                    {{ $unitBisnis->nama_usaha ?? 'Nama Usaha' }}
+                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm {{ $unitBisnis->nama_usaha ? 'font-bold text-[#0a2e1f]' : 'text-gray-400 italic' }}">
+                    {{ $unitBisnis->nama_usaha ?: 'Belum diisi' }}
                 </div>
             </div>
 
             {{-- Email Bisnis --}}
             <div>
                 <label class="text-[10px] font-extrabold text-[#7c9a8d] uppercase tracking-wider block mb-2">Email Bisnis</label>
-                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-[#0a2e1f] break-all">
-                    {{ $unitBisnis->email_bisnis ?? 'email@bisnis.com' }}
+                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm break-all {{ $unitBisnis->email_bisnis ? 'font-bold text-[#0a2e1f]' : 'text-gray-400 italic' }}">
+                    {{ $unitBisnis->email_bisnis ?: 'Belum diisi' }}
                 </div>
             </div>
 
             {{-- Nomor Hotline --}}
             <div>
                 <label class="text-[10px] font-extrabold text-[#7c9a8d] uppercase tracking-wider block mb-2">Nomor Hotline</label>
-                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold text-[#0a2e1f]">
-                    {{ $unitBisnis->no_telepon ?? '+62 812-3456-7890' }}
+                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm {{ $unitBisnis->no_telepon ? 'font-bold text-[#0a2e1f]' : 'text-gray-400 italic' }}">
+                    {{ $unitBisnis->no_telepon ?: 'Belum diisi' }}
                 </div>
             </div>
         </div>
@@ -314,44 +331,6 @@
         </div>
     </div>
 
-    @if (session('success'))
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const el = document.querySelector('[x-data]');
-                if (el && el.__x) {
-                    el.__x.$data.showSuccess = true;
-                    el.__x.$data.successMessage = "{{ session('success') }}";
-                    setTimeout(() => { el.__x.$data.showSuccess = false; }, 4000);
-                }
-            });
-        </script>
-    @endif
-
-    @if (session('error'))
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const el = document.querySelector('[x-data]');
-                if (el && el.__x) {
-                    el.__x.$data.showError = true;
-                    el.__x.$data.errorMessage = "{{ session('error') }}";
-                    setTimeout(() => { el.__x.$data.showError = false; }, 4000);
-                }
-            });
-        </script>
-    @endif
-
-    @if ($errors->any())
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                const el = document.querySelector('[x-data]');
-                if (el && el.__x) {
-                    el.__x.$data.showError = true;
-                    el.__x.$data.errorMessage = "Terdapat kesalahan pada pengaturan. Silakan periksa kembali.";
-                    setTimeout(() => { el.__x.$data.showError = false; }, 5000);
-                }
-            });
-        </script>
-    @endif
 </div>
 
 <style>

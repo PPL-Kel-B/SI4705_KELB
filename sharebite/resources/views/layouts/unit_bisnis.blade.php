@@ -306,21 +306,18 @@
 
                     @else
 
-                        {{-- Jika belum ada foto --}}
-                        <div
-                            class="w-11 h-11 rounded-full bg-[#eefcf4] border border-dashed border-[#1cb764] flex items-center justify-center shadow-sm">
-
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="h-5 w-5 text-[#1cb764]"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                stroke-width="2.5">
-
-                                <path stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    d="M12 4v16m8-8H4" />
-                            </svg>
+                        {{-- Jika belum ada foto, tampilkan inisial nama bisnis --}}
+                        @php
+                            $namaBisnis = Auth::check() && Auth::user()->unitBisnisProfile
+                                ? (Auth::user()->unitBisnisProfile->nama_bisnis ?? Auth::user()->name)
+                                : Auth::user()->name ?? '';
+                            $words = array_filter(explode(' ', trim($namaBisnis)));
+                            $initials = count($words) >= 2
+                                ? mb_strtoupper(mb_substr(array_values($words)[0], 0, 1) . mb_substr(array_values($words)[1], 0, 1))
+                                : mb_strtoupper(mb_substr($namaBisnis, 0, 2));
+                        @endphp
+                        <div class="w-11 h-11 rounded-full bg-[#1cb764] flex items-center justify-center shadow-sm ring-2 ring-white">
+                            <span class="text-white text-sm font-bold leading-none">{{ $initials }}</span>
                         </div>
 
                     @endif
