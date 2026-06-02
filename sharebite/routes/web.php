@@ -93,7 +93,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/test-notifications', function () {
         $user = auth()->user();
-        
+
         // 1. MakananDekatNotification
         $menuAktif = \App\Models\MenuAktif::first();
         if ($menuAktif) {
@@ -138,7 +138,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
         Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
-      
+
         Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');
         Route::get('/pengaturan/kebijakan/{type}', [\App\Http\Controllers\SettingsController::class, 'policy'])->name('pengaturan.policy');
         Route::delete('/pengaturan/session/{id}', [\App\Http\Controllers\SettingsController::class, 'logoutSession'])->name('pengaturan.logout_session');
@@ -151,10 +151,10 @@ Route::middleware('auth')->group(function () {
 
         // Route Pembayaran Utama
         Route::get('/dashboard/{id}/pembayaran', [PembayaranController::class, 'show'])->name('makanan.pembayaran');
-        
+
         // Laptop diam-diam mengecek status scan ke sini
         Route::get('/dashboard/{id}/pembayaran/check', [PembayaranController::class, 'cekStatusScan'])->name('pembayaran.check');
-        
+
         // Proses Pembayaran & Halaman Berhasil
         Route::post('/dashboard/{id}/pembayaran/proses', [PembayaranController::class, 'store'])->name('pembayaran.proses');
         Route::get('/dashboard/{id}/pembayaran/berhasil', [PembayaranController::class, 'berhasil'])->name('pembayaran.berhasil');
@@ -171,7 +171,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/kelola-makanan/{menuAktif}/edit', [\App\Http\Controllers\MenuAktifController::class, 'edit'])->name('menu_aktif.edit');
         Route::put('/kelola-makanan/{menuAktif}', [\App\Http\Controllers\MenuAktifController::class, 'update'])->name('menu_aktif.update');
         Route::delete('/kelola-makanan/{menuAktif}', [\App\Http\Controllers\MenuAktifController::class, 'destroy'])->name('menu_aktif.destroy');
-        
+
         // Master Data
         Route::resource('kelola-master-data', MasterDataController::class)->names([
             'index' => 'master_data.index',
@@ -198,7 +198,7 @@ Route::middleware('auth')->group(function () {
 
         // Hapus Foto Profile Unit Bisnis
         Route::delete('/profil/hapus-foto', [UnitBisnisController::class, 'hapusFotoProfile'])->name('profil.hapus-foto');
-            
+
         // Pengaturan Unit Bisnis
         Route::get('/pengaturan', [UnitBisnisController::class, 'showSettings'])->name('pengaturan');
         Route::post('/pengaturan/update', [UnitBisnisController::class, 'updateSettings'])->name('pengaturan.update');

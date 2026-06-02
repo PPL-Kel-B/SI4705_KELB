@@ -13,23 +13,28 @@
     successMessage: '',
     errorMessage: '',
     photoPreview: '{{ ($unitBisnis->foto_bisnis && $unitBisnis->foto_bisnis !== "images/placeholder-bisnis.jpg") ? asset($unitBisnis->foto_bisnis) : "" }}',
+    headerPreview: '{{ $unitBisnis->header_image ? asset($unitBisnis->header_image) : "" }}',
     isSaving: false,
     isEditMode: false,
+    isEditDeskripsi: false,
     formData: {
         nama_bisnis: @js(old('nama_bisnis', $unitBisnis->nama_bisnis ?? '')),
         tipe_bisnis: @js(old('tipe_bisnis', $unitBisnis->tipe_bisnis ?? '')),
         email_bisnis: @js(old('email_bisnis', $unitBisnis->email_bisnis ?? '')),
         no_telepon: @js(old('no_telepon', $unitBisnis->no_telepon ?? '')),
+        deskripsi: @js(old('deskripsi', $unitBisnis->deskripsi ?? '')),
     },
     origData: {
         nama_bisnis: @js(old('nama_bisnis', $unitBisnis->nama_bisnis ?? '')),
         tipe_bisnis: @js(old('tipe_bisnis', $unitBisnis->tipe_bisnis ?? '')),
         email_bisnis: @js(old('email_bisnis', $unitBisnis->email_bisnis ?? '')),
         no_telepon: @js(old('no_telepon', $unitBisnis->no_telepon ?? '')),
+        deskripsi: @js(old('deskripsi', $unitBisnis->deskripsi ?? '')),
     },
     cancelEdit() {
         this.formData = { ...this.origData };
         this.isEditMode = false;
+        this.isEditDeskripsi = false;
     },
     init() {
         @if(session('success'))
@@ -44,8 +49,8 @@
         @endif
         @if($errors->any())
             this.showError = true;
-            this.errorMessage = 'Terdapat kesalahan pada data yang dimasukkan. Silakan periksa kembali.';
-            setTimeout(() => { this.showError = false; }, 5000);
+            this.errorMessage = @js($errors->first());
+            setTimeout(() => { this.showError = false; }, 8000);
         @endif
         @if(request('changePassword') === 'true')
             this.$nextTick(() => {
@@ -105,13 +110,15 @@
         <input type="hidden" id="lokasi_lat" name="lokasi_lat" value="{{ old('lokasi_lat', $unitBisnis->lokasi_lat ?? '-6.9271') }}">
         <input type="hidden" id="lokasi_lng" name="lokasi_lng" value="{{ old('lokasi_lng', $unitBisnis->lokasi_lng ?? '107.6411') }}">
         <input type="hidden" id="delete_photo" name="delete_photo" value="0">
+        <input type="hidden" id="delete_header" name="delete_header" value="0">
 
         {{-- Hidden inputs informasi bisnis — selalu terkirim meski field disabled --}}
         <input type="hidden" name="nama_bisnis" :value="formData.nama_bisnis">
         <input type="hidden" name="tipe_bisnis" :value="formData.tipe_bisnis">
         <input type="hidden" name="email_bisnis" :value="formData.email_bisnis">
         <input type="hidden" name="no_telepon" :value="formData.no_telepon">
-        <input type="file" id="foto_input" name="foto_bisnis" accept="image/*" class="hidden"
+        <input type="hidden" name="deskripsi" :value="formData.deskripsi">
+        <input type="file" id="foto_input" name="foto_bisnis" accept="image/jpeg,image/png,.jpg,.jpeg,.png" class="hidden"
             @change="
                 const file = $el.files[0];
                 if (file) {
@@ -122,6 +129,186 @@
                     reader.readAsDataURL(file);
                 }
             ">
+        <input type="file" id="header_input" name="header_image" accept="image/jpeg,image/png,.jpg,.jpeg,.png" class="hidden"
+            @change="
+                const file = $el.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        headerPreview = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            ">
+
+        {{-- Header Hero: cover image + avatar + description --}}
+        <div class="relative bg-white rounded-3xl border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
+
+            {{-- Header image — overflow-hidden hanya di sini agar avatar tidak terpotong --}}
+            <div class="h-48 md:h-56 w-full bg-gray-100 relative rounded-t-3xl overflow-hidden">
+                <template x-if="headerPreview">
+                    <img :src="headerPreview" alt="Header Image" class="w-full h-full object-cover">
+                </template>
+                <template x-if="!headerPreview">
+                    <div @click="document.getElementById('header_input').click()"
+                        class="w-full h-full bg-gradient-to-r from-emerald-50 to-emerald-100 flex flex-col items-center justify-center gap-2 cursor-pointer hover:from-emerald-100 hover:to-emerald-200 transition-all group">
+                        <div class="w-12 h-12 rounded-full bg-[#1cb764]/10 group-hover:bg-[#1cb764]/20 flex items-center justify-center transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#1cb764]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <span class="text-sm font-semibold text-[#1cb764]">Tambahkan Header</span>
+                        <span class="text-xs text-gray-400">Klik untuk upload gambar header</span>
+                        <span class="text-[11px] text-gray-300 font-medium">JPG, PNG • Maks. 10 MB</span>
+                    </div>
+                </template>
+
+                {{-- Tombol Ubah Header — hanya muncul jika sudah ada header --}}
+                <template x-if="headerPreview">
+                    <div class="absolute top-4 right-4 flex items-center gap-2">
+                        <button type="button" @click.prevent="document.getElementById('header_input').click()"
+                            class="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold text-[#0a2e1f] shadow-md hover:bg-white transition-all flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Ubah Header
+                        </button>
+                        <button type="button" @click.prevent="document.getElementById('delete-header-modal').showModal()"
+                            class="bg-red-500/90 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-semibold text-white shadow-md hover:bg-red-600 transition-all flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Hapus Header
+                        </button>
+                    </div>
+                </template>
+            </div>
+
+            {{-- Konten di bawah header: avatar + info | divider | deskripsi --}}
+            <div class="px-6 py-5 relative overflow-hidden rounded-b-3xl"
+                style="background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 40%, #f0fdf4 70%, #dcfce7 100%);">
+
+                {{-- Blob hijau kiri atas --}}
+                <div class="absolute -top-10 -left-10 w-48 h-48 rounded-full pointer-events-none"
+                    style="background: radial-gradient(circle, rgba(28,183,100,0.12) 0%, transparent 70%);"></div>
+
+                {{-- Blob hijau kanan bawah --}}
+                <div class="absolute -bottom-12 -right-8 w-56 h-56 rounded-full pointer-events-none"
+                    style="background: radial-gradient(circle, rgba(22,163,74,0.10) 0%, transparent 70%);"></div>
+
+                {{-- Blob aksen kuning di tengah --}}
+                <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 pointer-events-none"
+                    style="background: radial-gradient(ellipse, rgba(134,239,172,0.15) 0%, transparent 70%);"></div>
+
+                {{-- Garis diagonal dekoratif --}}
+                <div class="absolute inset-0 pointer-events-none opacity-[0.04]"
+                    style="background-image: repeating-linear-gradient(45deg, #16a34a 0px, #16a34a 1px, transparent 1px, transparent 12px);"></div>
+
+                {{-- Daun besar transparan kanan --}}
+                <svg class="absolute -bottom-6 right-[36%] w-40 h-40 text-[#1cb764] opacity-[0.06] pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.5 3.5c-7.2-.2-12.7 2.2-15.4 6.8-1.9 3.2-1.4 6.8.7 8.9.2-2.2 1.1-5.2 3.6-8.1.3-.4.9-.4 1.3-.1.4.3.4.9.1 1.3-2.3 2.8-3.1 5.6-3.2 7.5 2.6 1.2 6.4.4 9.1-2.3 3.2-3.1 4.5-8.1 3.8-14z"/>
+                </svg>
+
+                <div class="flex items-stretch gap-0 relative z-10">
+
+                    {{-- Kiri: Avatar (overlap header) + Nama + Badge --}}
+                    <div class="flex items-start gap-5 flex-1 pr-8 min-w-0">
+                        {{-- Foto Profil --}}
+                        <div class="shrink-0">
+                            {{-- Belum ada foto --}}
+                            <template x-if="!photoPreview">
+                                <div @click="document.getElementById('foto_input').click()"
+                                    class="w-24 h-24 rounded-full border-4 border-white shadow-md ring-1 ring-gray-100 bg-[#eefcf4] hover:bg-[#dcfce7] flex flex-col items-center justify-center cursor-pointer transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-[#1cb764]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span class="text-[9px] font-bold text-[#16a34a] mt-1 text-center leading-tight">Tambahkan<br>Foto</span>
+                                </div>
+                            </template>
+
+                            {{-- Sudah ada foto: hover untuk ubah/hapus --}}
+                            <template x-if="photoPreview">
+                                <div class="relative group">
+                                    <img :src="photoPreview" alt="Foto Bisnis"
+                                        class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md ring-1 ring-gray-100">
+                                    {{-- Overlay ubah foto --}}
+                                    <div @click="document.getElementById('foto_input').click()"
+                                        class="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer flex items-center justify-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </div>
+                                    {{-- Tombol hapus --}}
+                                    <button type="button"
+                                        @click.stop="document.getElementById('delete-photo-modal').showModal()"
+                                        class="absolute -top-0.5 -right-0.5 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="pt-2 min-w-0">
+                            <div class="flex flex-wrap items-center gap-2 mb-1">
+                                <h2 class="text-2xl font-black text-[#0a2e1f] tracking-tight leading-tight">
+                                    {{ $unitBisnis->nama_bisnis ?: Auth::user()->name }}
+                                </h2>
+                            </div>
+                            @if($unitBisnis->verified || $unitBisnis->status_verifikasi === 'terverifikasi')
+                            <div class="inline-flex items-center gap-1.5 bg-[#eefcf4] text-[#16a34a] px-3 py-1.5 rounded-lg border border-green-100 mb-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                </svg>
+                                <span class="text-[10px] font-extrabold tracking-widest uppercase leading-none">Verified Business Partner</span>
+                            </div>
+                            @endif
+                            <p class="text-xs text-gray-500 font-medium">Bekerja sama sejak {{ $unitBisnis->tahun_bergabung ? 'Januari ' . $unitBisnis->tahun_bergabung : 'Januari 2023' }}</p>
+                        </div>
+                    </div>
+
+                    {{-- Garis pemisah vertikal --}}
+                    <div class="w-px bg-gray-200 shrink-0 self-stretch my-1"></div>
+
+                    {{-- Kanan: Deskripsi Bisnis --}}
+                    <div class="flex-1 pl-8 text-left min-w-0">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-sm font-bold text-gray-700">Deskripsi Bisnis</label>
+                            <button type="button" @click="isEditDeskripsi = !isEditDeskripsi"
+                                :class="isEditDeskripsi ? 'text-red-500 hover:text-red-600' : 'text-[#1cb764] hover:text-[#16a34a]'"
+                                class="flex items-center gap-1 text-xs font-semibold transition-colors shrink-0 ml-2">
+                                <svg x-show="!isEditDeskripsi" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                                </svg>
+                                <span x-show="!isEditDeskripsi">Ubah Deskripsi</span>
+                                <span x-show="isEditDeskripsi" x-cloak>Batal</span>
+                            </button>
+                        </div>
+                        <p x-show="!isEditDeskripsi"
+                            x-text="formData.deskripsi || 'Belum ada deskripsi. Klik Ubah Deskripsi untuk menambahkan.'"
+                            class="text-sm text-gray-600 leading-relaxed"></p>
+                        <div x-show="isEditDeskripsi" x-cloak class="mt-1">
+                            <textarea x-model="formData.deskripsi"
+                                class="w-full text-sm text-gray-700 rounded-xl border-2 border-[#1cb764] px-3 py-2 focus:ring-0 focus:outline-none resize-none leading-relaxed"
+                                rows="4"
+                                maxlength="1000"
+                                placeholder="Jelaskan tentang bisnis Anda, spesialisasi, layanan unggulan, dll."></textarea>
+                            <div class="flex justify-end mt-1.5">
+                                <button type="button" @click="isEditDeskripsi = false"
+                                    class="px-4 py-1.5 bg-[#1cb764] hover:bg-[#16a34a] text-white text-xs font-bold rounded-lg transition-colors">
+                                    Simpan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
 
         {{-- Two Columns Grid Layout --}}
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -129,82 +316,7 @@
             {{-- LEFT COLUMN: Profile Header, Business Info, Security (5 cols) --}}
             <div class="lg:col-span-5 space-y-6">
                 
-                {{-- CARD 1: Basic Info (Avatar & Badge) --}}
-                <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
-                    <div class="flex items-center gap-6">
-                       {{-- Profile Photo Container --}}
-                        <div class="relative shrink-0">
-
-                            {{-- Jika Belum Ada Foto --}}
-                            <div x-show="!photoPreview"
-                                x-cloak
-                                @click="document.getElementById('foto_input').click()"
-                                class="w-24 h-24 rounded-full border-2 border-dashed border-[#1cb764] bg-[#eefcf4] flex flex-col items-center justify-center cursor-pointer hover:bg-[#dcfce7] transition-all shadow-sm">
-
-                                <div class="w-9 h-9 rounded-full bg-[#1cb764] text-white flex items-center justify-center text-2xl font-bold leading-none shadow-md">
-                                    +
-                                </div>
-
-                                <span class="text-[10px] font-extrabold text-[#16a34a] mt-2">
-                                    Tambah Foto
-                                </span>
-                            </div>
-
-                            {{-- Jika Sudah Ada Foto / Setelah Pilih Foto --}}
-                            <div x-show="photoPreview" x-cloak class="relative group">
-
-                                <img
-                                    :src="photoPreview"
-                                    alt="Foto Bisnis"
-                                    class="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md ring-1 ring-gray-100">
-
-                                @if($unitBisnis->verified || $unitBisnis->status_verifikasi === 'terverifikasi')
-                                <div class="absolute bottom-0.5 right-0.5 w-6 h-6 bg-[#009b4d] rounded-full border-2 border-white flex items-center justify-center text-white shadow-sm">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                                @endif
-
-                                <div class="absolute inset-0 rounded-full bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center cursor-pointer"
-                                    @click="document.getElementById('foto_input').click()">
-
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                </div>
-
-                                <button type="button"
-                                    onclick="document.getElementById('delete-photo-modal').showModal()"
-                                    class="absolute -top-2 -right-2 w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all z-20"
-                                    title="Hapus Foto">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        {{-- Business Name, Status & Joined --}}
-                        <div class="space-y-2">
-                            <h2 class="text-3xl font-black text-[#0a2e1f] tracking-tight leading-tight">
-                                {{ $unitBisnis->nama_bisnis ?: Auth::user()->name }}
-                            </h2>
-                            @if($unitBisnis->verified || $unitBisnis->status_verifikasi === 'terverifikasi')
-                            <div class="inline-flex items-center gap-1.5 bg-[#eefcf4] text-[#16a34a] px-3 py-1.5 rounded-lg border border-green-100">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                </svg>
-                                <span class="text-[10px] font-extrabold tracking-widest uppercase leading-none">Verified Business Partner</span>
-                            </div>
-                            @endif
-
-
-<p class="text-xs text-gray-500 font-medium">Bekerja sama sejak {{ $unitBisnis->tahun_bergabung ? 'Januari ' . $unitBisnis->tahun_bergabung : 'Januari 2023' }}</p>
-                        </div>
-                    </div>
-                </div>
+                {{-- avatar ditampilkan pada header hero --}}
 
                 {{-- CARD 2: Informasi Bisnis --}}
                 <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
@@ -323,6 +435,7 @@
                             @enderror
                             <p class="text-[9px] text-gray-400 mt-1" id="phone_helper">*Hanya angka dan tanda (+, -) yang diperbolehkan</p>
                         </div>
+
                     </div>
                 </div>
 
@@ -367,54 +480,64 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     
                     {{-- Stats A: Dampak Sosial --}}
-                    <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between min-h-[176px]">
-                        <div class="flex items-start gap-3">
-                            <div class="w-14 h-14 rounded-2xl bg-[#eefcf4] flex items-center justify-center shrink-0">
-                            {{-- Icon Daun --}}
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="h-10 w-10 text-[#22c55e]"
-                                viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <path d="M20.5 3.5c-7.2-.2-12.7 2.2-15.4 6.8-1.9 3.2-1.4 6.8.7 8.9.2-2.2 1.1-5.2 3.6-8.1.3-.4.9-.4 1.3-.1.4.3.4.9.1 1.3-2.3 2.8-3.1 5.6-3.2 7.5 2.6 1.2 6.4.4 9.1-2.3 3.2-3.1 4.5-8.1 3.8-14z"/>
-                            </svg>
-                        </div>
-                        <div class="text-left">
-                                <span class="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest block">Dampak Sosial</span>
-                                <span class="text-3xl font-black text-gray-900 block leading-tight">{{ number_format($stats['total_porsi'], 0, ',', '.') }}</span>
-                                <span class="text-xs font-extrabold text-[#16a34a] block leading-none">Porsi Makanan</span>
+                    <div class="relative rounded-3xl p-6 overflow-hidden flex flex-col justify-between min-h-[176px] shadow-lg"
+                        style="background: linear-gradient(135deg, #0f9e57 0%, #1cb764 50%, #22c55e 100%);">
+                        {{-- Pola titik --}}
+                        <div class="absolute inset-0 pointer-events-none opacity-10"
+                            style="background-image: radial-gradient(white 1px, transparent 1px); background-size: 16px 16px;"></div>
+                        {{-- Daun besar dekoratif --}}
+                        <svg class="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-10 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.5 3.5c-7.2-.2-12.7 2.2-15.4 6.8-1.9 3.2-1.4 6.8.7 8.9.2-2.2 1.1-5.2 3.6-8.1.3-.4.9-.4 1.3-.1.4.3.4.9.1 1.3-2.3 2.8-3.1 5.6-3.2 7.5 2.6 1.2 6.4.4 9.1-2.3 3.2-3.1 4.5-8.1 3.8-14z"/>
+                        </svg>
+
+                        <div class="flex items-start gap-3 relative z-10">
+                            <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-white" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M20.5 3.5c-7.2-.2-12.7 2.2-15.4 6.8-1.9 3.2-1.4 6.8.7 8.9.2-2.2 1.1-5.2 3.6-8.1.3-.4.9-.4 1.3-.1.4.3.4.9.1 1.3-2.3 2.8-3.1 5.6-3.2 7.5 2.6 1.2 6.4.4 9.1-2.3 3.2-3.1 4.5-8.1 3.8-14z"/>
+                                </svg>
+                            </div>
+                            <div class="text-left">
+                                <span class="text-[9px] font-extrabold text-white/70 uppercase tracking-widest block">Dampak Sosial</span>
+                                <span class="text-4xl font-black text-white block leading-tight">{{ number_format($stats['total_porsi'], 0, ',', '.') }}</span>
+                                <span class="text-xs font-extrabold text-white/90 block leading-none">Porsi Makanan</span>
                             </div>
                         </div>
-                        <div class="text-xs text-gray-400 italic text-left pt-3 border-t border-gray-50 mt-3">
+                        <div class="text-xs text-white/60 italic text-left pt-3 border-t border-white/20 mt-3 relative z-10">
                             "Total Makanan Dibagikan"
                         </div>
                     </div>
 
                     {{-- Stats B: Dampak Lingkungan --}}
-                    <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)] flex flex-col justify-between min-h-[176px]">
-                        <div class="flex items-start gap-3">
-                            <div class="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0">
-                            {{-- Icon Timbangan --}}
-                            <svg xmlns="http://www.w3.org/2000/svg"
-                                class="h-10 w-10 text-[#8a5a00]"
-                                viewBox="0 0 24 24"
-                                fill="currentColor">
-                                <path d="M12 2a1 1 0 0 1 1 1v1h7a1 1 0 1 1 0 2h-3.2l3 5.2c.1.2.2.4.2.6C20 14.7 18.2 17 16 17s-4-2.3-4-5.2c0-.2.1-.4.2-.6L15.2 6H13v10h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2V6H8.8l3 5.2c.1.2.2.4.2.6C12 14.7 10.2 17 8 17s-4-2.3-4-5.2c0-.2.1-.4.2-.6L7.2 6H4a1 1 0 1 1 0-2h7V3a1 1 0 0 1 1-1ZM6.1 12h3.8L8 8.7 6.1 12Zm8 0h3.8L16 8.7 14.1 12Z"/>
-                            </svg>
-                        </div>
-                        <div class="text-left">
-                                <span class="text-[9px] font-extrabold text-gray-400 uppercase tracking-widest block">Dampak Lingkungan</span>
-                                <span class="text-3xl font-black text-gray-900 block leading-tight">{{ number_format($stats['total_kg'], 0, ',', '.') }}</span>
-                                <span class="text-xs font-extrabold text-amber-700 block leading-none">Kilogram</span>
+                    <div class="relative rounded-3xl p-6 overflow-hidden flex flex-col justify-between min-h-[176px] shadow-lg"
+                        style="background: linear-gradient(135deg, #b45309 0%, #d97706 50%, #f59e0b 100%);">
+                        {{-- Pola titik --}}
+                        <div class="absolute inset-0 pointer-events-none opacity-10"
+                            style="background-image: radial-gradient(white 1px, transparent 1px); background-size: 16px 16px;"></div>
+                        {{-- Timbangan besar dekoratif --}}
+                        <svg class="absolute -bottom-4 -right-4 w-32 h-32 text-white opacity-10 pointer-events-none" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2a1 1 0 0 1 1 1v1h7a1 1 0 1 1 0 2h-3.2l3 5.2c.1.2.2.4.2.6C20 14.7 18.2 17 16 17s-4-2.3-4-5.2c0-.2.1-.4.2-.6L15.2 6H13v10h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2V6H8.8l3 5.2c.1.2.2.4.2.6C12 14.7 10.2 17 8 17s-4-2.3-4-5.2c0-.2.1-.4.2-.6L7.2 6H4a1 1 0 1 1 0-2h7V3a1 1 0 0 1 1-1ZM6.1 12h3.8L8 8.7 6.1 12Zm8 0h3.8L16 8.7 14.1 12Z"/>
+                        </svg>
+
+                        <div class="flex items-start gap-3 relative z-10">
+                            <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9 text-white" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2a1 1 0 0 1 1 1v1h7a1 1 0 1 1 0 2h-3.2l3 5.2c.1.2.2.4.2.6C20 14.7 18.2 17 16 17s-4-2.3-4-5.2c0-.2.1-.4.2-.6L15.2 6H13v10h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2V6H8.8l3 5.2c.1.2.2.4.2.6C12 14.7 10.2 17 8 17s-4-2.3-4-5.2c0-.2.1-.4.2-.6L7.2 6H4a1 1 0 1 1 0-2h7V3a1 1 0 0 1 1-1ZM6.1 12h3.8L8 8.7 6.1 12Zm8 0h3.8L16 8.7 14.1 12Z"/>
+                                </svg>
+                            </div>
+                            <div class="text-left">
+                                <span class="text-[9px] font-extrabold text-white/70 uppercase tracking-widest block">Dampak Lingkungan</span>
+                                <span class="text-4xl font-black text-white block leading-tight">{{ number_format($stats['total_kg'], 0, ',', '.') }}</span>
+                                <span class="text-xs font-extrabold text-white/90 block leading-none">Kilogram</span>
                             </div>
                         </div>
-                        <div class="text-xs text-gray-400 italic text-left pt-3 border-t border-gray-50 mt-3">
+                        <div class="text-xs text-white/60 italic text-left pt-3 border-t border-white/20 mt-3 relative z-10">
                             "Total Berat Terselamatkan"
                         </div>
                     </div>
                 </div>
 
                 {{-- CARD 4: Lokasi & Alamat --}}
-                <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)] space-y-6">
+                <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-[0_10px_30px_rgba(0,0,0,0.03)]">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-2xl bg-[#eefcf4] flex items-center justify-center shrink-0">
@@ -434,19 +557,21 @@
                         </button>
                     </div>
 
-                    {{-- Hidden address input for form submit --}}
-                    <input type="hidden" id="alamat_input" name="alamat" value="{{ old('alamat', $unitBisnis->alamat) }}">
-
                     {{-- Address Callout Box --}}
-                    <div class="bg-[#f7faf8] rounded-2xl p-5 border border-gray-50 flex items-start gap-4">
-                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 mt-1.5 shrink-0 animate-pulse"></div>
-                        <p id="alamat_display" class="text-sm font-bold text-[#0a2e1f] leading-relaxed text-left whitespace-pre-line">
-                            {{ $unitBisnis->alamat ?: 'Masukkan alamat anda. Klik "Ubah" untuk menambahkan.' }}
-                        </p>
+                    <div class="mt-4">
+                        <input type="hidden" id="alamat_input" name="alamat" value="{{ old('alamat', $unitBisnis->alamat) }}">
+                        <div class="bg-[#f7faf8] rounded-2xl p-2 border border-gray-50 flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#1cb764] shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-2.013 3.713-4.912 3.713-8.027a8 8 0 10-16 0c0 3.115 1.77 6.014 3.713 8.027a19.58 19.58 0 002.683 2.282 16.974 16.974 0 001.144.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                            </svg>
+                            <p id="alamat_display" class="text-sm font-bold text-[#0a2e1f] leading-relaxed text-left whitespace-pre-line">
+                                {{ $unitBisnis->alamat ?: 'Masukkan alamat anda. Klik "Ubah" untuk menambahkan.' }}
+                            </p>
+                        </div>
                     </div>
 
                     {{-- Peta Map Container --}}
-                    <div class="relative rounded-3xl overflow-hidden shadow-inner border border-gray-100 group">
+                    <div class="mt-4 relative rounded-3xl overflow-hidden shadow-inner border border-gray-100 group">
                         {{-- Main Map Div --}}
                         <div id="main-map" class="h-80 z-10"></div>
                         
@@ -523,6 +648,40 @@
 
                 <button type="button"
                     onclick="deleteProfilePhoto()"
+                    class="w-1/2 py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold shadow-lg transition-all">
+                    Iya
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    {{-- Delete Header Confirmation Modal --}}
+    <dialog id="delete-header-modal" class="modal">
+        <div class="modal-box max-w-sm rounded-3xl p-8 border border-gray-100 bg-white shadow-2xl text-center">
+
+            <div class="mx-auto mb-5 w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </div>
+
+            <h3 class="text-xl font-extrabold text-gray-900 mb-2">
+                Hapus Gambar Header?
+            </h3>
+
+            <p class="text-sm text-gray-500 mb-7">
+                Apakah Anda yakin ingin menghapus gambar header profil?
+            </p>
+
+            <div class="flex gap-3">
+                <button type="button"
+                    onclick="document.getElementById('delete-header-modal').close()"
+                    class="w-1/2 py-3 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold transition-all">
+                    Tidak
+                </button>
+
+                <button type="button"
+                    onclick="deleteHeaderImage()"
                     class="w-1/2 py-3 rounded-2xl bg-red-500 hover:bg-red-600 text-white font-bold shadow-lg transition-all">
                     Iya
                 </button>
@@ -880,6 +1039,19 @@
 
         document.getElementById('hapus-foto-form').submit();
     }
+
+    // Delete header image
+    function deleteHeaderImage() {
+        const modal = document.getElementById('delete-header-modal');
+        if (modal) {
+            modal.close();
+        }
+
+        document.getElementById('delete_header').value = '1';
+        // Trigger form submission
+        document.getElementById('profile-form').submit();
+    }
+
 
 </script>
 

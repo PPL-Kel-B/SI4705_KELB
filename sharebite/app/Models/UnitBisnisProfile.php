@@ -20,6 +20,8 @@ class UnitBisnisProfile extends Model
         'nib_file',
         'foto_bisnis',
         'foto_profile',
+        'header_image',
+        'deskripsi',
         'alamat',
         'lokasi_lat',
         'lokasi_lng',
