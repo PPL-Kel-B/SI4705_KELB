@@ -17,7 +17,7 @@
         <div class="lg:col-span-4 flex flex-col justify-between gap-6">
             
             {{-- Card Profil Unit Bisnis --}}
-            <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-100 flex flex-col w-full">
+            <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-100 flex flex-col w-full flex-1">
                 {{-- Banner Latar Belakang --}}
                 <div class="h-40 bg-gradient-to-br from-[#1cb764] to-[#148f4c] relative shrink-0">
                     <div class="absolute inset-0 opacity-25 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
@@ -390,7 +390,7 @@
                     <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
                         <div>
                             <p class="text-[10px] text-gray-400 font-medium">Harga / Porsi</p>
-                            <p <p class="text-[#1cb764] font-bold text-sm">Rp {{ number_format((int)$makanan->harga, 0, ',', '.') }}</p>
+                            <p class="text-[#1cb764] font-bold text-sm">Rp {{ number_format((int)$makanan->harga, 0, ',', '.') }}</p>
                         </div>
                         {{-- Tombol Ambil Makanan --}}
                         <a href="{{ route('user.tes-tombol-profil', $makanan->id) }}" class="bg-[#1cb764] hover:bg-[#158f4e] text-white text-xs font-semibold px-4 py-2 rounded-xl transition text-center">
