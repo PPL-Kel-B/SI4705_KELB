@@ -21,7 +21,11 @@
     @if($allActiveMenus->isNotEmpty())
     <div class="bg-[#1cb764] text-white px-6 py-3.5 rounded-3xl mb-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
         <div class="flex items-center gap-2">
-            <span class="text-lg">🍱</span>
+            <span class="text-lg text-white">
+                <svg class="h-5 w-5 inline-block mr-1 align-text-bottom shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v3m-3-3v3m6-3v3M4 11h16a1 1 0 011 1v1a8 8 0 01-8 8 8 8 0 01-8-8v-1a1 1 0 011-1z" />
+                </svg>
+            </span>
             <span class="text-xs sm:text-sm font-bold text-white">
                 Menu Terpilih: <strong class="underline decoration-green-200 decoration-2 underline-offset-2">{{ $makanan->nama }}</strong>
             </span>
@@ -41,7 +45,11 @@
     {{-- WARNING BANNER UNTUK SIMULASI FALLBACK --}}
     <div class="bg-amber-50 border border-amber-200 text-amber-800 px-6 py-4 rounded-2xl mb-6 flex items-center justify-between shadow-sm">
         <div class="flex items-center gap-3">
-            <span class="text-2xl">💡</span>
+            <span class="text-2xl text-amber-500 shrink-0">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+            </span>
             <div>
                 <p class="font-bold text-sm">Belum Ada Menu Aktif di Database (Menggunakan Data Fallback)</p>
                 <p class="text-xs text-amber-700">Kamu sedang melihat data simulasi buah salad. Coba login sebagai <strong>Unit Bisnis</strong>, tambahkan menu baru di menu "Kelola Makanan", lalu kembali ke halaman ini untuk melihat menu real buatanmu!</p>
@@ -75,7 +83,9 @@
                             </span>
                             <h1 class="text-2xl sm:text-3xl font-black text-white mt-3 drop-shadow-sm">{{ $makanan->nama }}</h1>
                             <p class="text-green-300 text-xs font-semibold mt-1 flex items-center gap-1">
-                                🍴 Organic Curator Verified
+                                <svg class="h-3.5 w-3.5 text-green-300 inline-block mr-1 align-text-bottom" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg> Organic Curator Verified
                             </p>
                         </div>
                         <span class="bg-black/40 backdrop-blur-md text-white text-xs px-3 py-1.5 rounded-xl font-bold flex flex-col items-center justify-center border border-white/10 min-w-[70px]">
@@ -144,8 +154,11 @@
                         </div>
                         <div>
                             <h3 class="font-extrabold text-gray-800 text-base leading-tight">{{ $makanan->nama_usaha }}</h3>
-                            <p class="text-xs text-gray-500 flex items-center gap-1 mt-1 leading-none">
-                                📍 {{ $makanan->alamat }}
+                            <p class="text-xs text-gray-500 flex items-start gap-1 mt-1 leading-normal">
+                                <svg class="h-4 w-4 text-[#1cb764] inline-block mr-1.5 align-text-bottom shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg> <span>{{ $makanan->alamat }}</span>
                             </p>
                         </div>
                     </div>
@@ -229,7 +242,10 @@
                     {{-- Pin --}}
                     <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
                         <div class="w-8 h-8 bg-[#1cb764] text-white rounded-full flex items-center justify-center shadow-md animate-bounce ring-4 ring-[#eefcf4]">
-                            📍
+                            <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
                         </div>
                         <span class="mt-1 bg-white/95 backdrop-blur-sm text-[9px] font-black text-gray-800 px-2 py-0.5 rounded-md border border-gray-100 shadow-sm whitespace-nowrap">
                             Lokasi Disini
@@ -248,7 +264,11 @@
 
             {{-- CARD JAMINAN KUALITAS --}}
             <div class="bg-[#f9f6e6] border border-[#f3ecc2] p-5 rounded-3xl flex gap-3 shadow-sm">
-                <span class="text-xl">🛡️</span>
+                <span class="text-xl text-amber-600 shrink-0">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </span>
                 <div>
                     <h4 class="font-extrabold text-[#854d0e] text-xs uppercase tracking-wider">JAMINAN KUALITAS</h4>
                     <p class="text-[10px] text-gray-600 leading-relaxed mt-1">

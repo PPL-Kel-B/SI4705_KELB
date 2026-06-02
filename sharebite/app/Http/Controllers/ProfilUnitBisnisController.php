@@ -50,12 +50,28 @@ class ProfilUnitBisnisController extends Controller
 
             $makananAktif = [];
             foreach ($makananReal as $item) {
+                $distanceStr = '0.8 km';
+                $user = auth()->user();
+                if ($user && !is_null($user->latitude) && !is_null($user->longitude)) {
+                    $latBisnis = $profile->lokasi_lat ?? $profile->user->latitude ?? null;
+                    $lngBisnis = $profile->lokasi_lng ?? $profile->user->longitude ?? null;
+                    if (!is_null($latBisnis) && !is_null($lngBisnis)) {
+                        $distance = \App\Models\User::calculateDistance(
+                            $user->latitude,
+                            $user->longitude,
+                            $latBisnis,
+                            $lngBisnis
+                        );
+                        $distanceStr = number_format($distance, 1, ',', '.') . ' km';
+                    }
+                }
+
                 $makananAktif[] = (object) [
                     'id' => $item->id,
                     'nama' => $item->masterMakanan->nama_makanan,
                     'harga' => $item->is_gratis ? '0 (Donasi)' : number_format($item->harga_jual, 0, ',', '.'),
                     'porsi' => $item->stok_porsi,
-                    'jarak' => '0.8 km', // mock jarak karena tidak ada koordinat di db
+                    'jarak' => $distanceStr,
                     'foto' => $item->masterMakanan->foto ? asset('storage/' . $item->masterMakanan->foto) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
                     'kategori' => $item->masterMakanan->kategori ?? 'Umum',
                 ];
@@ -88,13 +104,29 @@ class ProfilUnitBisnisController extends Controller
 
             // Jika unit bisnis tidak punya makanan aktif di database, beri data mock agar tidak kosong
             if (empty($makananAktif)) {
+                $distanceStrFallback = '1.0 km';
+                $user = auth()->user();
+                if ($user && !is_null($user->latitude) && !is_null($user->longitude)) {
+                    $latBisnis = $profile->lokasi_lat ?? $profile->user->latitude ?? null;
+                    $lngBisnis = $profile->lokasi_lng ?? $profile->user->longitude ?? null;
+                    if (!is_null($latBisnis) && !is_null($lngBisnis)) {
+                        $distance = \App\Models\User::calculateDistance(
+                            $user->latitude,
+                            $user->longitude,
+                            $latBisnis,
+                            $lngBisnis
+                        );
+                        $distanceStrFallback = number_format($distance, 1, ',', '.') . ' km';
+                    }
+                }
+
                 $makananAktif = [
                     (object) [
                         'id' => 999,
                         'nama' => 'Menu Khusus Toko',
                         'harga' => '0 (Donasi)',
                         'porsi' => 5,
-                        'jarak' => '1.0 km',
+                        'jarak' => $distanceStrFallback,
                         'foto' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
                         'kategori' => 'Cemilan / Makanan Ringan',
                     ]
@@ -124,13 +156,36 @@ class ProfilUnitBisnisController extends Controller
             ];
 
             // MOCKING DATA MAKANAN AKTIF
+            $latBisnisFallback = -6.9271;
+            $lngBisnisFallback = 107.6411;
+
+            $distanceStr1 = '0.8 km';
+            $distanceStr2 = '1.2 km';
+            $distanceStr3 = '1.5 km';
+            $distanceStr4 = '0.5 km';
+
+            $user = auth()->user();
+            if ($user && !is_null($user->latitude) && !is_null($user->longitude)) {
+                $distance1 = \App\Models\User::calculateDistance($user->latitude, $user->longitude, $latBisnisFallback, $lngBisnisFallback);
+                $distanceStr1 = number_format($distance1, 1, ',', '.') . ' km';
+
+                $distance2 = \App\Models\User::calculateDistance($user->latitude, $user->longitude, $latBisnisFallback + 0.005, $lngBisnisFallback + 0.005);
+                $distanceStr2 = number_format($distance2, 1, ',', '.') . ' km';
+
+                $distance3 = \App\Models\User::calculateDistance($user->latitude, $user->longitude, $latBisnisFallback - 0.007, $lngBisnisFallback + 0.003);
+                $distanceStr3 = number_format($distance3, 1, ',', '.') . ' km';
+
+                $distance4 = \App\Models\User::calculateDistance($user->latitude, $user->longitude, $latBisnisFallback + 0.002, $lngBisnisFallback - 0.004);
+                $distanceStr4 = number_format($distance4, 1, ',', '.') . ' km';
+            }
+
             $makananAktif = [
                 (object) [
                     'id' => 1, 
                     'nama' => 'Paket Salad Buah Segar', 
                     'harga' => '7.500', 
                     'porsi' => 12, 
-                    'jarak' => '0.8 km',
+                    'jarak' => $distanceStr1,
                     'foto' => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80',
                     'kategori' => 'Cemilan / Makanan Ringan',
                 ],
@@ -139,7 +194,7 @@ class ProfilUnitBisnisController extends Controller
                     'nama' => 'Smoothie Bowl Berry', 
                     'harga' => '12.000', 
                     'porsi' => 5, 
-                    'jarak' => '1.2 km',
+                    'jarak' => $distanceStr2,
                     'foto' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
                     'kategori' => 'Dessert',
                 ],
@@ -148,7 +203,7 @@ class ProfilUnitBisnisController extends Controller
                     'nama' => 'Nasi Kotak Ayam Bakar', 
                     'harga' => '0 (Donasi)', 
                     'porsi' => 3, 
-                    'jarak' => '1.5 km',
+                    'jarak' => $distanceStr3,
                     'foto' => 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&q=80',
                     'kategori' => 'Makanan Berat',
                 ],
@@ -157,7 +212,7 @@ class ProfilUnitBisnisController extends Controller
                     'nama' => 'Gado-Gado Spesial Toko', 
                     'harga' => '8.000', 
                     'porsi' => 8, 
-                    'jarak' => '0.5 km',
+                    'jarak' => $distanceStr4,
                     'foto' => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80',
                     'kategori' => 'Makanan Berat',
                 ],
@@ -215,6 +270,22 @@ class ProfilUnitBisnisController extends Controller
 
         if ($activeMenu && $activeMenu->masterMakanan && $activeMenu->unitBisnis) {
             // Gunakan data REAL dari database (POV Unit Bisnis)
+            $distanceStr = '0.8 km';
+            $user = auth()->user();
+            if ($user && !is_null($user->latitude) && !is_null($user->longitude)) {
+                $latBisnis = $activeMenu->unitBisnis->lokasi_lat ?? $activeMenu->unitBisnis->user->latitude ?? null;
+                $lngBisnis = $activeMenu->unitBisnis->lokasi_lng ?? $activeMenu->unitBisnis->user->longitude ?? null;
+                if (!is_null($latBisnis) && !is_null($lngBisnis)) {
+                    $distance = \App\Models\User::calculateDistance(
+                        $user->latitude,
+                        $user->longitude,
+                        $latBisnis,
+                        $lngBisnis
+                    );
+                    $distanceStr = number_format($distance, 1, ',', '.') . ' km';
+                }
+            }
+
             $makanan = (object) [
                 'id' => $activeMenu->id,
                 'nama' => $activeMenu->masterMakanan->nama_makanan,
@@ -223,7 +294,7 @@ class ProfilUnitBisnisController extends Controller
                 'harga' => $activeMenu->is_gratis ? 0 : (float) $activeMenu->harga_jual,
                 'is_gratis' => $activeMenu->is_gratis,
                 'stok_porsi' => $activeMenu->stok_porsi,
-                'jarak' => '0.8 km', // mock jarak
+                'jarak' => $distanceStr,
                 'batas_pengambilan' => $activeMenu->batas_pengambilan ? $activeMenu->batas_pengambilan->format('H:i') . ' WIB' : 'Hari Ini',
                 'foto' => $activeMenu->masterMakanan->foto ? asset('storage/' . $activeMenu->masterMakanan->foto) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80',
                 'unit_bisnis_id' => $activeMenu->unit_bisnis_id,
@@ -233,6 +304,18 @@ class ProfilUnitBisnisController extends Controller
             ];
         } else {
             // FALLBACK: Gunakan data mockup buah salad jika kosong
+            $distanceStrFallback = '0.8 km';
+            $user = auth()->user();
+            if ($user && !is_null($user->latitude) && !is_null($user->longitude)) {
+                $distance = \App\Models\User::calculateDistance(
+                    $user->latitude,
+                    $user->longitude,
+                    -6.9271,
+                    107.6411
+                );
+                $distanceStrFallback = number_format($distance, 1, ',', '.') . ' km';
+            }
+
             $makanan = (object) [
                 'id' => null,
                 'nama' => 'Paket Salad Buah Segar',
@@ -241,7 +324,7 @@ class ProfilUnitBisnisController extends Controller
                 'harga' => 7500,
                 'is_gratis' => false,
                 'stok_porsi' => 12,
-                'jarak' => '0.8 km',
+                'jarak' => $distanceStrFallback,
                 'batas_pengambilan' => '2 Jam Lagi',
                 'foto' => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80',
                 'unit_bisnis_id' => 1,

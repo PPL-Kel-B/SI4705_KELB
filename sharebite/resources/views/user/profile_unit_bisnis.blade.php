@@ -5,16 +5,18 @@
     
     {{-- 1. BREADCRUMB (Navigasi Atas) --}}
     <nav class="text-sm text-gray-500 mb-4">
-        <span class="hover:underline cursor-pointer">Dashboard</span> / 
+        <a href="{{ route('user.dashboard') }}" class="hover:underline cursor-pointer">Dashboard</a> / 
         <span class="hover:underline cursor-pointer">Makanan</span> / 
         <span class="text-[#1cb764] font-semibold">{{ $unitBisnis->nama }}</span>
     </nav>
 
-    {{-- 2. GRID 2 KOLOM (PROFIL TOKO & DESKRIPSI) --}}
+    {{-- 2. GRID 2 KOLOM UTAMA --}}
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8 items-stretch">
         
-        {{-- Kolom Kiri: Profil Unit Bisnis (Panjang Kebawah) --}}
-        <div class="lg:col-span-5 flex">
+        {{-- ==================== KOLOM KIRI: PROFIL & STATISTIK ==================== --}}
+        <div class="lg:col-span-4 flex flex-col justify-between gap-6">
+            
+            {{-- Card Profil Unit Bisnis --}}
             <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-100 flex flex-col w-full">
                 {{-- Banner Latar Belakang --}}
                 <div class="h-40 bg-gradient-to-br from-[#1cb764] to-[#148f4c] relative shrink-0">
@@ -84,17 +86,47 @@
                                 </svg>
                                 Email Mitra
                             </span>
-                            <span class="text-gray-800 font-extrabold truncate max-w-[180px]">{{ $unitBisnis->email }}</span>
+                            <span class="text-gray-800 font-extrabold truncate max-w-[150px] lg:max-w-[120px] xl:max-w-[160px]">{{ $unitBisnis->email }}</span>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {{-- Dampak Statistik --}}
+            <div class="grid grid-cols-2 gap-4 w-full">
+                {{-- Total Donasi --}}
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between transition-all hover:shadow-md hover:-translate-y-0.5 duration-200">
+                    <div class="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center text-orange-500 shadow-sm border border-orange-100/30 mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-[9px] font-bold uppercase tracking-wider">Total Donasi</p>
+                        <h3 class="text-base font-black text-gray-800 mt-0.5">{{ $unitBisnis->total_donasi ?? 0 }}</h3>
+                    </div>
+                </div>
+
+                {{-- Rating --}}
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between transition-all hover:shadow-md hover:-translate-y-0.5 duration-200">
+                    <div class="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center text-yellow-500 shadow-sm border border-yellow-100/30 mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-[9px] font-bold uppercase tracking-wider">Reputasi / Rating</p>
+                        <h3 class="text-base font-black text-gray-800 mt-0.5">{{ $unitBisnis->rating ?? '0.0' }}</h3>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        {{-- Kolom Kanan: Deskripsi Toko & Statistik Dampak (Sejajar dengan Background Kotak Putih) --}}
-        <div class="lg:col-span-7 flex flex-col justify-between space-y-6">
+        {{-- ==================== KOLOM KANAN: DETAIL KONTEN MITRA ==================== --}}
+        <div class="lg:col-span-8 flex flex-col space-y-6 h-full">
             {{-- Deskripsi Toko (Tentang Mitra) --}}
-            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex-1 space-y-6">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 space-y-6 flex-1">
                 {{-- Tentang Mitra --}}
                 <div>
                     <h2 class="text-xl font-black text-[#1cb764] tracking-tight mb-2">Tentang Mitra</h2>
@@ -102,9 +134,10 @@
                         {{ $unitBisnis->deskripsi }}
                     </p>
                 </div>
+                
                 {{-- Spesialisasi --}}
                 @php
-                    $categories = collect($makananAktif)->pluck('kategori')->unique()->toArray();
+                    $categories = collect($makananAktif)->pluck('kategori')->unique()->filter()->toArray();
                 @endphp
                 <div>
                     <h3 class="text-sm font-bold text-gray-800 tracking-wide uppercase mb-3">Spesialisasi</h3>
@@ -171,9 +204,9 @@
                     </div>
                 </div>
 
-                {{-- Galeri (Bukti Donasi Terhubung ke Database) --}}
+                {{-- Galeri --}}
                 @php
-                    $buktiDonasisCol = collect($buktiDonasis);
+                    $buktiDonasisCol = collect($buktiDonasis)->filter();
                 @endphp
                 <div x-data="{ openGalleryModal: false }">
                     <h3 class="text-sm font-bold text-gray-800 tracking-wide uppercase mb-3">Galeri Aktivitas Donasi</h3>
@@ -187,23 +220,20 @@
                             @endforeach
                             
                             @if($buktiDonasisCol->count() > 4)
-                                {{-- Foto ke-4 dengan overlay + --}}
                                 <div class="h-16 rounded-xl overflow-hidden shadow-sm border border-gray-100 relative cursor-pointer group active:scale-95 transition-all duration-200" @click="openGalleryModal = true">
-                                    <img src="{{ $buktiDonasisCol[3] }}" alt="Bukti Donasi 4" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                    <img src="{{ $buktiDonasisCol->get(3) }}" alt="Bukti Donasi 4" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                     <div class="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-white font-extrabold text-xs transition-colors group-hover:bg-black/50">
                                         <span class="text-sm">+{{ $buktiDonasisCol->count() - 3 }}</span>
                                     </div>
                                 </div>
                             @elseif($buktiDonasisCol->count() == 4)
-                                {{-- Foto ke-4 normal --}}
                                 <div class="h-16 rounded-xl overflow-hidden shadow-sm border border-gray-100 cursor-pointer hover:opacity-90 hover:scale-[1.02] active:scale-95 transition-all duration-200" @click="openGalleryModal = true">
-                                    <img src="{{ $buktiDonasisCol[3] }}" alt="Bukti Donasi 4" class="w-full h-full object-cover">
+                                    <img src="{{ $buktiDonasisCol->get(3) }}" alt="Bukti Donasi 4" class="w-full h-full object-cover">
                                 </div>
                             @endif
                         </div>
                         <p class="text-[10px] text-gray-400 mt-2 font-semibold">Foto bukti penyaluran donasi terverifikasi kami.</p>
                     @else
-                        {{-- Empty State Card --}}
                         <div class="flex flex-col items-center justify-center p-6 bg-[#f4f7f5]/40 rounded-2xl border border-dashed border-gray-200 text-center">
                             <div class="w-12 h-12 bg-[#eefcf4] rounded-2xl flex items-center justify-center text-[#1cb764] mb-3 border border-[#1cb764]/10 shadow-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -214,6 +244,7 @@
                             <p class="text-[10px] text-gray-400 mt-1 max-w-[240px] font-medium leading-relaxed">Mitra ini belum memiliki atau mengunggah foto penyaluran donasi saat ini.</p>
                         </div>
                     @endif
+
                     {{-- AlpineJS Modal --}}
                     <div x-show="openGalleryModal" 
                          x-transition:enter="transition ease-out duration-300"
@@ -224,14 +255,14 @@
                          x-transition:leave-end="opacity-0 scale-95"
                          class="fixed inset-0 z-50 flex items-center justify-center p-4" 
                          x-cloak>
-                        <!-- Backdrop -->
                         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="openGalleryModal = false"></div>
-                        
-                        <!-- Modal Content -->
                         <div class="relative bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] p-6 z-10 border border-gray-100 flex flex-col">
                             <div class="flex justify-between items-center mb-4 pb-2 border-b border-gray-100 shrink-0">
                                 <h3 class="text-base font-extrabold text-gray-800 flex items-center gap-2">
-                                    <span class="text-lg">📸</span> Galeri Aktivitas Donasi
+                                    <svg class="h-5 w-5 text-gray-500 shrink-0 inline-block mr-1 align-text-bottom" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg> Galeri Aktivitas Donasi
                                 </h3>
                                 <button @click="openGalleryModal = false" class="text-gray-400 hover:text-gray-600 bg-gray-100 hover:bg-gray-200 p-1.5 rounded-full transition">
                                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -239,7 +270,6 @@
                                     </svg>
                                 </button>
                             </div>
-                            
                             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 overflow-y-auto pr-1">
                                 @foreach($buktiDonasisCol as $index => $foto)
                                     <div class="aspect-square rounded-2xl overflow-hidden shadow-sm border border-gray-100 group cursor-pointer hover:shadow-md transition">
@@ -259,14 +289,15 @@
                 {{-- Ulasan Komunitas --}}
                 <div>
                     <h3 class="text-sm font-bold text-gray-800 tracking-wide uppercase mb-3 flex items-center gap-2">
-                        💬 Ulasan Komunitas
+                        <svg class="h-5 w-5 text-[#1cb764] shrink-0 inline-block align-text-bottom" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg> Ulasan Komunitas
                     </h3>
-                    @if(collect($ulasans)->isNotEmpty())
+                    @if(collect($ulasans)->filter()->isNotEmpty())
                         <div class="space-y-4 max-h-[320px] overflow-y-auto pr-1">
                             @foreach($ulasans as $ulasan)
                                 <div class="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 transition duration-200 hover:bg-gray-50 hover:shadow-sm">
                                     <div class="flex items-start justify-between gap-3">
-                                        {{-- Avatar & Nama --}}
                                         <div class="flex items-center gap-3">
                                             <div class="w-9 h-9 rounded-full bg-emerald-50 text-[#1cb764] flex items-center justify-center font-bold text-sm border border-[#1cb764]/10 shrink-0">
                                                 {{ strtoupper(substr($ulasan->user->name ?? 'U', 0, 1)) }}
@@ -278,7 +309,6 @@
                                                 </p>
                                             </div>
                                         </div>
-                                        {{-- Stars --}}
                                         <div class="flex items-center gap-0.5 text-yellow-400">
                                             @for($i = 1; $i <= 5; $i++)
                                                 <svg class="w-3.5 h-3.5" fill="{{ $i <= $ulasan->skor_rating ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -294,7 +324,6 @@
                             @endforeach
                         </div>
                     @else
-                        {{-- Empty State Ulasan --}}
                         <div class="flex flex-col items-center justify-center p-6 bg-[#f4f7f5]/40 rounded-2xl border border-dashed border-gray-200 text-center">
                             <div class="w-11 h-11 bg-emerald-50 rounded-2xl flex items-center justify-center text-[#1cb764] mb-2 border border-[#1cb764]/10">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5.5 w-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
@@ -307,39 +336,6 @@
                     @endif
                 </div>
             </div>
-
-            {{-- Dampak Statistik (Sejajar / Side-by-side dengan Background Kotak Putih) --}}
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 shrink-0 mt-6">
-                {{-- Total Donasi --}}
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between transition-all hover:shadow-md hover:-translate-y-0.5 duration-200">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500 shadow-sm border border-orange-100/30">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Total Donasi</p>
-                            <h3 class="text-lg font-black text-gray-800">{{ $unitBisnis->total_donasi }}</h3>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Rating --}}
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between transition-all hover:shadow-md hover:-translate-y-0.5 duration-200">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 bg-yellow-50 rounded-2xl flex items-center justify-center text-yellow-500 shadow-sm border border-yellow-100/30">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-gray-400 text-[10px] font-bold uppercase tracking-wider">Reputasi / Rating</p>
-                            <h3 class="text-lg font-black text-gray-800">{{ $unitBisnis->rating }}</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
     </div>
@@ -349,7 +345,7 @@
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-bold text-gray-800">Makanan yang Tersedia Saat Ini</h2>
             <span class="text-xs bg-[#eefcf4] text-[#1cb764] px-3 py-1.5 rounded-lg font-bold border border-[#1cb764]/10">
-                {{ count($makananAktif) }} Menu Aktif
+                {{ collect($makananAktif)->count() }} Menu Aktif
             </span>
         </div>
 
@@ -394,7 +390,7 @@
                     <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
                         <div>
                             <p class="text-[10px] text-gray-400 font-medium">Harga / Porsi</p>
-                            <p class="text-[#1cb764] font-bold text-sm">Rp {{ $makanan->harga }}</p>
+                            <p <p class="text-[#1cb764] font-bold text-sm">Rp {{ number_format((int)$makanan->harga, 0, ',', '.') }}</p>
                         </div>
                         {{-- Tombol Ambil Makanan --}}
                         <a href="{{ route('user.tes-tombol-profil', $makanan->id) }}" class="bg-[#1cb764] hover:bg-[#158f4e] text-white text-xs font-semibold px-4 py-2 rounded-xl transition text-center">
