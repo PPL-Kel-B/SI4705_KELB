@@ -57,4 +57,29 @@ class SettingsController extends Controller
         DB::table('sessions')->where('id', $id)->where('user_id', Auth::id())->delete();
         return redirect()->route('user.pengaturan')->with('success', 'Perangkat berhasil dikeluarkan.');
     }
+
+    public function update(Request $request)
+    {
+        $user = Auth::user();
+
+        $validated = $request->validate([
+            'notif_donasi' => 'nullable|boolean',
+            'notif_email' => 'nullable|boolean',
+        ]);
+
+        if (array_key_exists('notif_donasi', $validated)) {
+            $user->notif_donasi = (bool) $validated['notif_donasi'];
+        }
+
+        if (array_key_exists('notif_email', $validated)) {
+            $user->notif_email = (bool) $validated['notif_email'];
+        }
+
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pengaturan notifikasi berhasil diperbarui!'
+        ]);
+    }
 }

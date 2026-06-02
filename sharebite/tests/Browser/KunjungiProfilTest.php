@@ -15,48 +15,57 @@ class KunjungiProfilTest extends DuskTestCase
      */
     public function test_kunjungi_profil_flow_e2e(): void
     {
-        // 1. AMBIL DATA USER DAN PROFIL DARI SEEDER
         $userKomunitas = User::where('role', 'komunitas')->first() ?? User::where('role', 'individu')->first();
         $userUnitBisnis = User::where('role', 'unit_bisnis')->first();
         $profile = $userUnitBisnis->unitBisnisProfile;
+        $namaMakananTest = 'Rawon';
+        $masterMakanan = MasterMakanan::updateOrCreate(
+            [
+                'unit_bisnis_id' => $profile->id, 
+                'nama_makanan' => $namaMakananTest
+            ],
+            [
+                'kategori' => 'Makanan Berat', 
+                'harga' => 20000, 
+                'berat' => 400
+            ]
+        );
 
-        // 2. BUAT DATA MAKANAN TIRUAN DI DATABASE (Dipastikan Masuk ke DB sharebite_dusk)
-        $namaMakananTest = 'Siomay Premium Dusk-' . time();
-        
-        $masterMakanan = MasterMakanan::create([
-            'unit_bisnis_id' => $profile->id, 
-            'nama_makanan' => $namaMakananTest,
-            'kategori' => 'Makanan Ringan', 
-            'harga' => 15000, 
-            'berat' => 200
-        ]);
+        $menuAktif = MenuAktif::updateOrCreate(
+            [
+                'master_makanan_id' => $masterMakanan->id,
+                'unit_bisnis_id' => $profile->id,
+            ],
+            [
+                'stok_porsi' => 15, 
+                'batas_pengambilan' => '23:59', 
+                'status' => 'aktif'
+            ]
+        );
 
-        MenuAktif::create([
-            'master_makanan_id' => $masterMakanan->id,
-            'unit_bisnis_id' => $profile->id,
-            'stok_porsi' => 15, 
-            'batas_pengambilan' => '23:59', 
-            'status' => 'aktif'
-        ]);
-
-        // 3. JALANKAN OTOMATISASI BROWSER
-        $this->browse(function (Browser $browser) use ($userKomunitas, $profile) {
+        $this->browse(function (Browser $browser) use ($userKomunitas, $profile, $menuAktif, $namaMakananTest) {
             
             $browser->loginAs($userKomunitas)
-                    
-                    // Tembak URL simulasi dengan prefix /user yang benar
-                    ->visit('/user/tes-tombol-profil') 
-                    
-                    // Tunggu maksimal 10 detik sampai halaman termuat sempurna dan tombol terdeteksi
+                    ->visit('/user/tes-tombol-profil/' . $menuAktif->id)
                     ->waitForText('Kunjungi Profil', 10)
-                    
-                    // KLIK TOMBOL "Kunjungi Profil"
-                    ->clickLink('Kunjungi Profil') 
-                    
-                    // TUNGGU SAMPAI HALAMAN PROFIL UNIT BISNIS BERHASIL TERBUKA DENGAN PREFIX /user
+                    ->assertSee($namaMakananTest)
+                    ->assertSee('15 Porsi')
+                    ->assertSee('23:59')
+                    ->clickLink('Kunjungi Profil')
                     ->waitForLocation('/user/unit-bisnis/' . $profile->id, 10)
                     ->assertPathIs('/user/unit-bisnis/' . $profile->id)
-                    ->assertSee($profile->nama_usaha);
+                    ->assertSee($profile->nama_usaha)
+                    ->assertSee('Jam Operasional')
+                    ->assertSee('Hubungi Mitra')
+                    ->assertSee('Email Mitra')
+                    ->assertSee('TOTAL DONASI')
+                    ->assertSee('REPUTASI / RATING')
+                    ->assertSee('GALERI AKTIVITAS DONASI')
+                    ->assertSee('ULASAN KOMUNITAS')
+                    ->assertSee($namaMakananTest) 
+                    ->clickLink('Ambil')
+                    ->pause(1000)
+                    ->assertPathBeginsWith('/user/tes-tombol-profil/');
         });
     }
 }

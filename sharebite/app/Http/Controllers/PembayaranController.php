@@ -7,118 +7,123 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Cache;
 use App\Models\MenuAktif;
+use App\Models\Pesanan;    
+use App\Models\Pembayaran; 
 use Carbon\Carbon;
 
 class PembayaranController extends Controller
 {
-    /**
-     * 1. Menampilkan Halaman Pembayaran QRIS (Berdasarkan ID Pesanan)
-     */
     public function show(Request $request, string $id)
     {
-        // Cari data transaksi langsung dari tabel pesanans asli
-        $pesanan = DB::table('pesanans')
-            ->join('menu_aktifs', 'pesanans.menu_aktif_id', '=', 'menu_aktifs.id')
-            ->join('master_makanans', 'menu_aktifs.master_makanan_id', '=', 'master_makanans.id')
-            ->join('unit_bisnis_profiles', 'pesanans.unit_bisnis_id', '=', 'unit_bisnis_profiles.id')
-            ->join('users', 'unit_bisnis_profiles.user_id', '=', 'users.id')
-            ->select(
-                'pesanans.*',
-                'master_makanans.nama_makanan',
-                'master_makanans.foto',
-                'unit_bisnis_profiles.nama_usaha',
-                'users.name',
-                'users.alamat',
-                'users.latitude',
-                'users.longitude'
-            )
-            ->where('pesanans.id', $id)
-            ->firstOrFail();
+        $qty = $request->input('qty', 1);
+        $user = auth()->user();
 
-        // Buat objek palsu penampung relasi agar kode Blade lamamu tidak pecah/error
-        $makanan = new \stdClass();
-        $makanan->harga_jual = $pesanan->total_harga / $pesanan->jumlah_porsi;
-        $makanan->masterMakanan = (object) ['nama_makanan' => $pesanan->nama_makanan, 'foto' => $pesanan->foto];
-        $makanan->unitBisnis = (object) ['user' => (object) [
-            'name' => $pesanan->name,
-            'alamat' => $pesanan->alamat,
-            'latitude' => $pesanan->latitude,
-            'longitude' => $pesanan->longitude
-        ]];
+        // Cari berdasarkan ID Menu Aktif (Sangat Akurat)
+        $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($id);
 
-        $qty = $pesanan->jumlah_porsi;
-        $subtotal = $pesanan->total_harga;
-        $ref = $pesanan->kode_unik; // Gunakan kode unik asli dari database (misal: TRX009)
-        $slug = Str::slug($pesanan->nama_makanan);
+        if ($makanan->is_gratis == 1) { 
+            $subtotal = 0;
+        } else {
+            $subtotal = $makanan->harga_jual * $qty;
+        }
 
-        return view('user.pembayaran', compact('makanan', 'qty', 'subtotal', 'ref', 'slug', 'id'));
+        $pesanan = Pesanan::where('user_id', $user->id)
+                    ->where('menu_aktif_id', $makanan->id)
+                    ->where('status', 'menunggu_pembayaran')
+                    ->first();
+
+        if ($pesanan) {
+            $pesanan->update([
+                'jumlah_porsi' => $qty,
+                'total_harga'  => $subtotal,
+                'waktu_pesan'  => now(),
+            ]);
+        } else {
+            $pesanan = Pesanan::create([
+                'user_id'        => $user->id,
+                'menu_aktif_id'  => $makanan->id,
+                'status'         => 'menunggu_pembayaran',
+                'unit_bisnis_id' => $makanan->unit_bisnis_id,
+                'jumlah_porsi'   => $qty,
+                'total_harga'    => $subtotal,
+                'kode_unik'      => 'SB-' . rand(1000, 9999) . '-' . strtoupper(Str::random(3)),
+                'waktu_pesan'    => now(),
+            ]);
+        }
+
+        $ref = 'SB-' . strtoupper(substr(md5($pesanan->id . time()), 0, 8));
+
+        $pembayaran = Pembayaran::firstOrCreate(
+            ['pesanan_id' => $pesanan->id],
+            [
+                'status' => 'menunggu', 
+                'qrcode' => $ref,
+            ]
+        );
+
+        $ref = $pembayaran->qrcode; 
+
+        return view('user.pembayaran', compact('makanan', 'qty', 'subtotal', 'ref', 'id'));
     }
 
-    /**
-     * 2. Memproses Simulasi Berhasil / Gagal (Update Status Database Toko)
-     */
     public function store(Request $request, string $id)
     {
         $status = $request->input('status'); 
+        $qty = $request->input('qty', 1);
+        $user = auth()->user();
 
-        if ($status === 'Berhasil') {
-            // Ubah status di database lokal phpMyAdmin menjadi 'dibayar' atau 'proses'
-            DB::table('pesanans')->where('id', $id)->update([
-                'status' => 'dibayar',
-                'updated_at' => now()
-            ]);
+        $makanan = MenuAktif::findOrFail($id);
 
-            return redirect()->route('user.pembayaran.berhasil', $id);
+        $pesanan = Pesanan::where('user_id', $user->id)
+                    ->where('menu_aktif_id', $makanan->id)
+                    ->where('status', 'menunggu_pembayaran')
+                    ->first();
+
+        if ($pesanan) {
+            if ($status === 'Berhasil') {
+                $pesanan->update(['status' => 'proses']); 
+                
+                Pembayaran::where('pesanan_id', $pesanan->id)->update([
+                    'status' => 'berhasil', 
+                    'waktu_bayar' => now(),
+                ]);
+
+                $makanan->decrement('stok_porsi', $pesanan->jumlah_porsi);
+
+                return redirect()->route('user.pembayaran.berhasil', ['id' => $id, 'qty' => $qty]);
+            } else {
+                $pesanan->update(['status' => 'dibatalkan']);
+                
+                Pembayaran::where('pesanan_id', $pesanan->id)->update([
+                    'status' => 'gagal', 
+                ]);
+
+                return redirect()->route('user.riwayat')->with('status_pembayaran', 'Gagal');
+            }
         }
 
-        return redirect()->route('user.riwayat')->with('status_pembayaran', 'Gagal');
+        return redirect()->route('user.riwayat');
     }
 
-    /**
-     * 3. Menampilkan Halaman Tiket/Pembayaran Berhasil
-     */
     public function berhasil(Request $request, string $id)
     {
-        // Tarik data asli dari baris database pesanans
-        $pesanan = DB::table('pesanans')
-            ->join('menu_aktifs', 'pesanans.menu_aktif_id', '=', 'menu_aktifs.id')
-            ->join('master_makanans', 'menu_aktifs.master_makanan_id', '=', 'master_makanans.id')
-            ->join('unit_bisnis_profiles', 'pesanans.unit_bisnis_id', '=', 'unit_bisnis_profiles.id')
-            ->join('users', 'unit_bisnis_profiles.user_id', '=', 'users.id')
-            ->select(
-                'pesanans.*',
-                'master_makanans.nama_makanan',
-                'master_makanans.foto',
-                'unit_bisnis_profiles.nama_usaha',
-                'users.name',
-                'users.alamat',
-                'users.latitude',
-                'users.longitude'
-            )
-            ->where('pesanans.id', $id)
-            ->firstOrFail();
+        $user = auth()->user();
 
-        // Buat objek palsu penampung relasi agar maps blade membaca data
-        $makanan = new \stdClass();
-        $makanan->batas_pengambilan = Carbon::parse($pesanan->waktu_pesan)->addHours(2); // Durasi penjemputan gerai
-        $makanan->masterMakanan = (object) ['nama_makanan' => $pesanan->nama_makanan, 'foto' => $pesanan->foto];
-        $makanan->unitBisnis = (object) ['user' => (object) [
-            'name' => $pesanan->name,
-            'alamat' => $pesanan->alamat,
-            'latitude' => $pesanan->latitude,
-            'longitude' => $pesanan->longitude
-        ]];
+        $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($id);
 
-        $qty = $pesanan->jumlah_porsi;
-        $subtotal = $pesanan->total_harga;
-        $kode_verifikasi = $pesanan->kode_unik; // Ambil kode unik asli dari database (misal: SB-0015)
+        $pesanan = Pesanan::where('user_id', $user->id)
+                    ->where('menu_aktif_id', $makanan->id)
+                    ->where('status', 'proses') 
+                    ->latest()
+                    ->firstOrFail();
+
+        $subtotal = $pesanan->total_harga; 
+        $kode_verifikasi = $pesanan->kode_unik; 
+        $qty = $pesanan->jumlah_porsi; 
 
         return view('user.pembayaran_berhasil', compact('makanan', 'qty', 'subtotal', 'kode_verifikasi', 'id'));
     }
 
-    /**
-     * Jalur HP saat scan QR Code simulator
-     */
     public function simulasiScan($id)
     {
         Cache::put('scan_qris_' . $id, true, now()->addMinutes(5));
@@ -129,13 +134,10 @@ class PembayaranController extends Controller
                 </div>";
     }
 
-    /**
-     * Dipanggil AJAX otomatis setiap 2 detik
-     */
     public function cekStatusScan($id)
     {
         if (Cache::has('scan_qris_' . $id)) {
-            Cache::forget('scan_qris_' . $id);
+            Cache::forget('scan_qris_' . $id); 
             return response()->json(['status' => 'sukses']);
         }
         return response()->json(['status' => 'pending']);

@@ -64,7 +64,7 @@ Route::resource('registerkomunitas', KomunitasController::class)->names([
 // =========================================================================
 // ROUTE PUBLIK UNTUK SCAN HP (REVISI FIX: Menggunakan ID dan diberi nama user.)
 // =========================================================================
-Route::get('/public/scan-qris/{id}', [PembayaranController::class, 'simulasiScan'])->name('user.pembayaran.scan.public');
+Route::get('/public/scan-qris/{id}', [PembayaranController::class, 'simulasiScan'])->name('pembayaran.scan.public');
 
 // ==========================================
 // Authenticated Routes
@@ -142,19 +142,22 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');
         Route::get('/pengaturan/kebijakan/{type}', [\App\Http\Controllers\SettingsController::class, 'policy'])->name('pengaturan.policy');
         Route::delete('/pengaturan/session/{id}', [\App\Http\Controllers\SettingsController::class, 'logoutSession'])->name('pengaturan.logout_session');
+        Route::post('/pengaturan/update', [\App\Http\Controllers\SettingsController::class, 'update'])->name('pengaturan.update');
 
         Route::get('/unit-bisnis/{id}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'show'])->name('unit-bisnis.show');
 
         // ROUTE SEMENTARA UNTUK TES TOMBOL (Nanti dihapus saat digabung)
         Route::get('/tes-tombol-profil/{menu_aktif_id?}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'simulasiDetail'])->name('tes-tombol-profil');
-        
-        // Pembenahan Rute Menggunakan Parameter ID Pesanan
-        Route::get('/pembayaran/{id}', [PembayaranController::class, 'show'])->name('pembayaran');
-        Route::post('/pembayaran/proses/{id}', [PembayaranController::class, 'store'])->name('pembayaran.proses');
-        Route::get('/pembayaran-berhasil/{id}', [PembayaranController::class, 'berhasil'])->name('pembayaran.berhasil');
 
-        // Check Sinyal AJAX otomatis laptop
-        Route::get('/pembayaran/check/{id}', [PembayaranController::class, 'cekStatusScan'])->name('pembayaran.check');
+        // Route Pembayaran Utama
+        Route::get('/dashboard/{id}/pembayaran', [PembayaranController::class, 'show'])->name('makanan.pembayaran');
+        
+        // Laptop diam-diam mengecek status scan ke sini
+        Route::get('/dashboard/{id}/pembayaran/check', [PembayaranController::class, 'cekStatusScan'])->name('pembayaran.check');
+        
+        // Proses Pembayaran & Halaman Berhasil
+        Route::post('/dashboard/{id}/pembayaran/proses', [PembayaranController::class, 'store'])->name('pembayaran.proses');
+        Route::get('/dashboard/{id}/pembayaran/berhasil', [PembayaranController::class, 'berhasil'])->name('pembayaran.berhasil');
     });
 
     // Unit Bisnis Dashboard Routes

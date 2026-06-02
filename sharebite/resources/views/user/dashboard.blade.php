@@ -1,3 +1,6 @@
+@php
+    $hideSearch = true;
+@endphp
 @extends('layouts.user')
 
 @section('title', 'Dashboard')
