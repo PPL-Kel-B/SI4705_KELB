@@ -133,4 +133,82 @@ class UnitBisnisProfileTest extends DuskTestCase
                 ->assertPresent('#main-map');
         });
     }
+
+    public function test_unit_bisnis_tombol_ganti_kata_sandi_membuka_modal()
+    {
+        $user = User::where('email', 'unit@sharebite.com')->first();
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/unit/profil')
+                ->pause(1500)
+                ->assertSee('Keamanan')
+                ->assertSee('Manajemen Kata Sandi');
+
+            // Klik div Manajemen Kata Sandi yang membuka modal
+            $browser->script("
+                document.getElementById('change-password-modal').showModal();
+            ");
+
+            $browser->pause(800)
+                ->assertSee('Ganti Kata Sandi')
+                ->assertPresent('#change-password-modal');
+        });
+    }
+
+    public function test_unit_bisnis_ganti_kata_sandi_gagal_password_baru_terlalu_pendek()
+    {
+        $user = User::where('email', 'unit@sharebite.com')->first();
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/unit/profil?changePassword=true')
+                ->pause(2000)
+                ->type('current_password', 'password')
+                ->type('password', 'abc123')
+                ->type('password_confirmation', 'abc123')
+                ->press('Ganti Kata Sandi')
+                ->pause(1500)
+                ->assertSee('minimal 8 karakter');
+        });
+    }
+
+    public function test_unit_bisnis_ganti_kata_sandi_gagal_konfirmasi_tidak_cocok()
+    {
+        $user = User::where('email', 'unit@sharebite.com')->first();
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/unit/profil?changePassword=true')
+                ->pause(2000)
+                ->type('current_password', 'password')
+                ->type('password', 'passwordbaru123')
+                ->type('password_confirmation', 'passwordbeda456')
+                ->press('Ganti Kata Sandi')
+                ->pause(1500)
+                ->assertSee('tidak cocok');
+        });
+    }
+
+    public function test_unit_bisnis_batal_ganti_kata_sandi_menutup_modal()
+    {
+        $user = User::where('email', 'unit@sharebite.com')->first();
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user)
+                ->visit('/unit/profil?changePassword=true')
+                ->pause(2000)
+                ->assertSee('Ganti Kata Sandi');
+
+            // Klik tombol Batal
+            $browser->script("
+                document.getElementById('change-password-modal').close();
+            ");
+
+            $browser->pause(500)
+                // Modal tertutup, tetap di halaman profil
+                ->assertPathIs('/unit/profil')
+                ->assertSee('Informasi Bisnis');
+        });
+    }
 }

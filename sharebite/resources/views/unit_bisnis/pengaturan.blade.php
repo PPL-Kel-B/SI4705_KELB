@@ -112,7 +112,7 @@
                             {{-- Jam Buka --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 mb-2">Jam Buka</label>
-                                <input type="time" name="jam_buka" value="{{ old('jam_buka', $unitBisnis->jam_buka ?? '08:00') }}"
+                                <input type="time" name="jam_buka" value="{{ old('jam_buka', $unitBisnis->jam_buka ? substr($unitBisnis->jam_buka, 0, 5) : '08:00') }}"
                                     class="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-base font-extrabold text-[#0a2e1f] focus:border-[#1cb764] focus:ring-2 focus:ring-green-100 outline-none transition-all"
                                     required>
                                 @error('jam_buka')
@@ -123,7 +123,7 @@
                             {{-- Jam Tutup --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-500 mb-2">Jam Tutup</label>
-                                <input type="time" name="jam_tutup" value="{{ old('jam_tutup', $unitBisnis->jam_tutup ?? '21:00') }}"
+                                <input type="time" name="jam_tutup" value="{{ old('jam_tutup', $unitBisnis->jam_tutup ? substr($unitBisnis->jam_tutup, 0, 5) : '21:00') }}"
                                     class="w-full px-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-base font-extrabold text-[#0a2e1f] focus:border-[#1cb764] focus:ring-2 focus:ring-green-100 outline-none transition-all"
                                     required>
                                 @error('jam_tutup')

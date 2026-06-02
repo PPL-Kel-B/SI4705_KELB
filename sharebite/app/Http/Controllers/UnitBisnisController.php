@@ -317,7 +317,7 @@ class UnitBisnisController extends Controller
             'jam_buka.date_format' => 'Format jam buka tidak valid',
             'jam_tutup.required' => 'Jam tutup harus diisi',
             'jam_tutup.date_format' => 'Format jam tutup tidak valid',
-            'jam_tutup.after' => 'Jam tutup harus lebih besar dari jam buka',
+            'jam_tutup.after' => 'Jam tutup harus setelah jam buka',
             'radius_penjemputan.required' => 'Radius penjemputan harus diisi',
             'radius_penjemputan.min' => 'Radius minimum 1 km',
             'radius_penjemputan.max' => 'Radius maksimal 50 km',
