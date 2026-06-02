@@ -14,26 +14,26 @@
 
 {{-- ── Data Metadata untuk JavaScript ── --}}
 <div id="qr-meta"
-     data-slug="{{ $slug }}"
+     data-slug="{{ $id }}"
      data-nama="{{ $makanan->masterMakanan->nama_makanan ?? 'Pesanan' }}"
-     data-harga="{{ $makanan->harga_jual ?? 0 }}"
+     data-harga="{{ $makanan->is_gratis ? 0 : ($makanan->harga_jual ?? 0) }}"
      data-qty="{{ $qty ?? 1 }}"
      data-lat="{{ $makanan->unitBisnis->user->latitude ?? -6.193125 }}" 
      data-lng="{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}"
      data-ref="{{ $ref ?? 'SB-00000000' }}"
-     data-total="Rp {{ number_format($subtotal ?? 0, 0, ',', '.') }}"
+     data-total="{{ $makanan->is_gratis ? 'GRATIS' : 'Rp ' . number_format($subtotal ?? 0, 0, ',', '.') }}"
      style="display:none;">
 </div>
 
-<div class="min-h-screen bg-[#F0F7F2] p-6 lg:p-10 font-jakarta w-full relative">
+<div class="min-h-screen bg-[#F0F7F2] px-6 pb-6 pt-3 lg:px-10 lg:pb-10 lg:pt-3 font-jakarta w-full relative">
     
     {{-- Header --}}
     <div class="flex items-center gap-3 mb-8 w-full max-w-full mx-auto">
-        <button onclick="window.history.back()" class="w-9 h-9 bg-[#E3EFE7] text-[#189347] hover:bg-[#D1E6D8] rounded-full flex items-center justify-center transition">
+        <a href="{{ route('user.riwayat') }}" class="w-9 h-9 bg-[#E3EFE7] text-[#189347] hover:bg-[#D1E6D8] rounded-full flex items-center justify-center transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-        </button>
+        </a>
         <h1 class="text-[30px] font-extrabold text-gray-800">Pembayaran</h1>
     </div>
 
@@ -43,7 +43,7 @@
         {{-- KOLOM KIRI --}}
         <div class="xl:col-span-8 flex flex-col gap-6 h-full">
 
-            {{-- Card 1: Item Makanan (DIPERBARUI) --}}
+            {{-- Card 1: Item Makanan --}}
             <div class="bg-white p-6 lg:p-7 rounded-[28px] shadow-sm">
                 <div class="flex gap-7 items-center">
                     {{-- Foto Makanan --}}
@@ -52,20 +52,27 @@
                          alt="Menu" 
                          class="w-[110px] h-[110px] object-cover rounded-[22px] flex-shrink-0 shadow-sm">
                     
-                    {{-- Konten Teks (Sejajar Tengah secara Vertikal) --}}
+                    {{-- Konten Teks --}}
                     <div class="flex-1 flex justify-between items-center">
                         <div class="flex flex-col justify-center">
-                            {{-- Label Tersedia --}}
+                            {{-- Label Status Dinamis --}}
                             <div class="mb-2">
-                                <span class="bg-[#E4F2E8] text-[#189347] text-[10px] font-extrabold px-3 py-1 rounded-[8px] tracking-[0.1em] uppercase inline-block">
-                                    TERSEDIA
+                                @php
+                                    if ($makanan->stok_porsi <= 5) {
+                                        $statusTeks = 'SEGERA HABIS';
+                                        $statusWarna = 'bg-[#FFF4E5] text-[#D97706]';
+                                    } else {
+                                        $statusTeks = 'TERSEDIA';
+                                        $statusWarna = 'bg-[#E4F2E8] text-[#189347]';
+                                    }
+                                @endphp
+                                <span class="{{ $statusWarna }} text-[10px] font-extrabold px-3 py-1 rounded-[8px] tracking-[0.1em] uppercase inline-block">
+                                    {{ $statusTeks }}
                                 </span>
                             </div>
-                            {{-- Nama Makanan --}}
                             <h2 class="font-extrabold text-gray-900 text-[22px] leading-tight mb-1">
                                 {{ $makanan->masterMakanan->nama_makanan ?? 'Nama Makanan' }}
                             </h2>
-                            {{-- Jumlah Porsi (Teks Polos tanpa Sandbox) --}}
                             <p class="text-gray-500 font-semibold text-[14px]">
                                 {{ $qty ?? 1 }} Porsi
                             </p>
@@ -74,7 +81,11 @@
                         {{-- Bagian Harga --}}
                         <div class="text-right">
                             <span class="text-[#189347] font-extrabold text-[22px]">
-                                Rp {{ number_format($makanan->harga_jual ?? 0, 0, ',', '.') }}
+                                @if($makanan->is_gratis)
+                                    GRATIS
+                                @else
+                                    Rp {{ number_format($makanan->harga_jual ?? 0, 0, ',', '.') }}
+                                @endif
                             </span>
                         </div>
                     </div>
@@ -86,16 +97,22 @@
                 <h3 class="text-[11px] font-extrabold text-gray-400 mb-5 tracking-widest uppercase">RINCIAN PEMBAYARAN</h3>
                 <div class="flex justify-between items-center mb-3 text-gray-500 font-medium text-[14px]">
                     <span>Subtotal ({{ $qty ?? 1 }} Porsi)</span>
-                    <span class="font-extrabold text-gray-800">Rp {{ number_format($subtotal ?? 0, 0, ',', '.') }}</span>
+                    <span class="font-extrabold text-gray-800">
+                        @if($makanan->is_gratis) GRATIS @else Rp {{ number_format($subtotal ?? 0, 0, ',', '.') }} @endif
+                    </span>
                 </div>
                 <div class="flex justify-between items-center mb-5 text-gray-500 font-medium text-[14px]">
                     <span>Biaya Layanan</span>
-                    <span class="font-extrabold text-[#189347]">Rp 0</span>
+                    <span class="font-extrabold text-[#189347]">
+                        @if($makanan->is_gratis) GRATIS @else Rp 0 @endif
+                    </span>
                 </div>
                 <hr class="border-gray-70 mb-5">
                 <div class="flex justify-between items-center">
                     <span class="font-extrabold text-gray-800 text-[17px]">Total Pembayaran</span>
-                    <span class="font-extrabold text-[24px] text-[#189347] tracking-tight">Rp {{ number_format($subtotal ?? 0, 0, ',', '.') }}</span>
+                    <span class="font-extrabold text-[24px] text-[#189347] tracking-tight">
+                        @if($makanan->is_gratis) GRATIS @else Rp {{ number_format($subtotal ?? 0, 0, ',', '.') }} @endif
+                    </span>
                 </div>
             </div>
 
@@ -106,7 +123,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-8-4.5-8-11.8A8 8 0 0112 1.2a8 8 0 018 8c0 7.3-8 11.8-8 11.8z" />
                         <circle cx="12" cy="9.2" r="2.5" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                    <h3 class="text-[14px] font-bold text-gray-500 tracking-[0.2em] uppercase">LOKASI PENJEMPUTAN</h3>
+                    <h3 class="text-[14px] font-bold text-gray-500 tracking-[0.2em] uppercase">LOKASI RESTO</h3>
                 </div>
                 
                 <div class="flex flex-col md:flex-row gap-6 flex-1 items-stretch">
@@ -170,10 +187,10 @@
             </div>
 
             <div class="hidden">
-                <form action="{{ route('user.pembayaran.proses', $slug) }}" method="POST">
+                <form action="{{ route('user.pembayaran.proses', $id) }}" method="POST">
                     @csrf <input type="hidden" name="status" value="Berhasil"> <input type="hidden" name="qty" value="{{ $qty ?? 1 }}">
                 </form>
-                <form id="form-batal-otomatis" action="{{ route('user.pembayaran.proses', $slug) }}" method="POST">
+                <form id="form-batal-otomatis" action="{{ route('user.pembayaran.proses', $id) }}" method="POST">
                     @csrf <input type="hidden" name="status" value="Gagal"> <input type="hidden" name="qty" value="{{ $qty ?? 1 }}">
                 </form>
             </div>
@@ -192,11 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         const canvas = document.getElementById('qr-canvas');
         if(canvas) {
-            // Laravel otomatis memasukkan URL utuh berdasarkan yang sedang diakses saat ini
-            // Mengambil rute dari Laravel (parameter 'false' agar hanya mengambil path belakangnya saja)
-            let pathUrl = "{{ route('pembayaran.scan.public', ['slug' => $slug], false) }}";
-            
-            // Gabungkan domain yang sedang aktif di browser (Ngrok/IP/Localhost) dengan path rute
+            let pathUrl = "{{ route('pembayaran.scan.public', ['id' => $id], false) }}";
             let finalUrl = window.location.origin + pathUrl;
             
             QRCode.toCanvas(canvas, finalUrl, { width: 300, margin: 1, color: { dark: '#000000', light: '#ffffff' } });
@@ -214,8 +227,18 @@ document.addEventListener('DOMContentLoaded', () => {
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             const customIcon = L.divIcon({
                 className: 'custom-leaflet-marker',
-                html: `<div class="relative flex items-center justify-center w-16 h-16"><div class="absolute w-full h-full bg-[#189347]/20 rounded-full animate-ping"></div><div class="absolute w-10 h-10 bg-[#189347]/40 rounded-full"></div><div class="relative w-8 h-8 bg-[#189347] rounded-full shadow-md flex items-center justify-center border-2 border-white"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg></div></div>`,
-                iconSize: [64, 64], iconAnchor: [32, 32]
+                html: `<div class="relative flex items-center justify-center w-24 h-24">
+                           <div class="absolute w-16 h-16 bg-[#189347]/30 rounded-full animate-pulse"></div>
+                           <div class="relative w-10 h-10 bg-[#189347] rounded-full shadow-lg flex items-center justify-center border-[3px] border-white">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                   <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
+                                   <path d="M7 2v20"></path>
+                                   <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"></path>
+                               </svg>
+                           </div>
+                       </div>`,
+                iconSize: [96, 96], 
+                iconAnchor: [48, 48]
             });
             L.marker([lat, lng], {icon: customIcon}).addTo(map);
         }
@@ -251,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) {}
 
     setInterval(() => {
-        fetch("{{ route('user.pembayaran.check', ['slug' => $slug]) }}")
+        fetch("{{ route('user.pembayaran.check', ['id' => $id]) }}")
         .then(response => response.json())
         .then(data => {
             if (data.status === 'sukses') {
