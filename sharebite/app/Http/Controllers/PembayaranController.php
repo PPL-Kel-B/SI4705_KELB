@@ -140,7 +140,6 @@ class PembayaranController extends Controller
             Cache::forget('scan_qris_' . $id); 
             return response()->json(['status' => 'sukses']);
         }
-        
         return response()->json(['status' => 'pending']);
     }
 }

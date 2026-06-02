@@ -12,9 +12,10 @@ use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\RegistIndividuController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\PembayaranController;
-
+use App\Http\Controllers\RiwayatController;
 use App\Http\Controllers\DashboardUnitBisnisController;
 use App\Http\Controllers\UnitBisnisController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -61,7 +62,7 @@ Route::resource('registerkomunitas', KomunitasController::class)->names([
 ]);
 
 // =========================================================================
-// ROUTE PUBLIK UNTUK SCAN HP (TIDAK PERLU LOGIN AGAR HP BISA AKSES)
+// ROUTE PUBLIK UNTUK SCAN HP (REVISI FIX: Menggunakan ID dan diberi nama user.)
 // =========================================================================
 Route::get('/public/scan-qris/{id}', [PembayaranController::class, 'simulasiScan'])->name('pembayaran.scan.public');
 
@@ -143,7 +144,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/pengaturan/session/{id}', [\App\Http\Controllers\SettingsController::class, 'logoutSession'])->name('pengaturan.logout_session');
         Route::post('/pengaturan/update', [\App\Http\Controllers\SettingsController::class, 'update'])->name('pengaturan.update');
 
-       Route::get('/unit-bisnis/{id}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'show'])->name('unit-bisnis.show');
+        Route::get('/unit-bisnis/{id}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'show'])->name('unit-bisnis.show');
 
         // ROUTE SEMENTARA UNTUK TES TOMBOL (Nanti dihapus saat digabung)
         Route::get('/tes-tombol-profil/{menu_aktif_id?}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'simulasiDetail'])->name('tes-tombol-profil');
@@ -163,14 +164,13 @@ Route::middleware('auth')->group(function () {
     Route::prefix('unit')->name('unit.')->group(function () {
         Route::get('/dashboard', [DashboardUnitBisnisController::class, 'index'])->name('dashboard');
 
-        // Menu Aktif
+        // Menu Hack Kelola Makanan
         Route::get('/kelola-makanan', [\App\Http\Controllers\MenuAktifController::class, 'index'])->name('kelola_makanan');
         Route::get('/kelola-makanan/tambah', [\App\Http\Controllers\MenuAktifController::class, 'create'])->name('menu_aktif.create');
         Route::post('/kelola-makanan/tambah', [\App\Http\Controllers\MenuAktifController::class, 'store'])->name('menu_aktif.store');
         Route::get('/kelola-makanan/{menuAktif}/edit', [\App\Http\Controllers\MenuAktifController::class, 'edit'])->name('menu_aktif.edit');
         Route::put('/kelola-makanan/{menuAktif}', [\App\Http\Controllers\MenuAktifController::class, 'update'])->name('menu_aktif.update');
         Route::delete('/kelola-makanan/{menuAktif}', [\App\Http\Controllers\MenuAktifController::class, 'destroy'])->name('menu_aktif.destroy');
-        
         
         // Master Data
         Route::resource('kelola-master-data', MasterDataController::class)->names([
@@ -194,12 +194,10 @@ Route::middleware('auth')->group(function () {
         Route::post('/profil/update', [UnitBisnisController::class, 'updateProfile'])->name('profil.update');
 
         // Upload Foto Profile Unit Bisnis
-        Route::post('/profil/upload-foto', [UnitBisnisController::class, 'uploadFotoProfile'])
-             ->name('profil.upload-foto');
+        Route::post('/profil/upload-foto', [UnitBisnisController::class, 'uploadFotoProfile'])->name('profil.upload-foto');
 
         // Hapus Foto Profile Unit Bisnis
-        Route::delete('/profil/hapus-foto', [UnitBisnisController::class, 'hapusFotoProfile'])
-            ->name('profil.hapus-foto');
+        Route::delete('/profil/hapus-foto', [UnitBisnisController::class, 'hapusFotoProfile'])->name('profil.hapus-foto');
             
         // Pengaturan Unit Bisnis
         Route::get('/pengaturan', [UnitBisnisController::class, 'showSettings'])->name('pengaturan');
@@ -222,10 +220,6 @@ Route::middleware('auth')->group(function () {
         })->name('chat');
     });
 });
-
-// ==========================================
-// Application Features Routes
-// ==========================================
 
 // User Management
 Route::resource('manajemen-user', ManajemenUserController::class);
