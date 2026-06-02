@@ -113,6 +113,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                     </svg>
                 </div>
+                @if($stats['total_unit_bisnis_growth'] !== '-')
                 <div class="flex items-center gap-1 {{ $stats['total_unit_bisnis_growth'] >= 0 ? 'bg-[#eefcf4] text-[#1cb764]' : 'bg-red-50 text-red-600' }} px-2 py-1 rounded-full text-[10px] font-bold">
                     <span>{{ ($stats['total_unit_bisnis_growth'] >= 0 ? '+' : '') . $stats['total_unit_bisnis_growth'] }}%</span>
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,6 +124,7 @@
                         @endif
                     </svg>
                 </div>
+                @endif
             </div>
             <div class="mt-6">
                 <p class="text-[10px] font-black text-gray-400 tracking-wider uppercase">Total Unit Bisnis</p>
@@ -138,6 +140,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
                 </div>
+                @if($stats['total_komunitas_growth'] !== '-')
                 <div class="flex items-center gap-1 {{ $stats['total_komunitas_growth'] >= 0 ? 'bg-[#fdf5ee] text-[#d97706]' : 'bg-red-50 text-red-600' }} px-2 py-1 rounded-full text-[10px] font-bold">
                     <span>{{ ($stats['total_komunitas_growth'] >= 0 ? '+' : '') . $stats['total_komunitas_growth'] }}%</span>
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,6 +151,7 @@
                         @endif
                     </svg>
                 </div>
+                @endif
             </div>
             <div class="mt-6">
                 <p class="text-[10px] font-black text-gray-400 tracking-wider uppercase">Total Komunitas</p>
@@ -262,8 +266,8 @@
     <!-- Table and Circular Status Row -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <!-- Recent Transactions Table (Takes 3 columns on large screens) -->
-        <div class="lg:col-span-3 bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between">
-            <div class="flex items-center justify-between mb-6">
+        <div class="lg:col-span-3 lg:h-[400px] bg-white rounded-3xl pt-5 px-6 pb-6 border border-gray-100 shadow-sm flex flex-col justify-between">
+            <div class="flex items-center justify-between mb-4">
                 <h4 class="font-black text-gray-800 text-xl">Transaksi Terbaru</h4>
                 <a href="{{ route('admin.transaksi') }}" class="text-sm font-bold text-[#1cb764] hover:text-[#128a49] flex items-center gap-1 transition">
                     Lihat Semua
@@ -272,24 +276,24 @@
                     </svg>
                 </a>
             </div>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto overflow-y-auto flex-1">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b border-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                            <th class="pb-3 pl-2">Mitra Penyalur</th>
-                            <th class="pb-3">Penerima Manfaat</th>
-                            <th class="pb-3">Item Makanan</th>
-                            <th class="pb-3">Status</th>
-                            <th class="pb-3 text-right pr-2">Waktu</th>
+                            <th class="pb-2 pl-2">Mitra Penyalur</th>
+                            <th class="pb-2">Penerima Manfaat</th>
+                            <th class="pb-2">Item Makanan</th>
+                            <th class="pb-2">Status</th>
+                            <th class="pb-2 text-right pr-2">Waktu</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50 text-sm font-semibold text-gray-700">
                         @forelse($transactions as $t)
                         <tr class="hover:bg-gray-50/50 transition duration-150">
-                            <td class="py-4 pl-2 font-bold text-gray-900">{{ $t['mitra'] }}</td>
-                            <td class="py-4 text-gray-500">{{ $t['penerima'] }}</td>
-                            <td class="py-4 text-gray-500">{{ $t['item'] }}</td>
-                            <td class="py-4">
+                            <td class="py-3 pl-2 font-bold text-gray-900">{{ $t['mitra'] }}</td>
+                            <td class="py-3 text-gray-500">{{ $t['penerima'] }}</td>
+                            <td class="py-3 text-gray-500">{{ $t['item'] }}</td>
+                            <td class="py-3">
                                 @if($t['status'] == 'SELESAI')
                                     <span class="inline-flex items-center px-3 py-1 bg-[#eefcf4] text-[#1cb764] border border-[#d2f6e2] rounded-full text-xs font-black tracking-wide uppercase">Selesai</span>
                                 @elseif($t['status'] == 'PROSES')
@@ -298,7 +302,7 @@
                                     <span class="inline-flex items-center px-3 py-1 bg-red-50 text-red-600 border border-red-100 rounded-full text-xs font-black tracking-wide uppercase">Batal</span>
                                 @endif
                             </td>
-                            <td class="py-4 text-right text-gray-400 text-xs pr-2 font-medium">{{ $t['waktu'] }}</td>
+                            <td class="py-3 text-right text-gray-400 text-xs pr-2 font-medium">{{ $t['waktu'] }}</td>
                         </tr>
                         @empty
                         <tr>
@@ -311,23 +315,23 @@
         </div>
 
         <!-- Status Distribusi Card (Takes 1 column) -->
-        <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm flex flex-col justify-between items-center text-center">
-            <div class="w-full text-left mb-4">
+        <div class="lg:h-[400px] bg-white rounded-3xl pt-5 px-6 pb-6 border border-gray-100 shadow-sm flex flex-col justify-between items-center text-center">
+            <div class="w-full text-left mb-2">
                 <h4 class="font-black text-gray-800 text-lg">Status Distribusi</h4>
                 <p class="text-[10px] font-black text-gray-400 tracking-wider uppercase mt-0.5">Real-time Stats</p>
             </div>
             
             <!-- Circular Progress Chart -->
-            <div class="relative w-44 h-44 flex items-center justify-center my-2">
+            <div class="relative w-36 h-36 flex items-center justify-center my-2">
                 <canvas id="chartDistribution" class="absolute inset-0 w-full h-full"></canvas>
                 <div class="flex flex-col items-center justify-center z-10">
-                    <span class="text-3xl font-black text-gray-800">{{ $distribution['success_rate'] }}%</span>
-                    <span class="text-[9px] font-black tracking-widest text-[#1cb764] uppercase mt-0.5">Success</span>
+                    <span class="text-2xl font-black text-gray-800">{{ $distribution['success_rate'] }}%</span>
+                    <span class="text-[8px] font-black tracking-widest text-[#1cb764] uppercase mt-0.5">Success</span>
                 </div>
             </div>
 
             <!-- Stats Breakdowns -->
-            <div class="grid grid-cols-3 gap-2 w-full mt-4 pt-4 border-t border-gray-50 text-xs">
+            <div class="grid grid-cols-3 gap-2 w-full mt-2 pt-4 border-t border-gray-50 text-xs">
                 <div>
                     <span class="text-[9px] font-bold text-gray-400 block uppercase">Done</span>
                     <span class="font-black text-gray-800 text-sm mt-0.5 block">{{ $distribution['done'] >= 1000 ? number_format($distribution['done']/1000, 1) . 'k' : $distribution['done'] }}</span>

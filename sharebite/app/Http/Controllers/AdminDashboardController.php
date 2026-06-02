@@ -20,26 +20,162 @@ class AdminDashboardController extends Controller
         $rentangWaktu = $request->input('rentang_waktu', 'semua_waktu');
         $kategoriEntitas = $request->input('kategori_entitas', 'semua_kategori');
 
-        // 2. Query data statistik utama dari database (dihitung dari tabel users agar sinkron dengan seeder)
-        $totalUnitBisnis = User::where('role', 'unit_bisnis')->count();
-        $totalKomunitas = User::whereIn('role', ['komunitas', 'individu'])->count();
-        
-        // Makanan dihitung dari total porsi pesanan yang sukses/selesai
-        $totalMakanan = Pesanan::where('status', 'selesai')->sum('jumlah_porsi') ?: 0;
-        
-        $totalTransaksi = Pesanan::count();
+        // 2. Tentukan batasan tanggal berdasarkan filter
+        $now = Carbon::now();
+        $start = null;
+        $end = (clone $now)->endOfDay();
 
-        // Bandingkan dengan awal bulan ini untuk menghitung persen pertumbuhan (MoM)
-        $startOfMonth = Carbon::now()->startOfMonth();
+        $startPrev = null;
+        $endPrev = null;
 
-        $totalUnitBisnisPrev = User::where('role', 'unit_bisnis')->where('created_at', '<', $startOfMonth)->count();
-        $totalKomunitasPrev = User::whereIn('role', ['komunitas', 'individu'])->where('created_at', '<', $startOfMonth)->count();
-        $totalMakananPrev = Pesanan::where('status', 'selesai')->where('waktu_pesan', '<', $startOfMonth)->sum('jumlah_porsi') ?: 0;
-        $totalTransaksiPrev = Pesanan::where('waktu_pesan', '<', $startOfMonth)->count();
+        if ($rentangWaktu == 'bulan_ini') {
+            $start = (clone $now)->startOfMonth();
+            $end = (clone $now)->endOfMonth();
+            
+            $startPrev = (clone $now)->subMonth()->startOfMonth();
+            $endPrev = (clone $now)->subMonth()->endOfMonth();
+        } elseif ($rentangWaktu == 'bulan_lalu') {
+            $start = (clone $now)->subMonth()->startOfMonth();
+            $end = (clone $now)->subMonth()->endOfMonth();
+            
+            $startPrev = (clone $now)->subMonths(2)->startOfMonth();
+            $endPrev = (clone $now)->subMonths(2)->endOfMonth();
+        } elseif ($rentangWaktu == 'minggu_ini') {
+            $start = (clone $now)->startOfWeek();
+            $end = (clone $now)->endOfWeek();
+            
+            $startPrev = (clone $now)->subWeek()->startOfWeek();
+            $endPrev = (clone $now)->subWeek()->endOfWeek();
+        } else {
+            // Semua Waktu
+            $earliest = Pesanan::min('waktu_pesan') ?: (Pesanan::min('created_at') ?: (clone $now)->subYear());
+            $start = Carbon::parse($earliest)->startOfDay();
+            
+            // Bandingkan dengan data sebelum awal bulan berjalan
+            $endPrev = (clone $now)->startOfMonth();
+        }
 
-        $ubGrowth = $totalUnitBisnisPrev > 0 ? round((($totalUnitBisnis - $totalUnitBisnisPrev) / $totalUnitBisnisPrev) * 100) : ($totalUnitBisnis > 0 ? 100 : 0);
-        $komGrowth = $totalKomunitasPrev > 0 ? round((($totalKomunitas - $totalKomunitasPrev) / $totalKomunitasPrev) * 100) : ($totalKomunitas > 0 ? 100 : 0);
+        // 3. Hitung statistik Unit Bisnis & Komunitas berdasarkan kategori_entitas
+        $totalUnitBisnis = '-';
+        $ubGrowth = '-';
+        $totalKomunitas = '-';
+        $komGrowth = '-';
+
+        // Hitung Unit Bisnis jika kategori adalah semua_kategori atau unit_bisnis
+        if ($kategoriEntitas == 'semua_kategori' || $kategoriEntitas == 'unit_bisnis') {
+            $ubQuery = User::where('role', 'unit_bisnis')->where('created_at', '<=', $end);
+            if ($search) {
+                $ubQuery->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhereHas('unitBisnisProfile', function($qp) use ($search) {
+                          $qp->where('nama_usaha', 'like', "%{$search}%");
+                      });
+                });
+            }
+            $totalUnitBisnis = $ubQuery->count();
+
+            $ubQueryPrev = User::where('role', 'unit_bisnis');
+            if ($rentangWaktu == 'semua_waktu') {
+                $ubQueryPrev->where('created_at', '<', $endPrev);
+            } else {
+                $ubQueryPrev->where('created_at', '<=', $endPrev);
+            }
+            if ($search) {
+                $ubQueryPrev->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhereHas('unitBisnisProfile', function($qp) use ($search) {
+                          $qp->where('nama_usaha', 'like', "%{$search}%");
+                      });
+                });
+            }
+            $totalUnitBisnisPrev = $ubQueryPrev->count();
+            $ubGrowth = $totalUnitBisnisPrev > 0 ? round((($totalUnitBisnis - $totalUnitBisnisPrev) / $totalUnitBisnisPrev) * 100) : ($totalUnitBisnis > 0 ? 100 : 0);
+        }
+
+        // Hitung Komunitas jika kategori adalah semua_kategori, komunitas, atau individu
+        if ($kategoriEntitas == 'semua_kategori' || $kategoriEntitas == 'komunitas' || $kategoriEntitas == 'individu') {
+            $rolesToCount = [];
+            if ($kategoriEntitas == 'semua_kategori') {
+                $rolesToCount = ['komunitas', 'individu'];
+            } elseif ($kategoriEntitas == 'komunitas') {
+                $rolesToCount = ['komunitas'];
+            } elseif ($kategoriEntitas == 'individu') {
+                $rolesToCount = ['individu'];
+            }
+
+            $komQuery = User::whereIn('role', $rolesToCount)->where('created_at', '<=', $end);
+            if ($search) {
+                $komQuery->where('name', 'like', "%{$search}%");
+            }
+            $totalKomunitas = $komQuery->count();
+
+            $komQueryPrev = User::whereIn('role', $rolesToCount);
+            if ($rentangWaktu == 'semua_waktu') {
+                $komQueryPrev->where('created_at', '<', $endPrev);
+            } else {
+                $komQueryPrev->where('created_at', '<=', $endPrev);
+            }
+            if ($search) {
+                $komQueryPrev->where('name', 'like', "%{$search}%");
+            }
+            $totalKomunitasPrev = $komQueryPrev->count();
+            $komGrowth = $totalKomunitasPrev > 0 ? round((($totalKomunitas - $totalKomunitasPrev) / $totalKomunitasPrev) * 100) : ($totalKomunitas > 0 ? 100 : 0);
+        }
+
+        // 4. Query Pesanan (transaksi) terfilter
+        $pesananQuery = Pesanan::query();
+        $pesananQueryPrev = Pesanan::query();
+
+        if ($start && $end) {
+            $pesananQuery->whereBetween('waktu_pesan', [$start, $end]);
+        }
+        if ($rentangWaktu == 'semua_waktu') {
+            if ($endPrev) {
+                $pesananQueryPrev->where('waktu_pesan', '<', $endPrev);
+            }
+        } else {
+            if ($startPrev && $endPrev) {
+                $pesananQueryPrev->whereBetween('waktu_pesan', [$startPrev, $endPrev]);
+            }
+        }
+
+        if ($kategoriEntitas == 'komunitas') {
+            $pesananQuery->whereHas('user', function($q) {
+                $q->where('role', 'komunitas');
+            });
+            $pesananQueryPrev->whereHas('user', function($q) {
+                $q->where('role', 'komunitas');
+            });
+        } elseif ($kategoriEntitas == 'individu') {
+            $pesananQuery->whereHas('user', function($q) {
+                $q->where('role', 'individu');
+            });
+            $pesananQueryPrev->whereHas('user', function($q) {
+                $q->where('role', 'individu');
+            });
+        }
+
+        if ($search) {
+            $searchFilter = function($q) use ($search) {
+                $q->whereHas('unitBisnis', function($qb) use ($search) {
+                    $qb->where('nama_usaha', 'like', "%{$search}%");
+                })->orWhereHas('user', function($qu) use ($search) {
+                    $qu->where('name', 'like', "%{$search}%");
+                })->orWhereHas('menuAktif.masterMakanan', function($qm) use ($search) {
+                    $qm->where('nama_makanan', 'like', "%{$search}%");
+                });
+            };
+            $pesananQuery->where($searchFilter);
+            $pesananQueryPrev->where($searchFilter);
+        }
+
+        // 5. Hitung metrik makanan (porsi) & total transaksi (berhasil = selesai)
+        $totalMakanan = (clone $pesananQuery)->where('status', 'selesai')->sum('jumlah_porsi') ?: 0;
+        $totalMakananPrev = (clone $pesananQueryPrev)->where('status', 'selesai')->sum('jumlah_porsi') ?: 0;
         $makananGrowth = $totalMakananPrev > 0 ? round((($totalMakanan - $totalMakananPrev) / $totalMakananPrev) * 100) : ($totalMakanan > 0 ? 100 : 0);
+
+        $totalTransaksi = (clone $pesananQuery)->where('status', 'selesai')->count();
+        $totalTransaksiPrev = (clone $pesananQueryPrev)->where('status', 'selesai')->count();
         $transaksiGrowth = $totalTransaksiPrev > 0 ? round((($totalTransaksi - $totalTransaksiPrev) / $totalTransaksiPrev) * 100) : ($totalTransaksi > 0 ? 100 : 0);
 
         $stats = [
@@ -53,46 +189,11 @@ class AdminDashboardController extends Controller
             'total_transaksi_growth' => $transaksiGrowth,
         ];
 
-        // 3. Query Transaksi Terbaru
-        $query = Pesanan::with(['unitBisnis', 'user', 'menuAktif.masterMakanan'])
-            ->latest('waktu_pesan');
-
-        // Filter waktu
-        if ($rentangWaktu == 'bulan_ini') {
-            $query->whereMonth('waktu_pesan', Carbon::now()->month)
-                  ->whereYear('waktu_pesan', Carbon::now()->year);
-        } elseif ($rentangWaktu == 'bulan_lalu') {
-            $query->whereMonth('waktu_pesan', Carbon::now()->subMonth()->month)
-                  ->whereYear('waktu_pesan', Carbon::now()->subMonth()->year);
-        } elseif ($rentangWaktu == 'minggu_ini') {
-            $query->where('waktu_pesan', '>=', Carbon::now()->startOfWeek());
-        }
-
-        // Filter entitas pemesan
-        if ($kategoriEntitas == 'komunitas') {
-            $query->whereHas('user', function($q) {
-                $q->where('role', 'komunitas');
-            });
-        } elseif ($kategoriEntitas == 'individu') {
-            $query->whereHas('user', function($q) {
-                $q->where('role', 'individu');
-            });
-        }
-
-        // Filter pencarian global
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->whereHas('unitBisnis', function($qb) use ($search) {
-                    $qb->where('nama_usaha', 'like', "%{$search}%");
-                })->orWhereHas('user', function($qu) use ($search) {
-                    $qu->where('name', 'like', "%{$search}%");
-                })->orWhereHas('menuAktif.masterMakanan', function($qm) use ($search) {
-                    $qm->where('nama_makanan', 'like', "%{$search}%");
-                });
-            });
-        }
-
-        $pesanans = $query->limit(5)->get();
+        // 6. Query Transaksi Terbaru terfilter (limit 5 untuk dashboard)
+        $pesanans = (clone $pesananQuery)->with(['unitBisnis', 'user', 'menuAktif.masterMakanan'])
+            ->latest('waktu_pesan')
+            ->limit(5)
+            ->get();
 
         $transactions = $pesanans->map(function ($pesanan) {
             $mitra = $pesanan->unitBisnis ? $pesanan->unitBisnis->nama_usaha : 'Mitra Tidak Dikenal';
@@ -126,33 +227,48 @@ class AdminDashboardController extends Controller
             ];
         })->toArray();
 
-        // 4. Hitung Status Distribusi (Doughnut Chart)
-        $doneCount = Pesanan::where('status', 'selesai')->count();
-        $procCount = Pesanan::whereIn('status', ['menunggu_pembayaran', 'dibayar', 'siap_diambil'])->count();
-        $failCount = Pesanan::where('status', 'dibatalkan')->count();
+        // 7. Hitung Status Distribusi terfilter (Doughnut Chart)
+        $doneCount = (clone $pesananQuery)->where('status', 'selesai')->count();
+        $procCount = (clone $pesananQuery)->whereIn('status', ['menunggu_pembayaran', 'dibayar', 'siap_diambil'])->count();
+        $failCount = (clone $pesananQuery)->where('status', 'dibatalkan')->count();
         $totalDist = $doneCount + $procCount + $failCount;
         $successRate = $totalDist > 0 ? round(($doneCount / $totalDist) * 100) : 0;
 
-        // 5. Query Chart Bulanan secara riil untuk tahun 2026 (Jan - Jun)
+        // 8. Query Chart Bulanan secara riil untuk tahun 2026 (Jan - Jun) terfilter
         $months = [1, 2, 3, 4, 5, 6];
         $chartAktivitasUser = [];
         $chartJumlahMakanan = [];
         $chartJumlahTransaksi = [];
 
         foreach ($months as $m) {
-            $chartAktivitasUser[] = Pesanan::whereMonth('waktu_pesan', $m)
-                ->whereYear('waktu_pesan', 2026)
-                ->distinct('user_id')
-                ->count();
+            $monthQuery = Pesanan::whereMonth('waktu_pesan', $m)
+                ->whereYear('waktu_pesan', 2026);
 
-            $chartJumlahMakanan[] = (int) Pesanan::whereMonth('waktu_pesan', $m)
-                ->whereYear('waktu_pesan', 2026)
-                ->where('status', 'selesai')
-                ->sum('jumlah_porsi');
+            if ($kategoriEntitas == 'komunitas') {
+                $monthQuery->whereHas('user', function($q) {
+                    $q->where('role', 'komunitas');
+                });
+            } elseif ($kategoriEntitas == 'individu') {
+                $monthQuery->whereHas('user', function($q) {
+                    $q->where('role', 'individu');
+                });
+            }
 
-            $chartJumlahTransaksi[] = Pesanan::whereMonth('waktu_pesan', $m)
-                ->whereYear('waktu_pesan', 2026)
-                ->count();
+            if ($search) {
+                $monthQuery->where(function($q) use ($search) {
+                    $q->whereHas('unitBisnis', function($qb) use ($search) {
+                        $qb->where('nama_usaha', 'like', "%{$search}%");
+                    })->orWhereHas('user', function($qu) use ($search) {
+                        $qu->where('name', 'like', "%{$search}%");
+                    })->orWhereHas('menuAktif.masterMakanan', function($qm) use ($search) {
+                        $qm->where('nama_makanan', 'like', "%{$search}%");
+                    });
+                });
+            }
+
+            $chartAktivitasUser[] = (clone $monthQuery)->distinct('user_id')->count('user_id');
+            $chartJumlahMakanan[] = (int) (clone $monthQuery)->where('status', 'selesai')->sum('jumlah_porsi');
+            $chartJumlahTransaksi[] = (clone $monthQuery)->where('status', 'selesai')->count();
         }
 
         return view('admin.dashboard', [
@@ -213,69 +329,54 @@ class AdminDashboardController extends Controller
         $rentangWaktu = $request->input('rentang_waktu', 'semua_waktu');
         $kategoriEntitas = $request->input('kategori_entitas', 'semua_kategori');
 
-        // Rentang Waktu filter
+        // 2. Tentukan batasan tanggal berdasarkan filter
+        $now = Carbon::now();
         $start = null;
-        $end = Carbon::now()->endOfDay();
+        $end = (clone $now)->endOfDay();
+
+        $startPrev = null;
+        $endPrev = null;
 
         if ($rentangWaktu == 'bulan_ini') {
-            $start = Carbon::now()->startOfMonth();
-            $end = Carbon::now()->endOfMonth();
+            $start = (clone $now)->startOfMonth();
+            $end = (clone $now)->endOfMonth();
+            
+            $startPrev = (clone $now)->subMonth()->startOfMonth();
+            $endPrev = (clone $now)->subMonth()->endOfMonth();
         } elseif ($rentangWaktu == 'bulan_lalu') {
-            $start = Carbon::now()->subMonth()->startOfMonth();
-            $end = Carbon::now()->subMonth()->endOfMonth();
+            $start = (clone $now)->subMonth()->startOfMonth();
+            $end = (clone $now)->subMonth()->endOfMonth();
+            
+            $startPrev = (clone $now)->subMonths(2)->startOfMonth();
+            $endPrev = (clone $now)->subMonths(2)->endOfMonth();
         } elseif ($rentangWaktu == 'minggu_ini') {
-            $start = Carbon::now()->startOfWeek();
-            $end = Carbon::now()->endOfWeek();
+            $start = (clone $now)->startOfWeek();
+            $end = (clone $now)->endOfWeek();
+            
+            $startPrev = (clone $now)->subWeek()->startOfWeek();
+            $endPrev = (clone $now)->subWeek()->endOfWeek();
+        } else {
+            // Semua Waktu
+            $earliest = Pesanan::min('waktu_pesan') ?: (Pesanan::min('created_at') ?: (clone $now)->subYear());
+            $start = Carbon::parse($earliest)->startOfDay();
+            
+            // Bandingkan dengan data sebelum awal bulan berjalan
+            $endPrev = (clone $now)->startOfMonth();
         }
 
-        // Jika semua_waktu, set start ke waktu transaksi pertama di DB (agar periode di header terisi lengkap)
-        if (!$start) {
-            $earliest = Pesanan::min('waktu_pesan') ?: (Pesanan::min('created_at') ?: Carbon::now()->subYear());
-            $start = Carbon::parse($earliest)->startOfDay();
-        }
-        
         $periodeStart = $start->translatedFormat('d M Y');
         $periodeEnd = $end->translatedFormat('d M Y');
-        $dibuatPada = Carbon::now()->translatedFormat('d M Y'); // Hari ini
+        $dibuatPada = Carbon::now()->translatedFormat('d M Y');
 
-        // Query transaksi (Pesanan) terfilter
-        $pesananQuery = Pesanan::query();
+        // 3. Hitung statistik Unit Bisnis & Komunitas berdasarkan kategori_entitas
+        $totalUnitBisnis = '-';
+        $ubGrowth = '-';
+        $totalKomunitas = '-';
+        $komGrowth = '-';
 
-        if ($start && $end) {
-            $pesananQuery->whereBetween('waktu_pesan', [$start, $end]);
-        }
-
-        if ($kategoriEntitas == 'komunitas') {
-            $pesananQuery->whereHas('user', function($q) {
-                $q->where('role', 'komunitas');
-            });
-        } elseif ($kategoriEntitas == 'individu') {
-            $pesananQuery->whereHas('user', function($q) {
-                $q->where('role', 'individu');
-            });
-        }
-
-        if ($search) {
-            $pesananQuery->where(function($q) use ($search) {
-                $q->whereHas('unitBisnis', function($qb) use ($search) {
-                    $qb->where('nama_usaha', 'like', "%{$search}%");
-                })->orWhereHas('user', function($qu) use ($search) {
-                    $qu->where('name', 'like', "%{$search}%");
-                })->orWhereHas('menuAktif.masterMakanan', function($qm) use ($search) {
-                    $qm->where('nama_makanan', 'like', "%{$search}%");
-                });
-            });
-        }
-
-        // Menghitung statistik terfilter secara dinamis
-        // Untuk Unit Bisnis & Komunitas: jika kategori disaring ke komunitas/individu saja, maka unit bisnis yang tampil adalah unit bisnis yang bertransaksi dengan entitas tersebut.
-        if ($kategoriEntitas == 'komunitas' || $kategoriEntitas == 'individu') {
-            $unitBisnisCount = (clone $pesananQuery)->distinct('unit_bisnis_id')->count('unit_bisnis_id');
-        } else {
-            $ubQuery = User::where('role', 'unit_bisnis');
-            if ($rentangWaktu != 'semua_waktu') {
-                $ubQuery->where('created_at', '<=', $end);
-            }
+        // Hitung Unit Bisnis jika kategori adalah semua_kategori atau unit_bisnis
+        if ($kategoriEntitas == 'semua_kategori' || $kategoriEntitas == 'unit_bisnis') {
+            $ubQuery = User::where('role', 'unit_bisnis')->where('created_at', '<=', $end);
             if ($search) {
                 $ubQuery->where(function($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -284,79 +385,12 @@ class AdminDashboardController extends Controller
                       });
                 });
             }
-            $unitBisnisCount = $ubQuery->count();
-        }
+            $totalUnitBisnis = $ubQuery->count();
 
-        if ($kategoriEntitas == 'unit_bisnis') {
-            $komunitasCount = (clone $pesananQuery)->distinct('user_id')->count('user_id');
-        } else {
-            $komQuery = User::whereIn('role', ['komunitas', 'individu']);
-            if ($kategoriEntitas == 'komunitas') {
-                $komQuery->where('role', 'komunitas');
-            } elseif ($kategoriEntitas == 'individu') {
-                $komQuery->where('role', 'individu');
-            }
-            if ($rentangWaktu != 'semua_waktu') {
-                $komQuery->where('created_at', '<=', $end);
-            }
-            if ($search) {
-                $komQuery->where('name', 'like', "%{$search}%");
-            }
-            $komunitasCount = $komQuery->count();
-        }
-
-        $totalPorsiCurrent = (clone $pesananQuery)->where('status', 'selesai')->sum('jumlah_porsi') ?: 0;
-        $makananKg = $totalPorsiCurrent * 0.2;
-        $totalTransaksiCurrent = (clone $pesananQuery)->count();
-
-        // Hitung perbandingan untuk persentase pertumbuhan dinamis laporan (MoM atau WoW)
-        $pesananQueryPrev = Pesanan::query();
-        if ($rentangWaktu == 'bulan_ini') {
-            $startPrev = Carbon::now()->subMonth()->startOfMonth();
-            $endPrev = Carbon::now()->subMonth()->endOfMonth();
-            $pesananQueryPrev->whereBetween('waktu_pesan', [$startPrev, $endPrev]);
-        } elseif ($rentangWaktu == 'bulan_lalu') {
-            $startPrev = Carbon::now()->subMonths(2)->startOfMonth();
-            $endPrev = Carbon::now()->subMonths(2)->endOfMonth();
-            $pesananQueryPrev->whereBetween('waktu_pesan', [$startPrev, $endPrev]);
-        } elseif ($rentangWaktu == 'minggu_ini') {
-            $startPrev = Carbon::now()->subWeek()->startOfWeek();
-            $endPrev = Carbon::now()->subWeek()->endOfWeek();
-            $pesananQueryPrev->whereBetween('waktu_pesan', [$startPrev, $endPrev]);
-        } else {
-            // semua_waktu: bandingkan data sebelum awal bulan berjalan
-            $endPrev = Carbon::now()->startOfMonth();
-            $pesananQueryPrev->where('waktu_pesan', '<', $endPrev);
-        }
-
-        // Terapkan filter yang sama pada query prev
-        if ($kategoriEntitas == 'komunitas') {
-            $pesananQueryPrev->whereHas('user', function($q) {
-                $q->where('role', 'komunitas');
-            });
-        } elseif ($kategoriEntitas == 'individu') {
-            $pesananQueryPrev->whereHas('user', function($q) {
-                $q->where('role', 'individu');
-            });
-        }
-        if ($search) {
-            $pesananQueryPrev->where(function($q) use ($search) {
-                $q->whereHas('unitBisnis', function($qb) use ($search) {
-                    $qb->where('nama_usaha', 'like', "%{$search}%");
-                })->orWhereHas('user', function($qu) use ($search) {
-                    $qu->where('name', 'like', "%{$search}%");
-                })->orWhereHas('menuAktif.masterMakanan', function($qm) use ($search) {
-                    $qm->where('nama_makanan', 'like', "%{$search}%");
-                });
-            });
-        }
-
-        // Hitung Unit Bisnis Prev
-        if ($kategoriEntitas == 'komunitas' || $kategoriEntitas == 'individu') {
-            $unitBisnisPrev = (clone $pesananQueryPrev)->distinct('unit_bisnis_id')->count('unit_bisnis_id');
-        } else {
             $ubQueryPrev = User::where('role', 'unit_bisnis');
-            if (isset($endPrev)) {
+            if ($rentangWaktu == 'semua_waktu') {
+                $ubQueryPrev->where('created_at', '<', $endPrev);
+            } else {
                 $ubQueryPrev->where('created_at', '<=', $endPrev);
             }
             if ($search) {
@@ -367,44 +401,115 @@ class AdminDashboardController extends Controller
                       });
                 });
             }
-            $unitBisnisPrev = $ubQueryPrev->count();
+            $totalUnitBisnisPrev = $ubQueryPrev->count();
+            $ubGrowth = $totalUnitBisnisPrev > 0 ? round((($totalUnitBisnis - $totalUnitBisnisPrev) / $totalUnitBisnisPrev) * 100) : ($totalUnitBisnis > 0 ? 100 : 0);
         }
 
-        // Hitung Komunitas Prev
-        if ($kategoriEntitas == 'unit_bisnis') {
-            $komunitasPrev = (clone $pesananQueryPrev)->distinct('user_id')->count('user_id');
-        } else {
-            $komQueryPrev = User::whereIn('role', ['komunitas', 'individu']);
-            if ($kategoriEntitas == 'komunitas') {
-                $komQueryPrev->where('role', 'komunitas');
+        // Hitung Komunitas jika kategori adalah semua_kategori, komunitas, atau individu
+        if ($kategoriEntitas == 'semua_kategori' || $kategoriEntitas == 'komunitas' || $kategoriEntitas == 'individu') {
+            $rolesToCount = [];
+            if ($kategoriEntitas == 'semua_kategori') {
+                $rolesToCount = ['komunitas', 'individu'];
+            } elseif ($kategoriEntitas == 'komunitas') {
+                $rolesToCount = ['komunitas'];
             } elseif ($kategoriEntitas == 'individu') {
-                $komQueryPrev->where('role', 'individu');
+                $rolesToCount = ['individu'];
             }
-            if (isset($endPrev)) {
+
+            $komQuery = User::whereIn('role', $rolesToCount)->where('created_at', '<=', $end);
+            if ($search) {
+                $komQuery->where('name', 'like', "%{$search}%");
+            }
+            $totalKomunitas = $komQuery->count();
+
+            $komQueryPrev = User::whereIn('role', $rolesToCount);
+            if ($rentangWaktu == 'semua_waktu') {
+                $komQueryPrev->where('created_at', '<', $endPrev);
+            } else {
                 $komQueryPrev->where('created_at', '<=', $endPrev);
             }
             if ($search) {
                 $komQueryPrev->where('name', 'like', "%{$search}%");
             }
-            $komunitasPrev = $komQueryPrev->count();
+            $totalKomunitasPrev = $komQueryPrev->count();
+            $komGrowth = $totalKomunitasPrev > 0 ? round((($totalKomunitas - $totalKomunitasPrev) / $totalKomunitasPrev) * 100) : ($totalKomunitas > 0 ? 100 : 0);
         }
 
-        $ubGrowth = $unitBisnisPrev > 0 ? round((($unitBisnisCount - $unitBisnisPrev) / $unitBisnisPrev) * 100) : ($unitBisnisCount > 0 ? 100 : 0);
-        $komGrowth = $komunitasPrev > 0 ? round((($komunitasCount - $komunitasPrev) / $komunitasPrev) * 100) : ($komunitasCount > 0 ? 100 : 0);
+        // 4. Query Pesanan terfilter
+        $pesananQuery = Pesanan::query();
+        $pesananQueryPrev = Pesanan::query();
+
+        if ($start && $end) {
+            $pesananQuery->whereBetween('waktu_pesan', [$start, $end]);
+        }
+        if ($rentangWaktu == 'semua_waktu') {
+            if ($endPrev) {
+                $pesananQueryPrev->where('waktu_pesan', '<', $endPrev);
+            }
+        } else {
+            if ($startPrev && $endPrev) {
+                $pesananQueryPrev->whereBetween('waktu_pesan', [$startPrev, $endPrev]);
+            }
+        }
+
+        if ($kategoriEntitas == 'komunitas') {
+            $pesananQuery->whereHas('user', function($q) {
+                $q->where('role', 'komunitas');
+            });
+            $pesananQueryPrev->whereHas('user', function($q) {
+                $q->where('role', 'komunitas');
+            });
+        } elseif ($kategoriEntitas == 'individu') {
+            $pesananQuery->whereHas('user', function($q) {
+                $q->where('role', 'individu');
+            });
+            $pesananQueryPrev->whereHas('user', function($q) {
+                $q->where('role', 'individu');
+            });
+        }
+
+        if ($search) {
+            $searchFilter = function($q) use ($search) {
+                $q->whereHas('unitBisnis', function($qb) use ($search) {
+                    $qb->where('nama_usaha', 'like', "%{$search}%");
+                })->orWhereHas('user', function($qu) use ($search) {
+                    $qu->where('name', 'like', "%{$search}%");
+                })->orWhereHas('menuAktif.masterMakanan', function($qm) use ($search) {
+                    $qm->where('nama_makanan', 'like', "%{$search}%");
+                });
+            };
+            $pesananQuery->where($searchFilter);
+            $pesananQueryPrev->where($searchFilter);
+        }
+
+        // 5. Hitung metrik makanan (KG) & total transaksi (berhasil = selesai)
+        $totalMakanan = (clone $pesananQuery)->where('status', 'selesai')->sum('jumlah_porsi') ?: 0;
+        $makananKg = $totalMakanan * 0.2;
+        
+        $totalMakananPrev = (clone $pesananQueryPrev)->where('status', 'selesai')->sum('jumlah_porsi') ?: 0;
+        $makananGrowth = $totalMakananPrev > 0 ? round((($totalMakanan - $totalMakananPrev) / $totalMakananPrev) * 100) : ($totalMakanan > 0 ? 100 : 0);
+
+        $totalTransaksiCurrent = (clone $pesananQuery)->where('status', 'selesai')->count();
+        $totalTransaksiPrev = (clone $pesananQueryPrev)->where('status', 'selesai')->count();
+        $transaksiGrowth = $totalTransaksiPrev > 0 ? round((($totalTransaksiCurrent - $totalTransaksiPrev) / $totalTransaksiPrev) * 100) : ($totalTransaksiCurrent > 0 ? 100 : 0);
 
         $reportStats = [
-            'unit_bisnis' => $unitBisnisCount,
-            'komunitas' => $komunitasCount,
+            'unit_bisnis' => $totalUnitBisnis,
+            'komunitas' => $totalKomunitas,
             'makanan_kg' => number_format($makananKg, 1, ',', '.'),
             'total_transaksi' => number_format($totalTransaksiCurrent, 0, ',', '.'),
-            'unit_bisnis_change' => ($ubGrowth >= 0 ? '+' : '') . $ubGrowth . '%',
-            'komunitas_change' => ($komGrowth >= 0 ? '+' : '') . $komGrowth . '%',
+            'unit_bisnis_change' => $ubGrowth === '-' ? '-' : (($ubGrowth >= 0 ? '+' : '') . $ubGrowth . '%'),
+            'komunitas_change' => $komGrowth === '-' ? '-' : (($komGrowth >= 0 ? '+' : '') . $komGrowth . '%'),
+            'unit_bisnis_change_raw' => $ubGrowth,
+            'komunitas_change_raw' => $komGrowth,
+            'makanan_growth' => $makananGrowth,
+            'transaksi_growth' => $transaksiGrowth,
         ];
 
-        // 2. Query Transaksi log terfilter (maks. 15 item terbaru agar muat di cetak PDF)
+        // 6. Query Transaksi log terfilter (limit 50 item terbaru untuk mendukung cetak multi-halaman jika data banyak)
         $currentMonthPesanans = (clone $pesananQuery)->with(['unitBisnis', 'menuAktif.masterMakanan'])
             ->latest('waktu_pesan')
-            ->limit(15)
+            ->limit(50)
             ->get();
 
         $transactions = $currentMonthPesanans->map(function($pesanan) {
@@ -438,7 +543,7 @@ class AdminDashboardController extends Controller
             ];
         })->toArray();
 
-        // 3. Hitung pertumbuhan donasi mingguan/periodik di rentang berjalan
+        // 7. Hitung pertumbuhan donasi mingguan/periodik di rentang berjalan terfilter
         $mingguData = [];
         $totalDuration = $start->diffInSeconds($end);
         $interval = $totalDuration / 4;
@@ -450,7 +555,6 @@ class AdminDashboardController extends Controller
             $porsiSub = Pesanan::where('status', 'selesai')
                 ->whereBetween('waktu_pesan', [$subStart, $subEnd]);
 
-            // Terapkan filter yang sama pada query chart
             if ($kategoriEntitas == 'komunitas') {
                 $porsiSub->whereHas('user', function($q) {
                     $q->where('role', 'komunitas');
@@ -475,7 +579,6 @@ class AdminDashboardController extends Controller
             $mingguData[] = $porsiSub->sum('jumlah_porsi') ?: 0;
         }
 
-        // Akumulasikan ke persentase pertumbuhan kumulatif
         $runningSum = 0;
         $cumulativeData = [];
         $totalPeriodPortions = array_sum($mingguData);
@@ -489,21 +592,6 @@ class AdminDashboardController extends Controller
             }
         }
 
-        // 4. Hitung variabel untuk template ringkasan eksekutif
-        $p3 = $mingguData[2];
-        $p4 = $mingguData[3];
-        $weeklyGrowth = $p3 > 0 ? round((($p4 - $p3) / $p3) * 100) : ($p4 > 0 ? 100 : 0);
-        
-        $newPartnersQuery = UnitBisnisProfile::whereBetween('created_at', [$start, $end]);
-        if ($search) {
-            $newPartnersQuery->where('nama_usaha', 'like', "%{$search}%");
-        }
-        $newPartners = $newPartnersQuery->count();
-        
-        $totalOrdersCurrent = (clone $pesananQuery)->count();
-        $doneOrdersCurrent = (clone $pesananQuery)->where('status', 'selesai')->count();
-        $efficiency = $totalOrdersCurrent > 0 ? round(($doneOrdersCurrent / $totalOrdersCurrent) * 100, 1) : 0;
-
         return view('admin.laporan', [
             'periode_start' => $periodeStart,
             'periode_end' => $periodeEnd,
@@ -515,11 +603,6 @@ class AdminDashboardController extends Controller
                 'search' => $search,
                 'rentang_waktu' => $rentangWaktu,
                 'kategori_entitas' => $kategoriEntitas,
-            ],
-            'summary' => [
-                'weekly_growth' => $weeklyGrowth,
-                'new_partners' => $newPartners,
-                'efficiency' => $efficiency,
             ]
         ]);
     }

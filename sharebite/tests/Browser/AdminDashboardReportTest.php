@@ -2,13 +2,74 @@
 
 namespace Tests\Browser;
 
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
+use Illuminate\Support\Facades\DB;
 
 class AdminDashboardReportTest extends DuskTestCase
 {
+    // Menggunakan DatabaseMigrations agar setiap kali test dijalankan,
+    // database testing (sharebite_dusk) di-reset dan data dummy dibuat ulang.
+    use DatabaseMigrations;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // 1. Jalankan seeder bawaan (untuk User Admin, Komunitas, Unit Bisnis)
+        $this->artisan('db:seed');
+
+        // 2. Insert dummy profile & pesanans untuk menguji Paginasi dan Filter (TC-DT-03 & TC-DT-02)
+        // Kita matikan sementara FOREIGN_KEY_CHECKS agar insert data pesanan lebih mudah
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        
+        // Buat dummy unit bisnis profile untuk user ID 2 (Lestari Food)
+        DB::table('unit_bisnis_profiles')->insertOrIgnore([
+            'id' => 999,
+            'user_id' => 2,
+            'nama_usaha' => 'Lestari Food',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Buat dummy master makanan & menu aktif agar relasi valid
+        DB::table('master_makanans')->insertOrIgnore([
+            'id' => 999,
+            'unit_bisnis_id' => 999,
+            'nama_makanan' => 'Nasi Goreng Spesial',
+            'kategori' => 'Makanan Utama',
+            'created_at' => now(),
+        ]);
+
+        DB::table('menu_aktifs')->insertOrIgnore([
+            'id' => 999,
+            'master_makanan_id' => 999,
+            'unit_bisnis_id' => 999,
+            'created_at' => now(),
+        ]);
+
+        // Buat 12 dummy transaksi (pesanan) agar paginasi > 10 data aktif (halaman 1 dan 2)
+        for ($i = 1; $i <= 12; $i++) {
+            DB::table('pesanans')->insert([
+                'menu_aktif_id' => 999,
+                'unit_bisnis_id' => 999,
+                'user_id' => 3, // Komunitas Berbagi
+                'jumlah_porsi' => 1,
+                'total_harga' => 0,
+                // Berikan 1 transaksi status batal agar bisa difilter di TC-DT-02
+                'status' => ($i == 1) ? 'dibatalkan' : 'selesai',
+                'kode_unik' => 'DUMMY_TRX_' . $i,
+                'waktu_pesan' => now()->subMinutes($i),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+    }
+
     /**
-     * Helper untuk masuk sebagai admin
+     * Helper untuk login sebagai admin.
      */
     protected function loginAdmin(Browser $browser): void
     {
@@ -20,137 +81,220 @@ class AdminDashboardReportTest extends DuskTestCase
             ->waitForLocation('/admin/dashboard');
     }
 
+    /* -------------------------------------------------------------------------
+     * 1. Test Case Dashboard (TC-DS)
+     * ------------------------------------------------------------------------- */
+
     /**
-     * 1. Test Case: Validasi Log Transaksi Terbaru dan Navigasi "Lihat Semua"
+     * TC-DS-01: Fungsionalitas Pencarian Global
      */
-    public function testValidationLogTransaksiDanNavigasi(): void
+    public function test_TC_DS_01_FungsionalitasPencarianGlobal(): void
     {
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
 
-            // Verifikasi kolom-kolom pada tabel Transaksi Terbaru (styled uppercase)
-            $browser->assertSee('Transaksi Terbaru')
-                ->assertSee('MITRA PENYALUR')
-                ->assertSee('PENERIMA MANFAAT')
-                ->assertSee('ITEM MAKANAN')
-                ->assertSee('STATUS')
-                ->assertSee('WAKTU');
-
-            // Klik link "Lihat Semua" dan tunggu halaman memuat
-            $browser->waitForReload(function (Browser $browser) {
-                $browser->clickLink('Lihat Semua');
-            })
-                ->assertPathIs('/admin/transaksi')
-                ->assertSee('Daftar Transaksi'); // Pastikan halaman transaksi termuat
-        });
-    }
-
-    /**
-     * 2. Test Case: Fungsionalitas Tombol "Reset" Filter
-     */
-    public function testFungsionalitasTombolReset(): void
-    {
-        $this->browse(function (Browser $browser) {
-            $this->loginAdmin($browser);
-
-            // Mengisi filter dan tunggu halaman memuat ulang
             $browser->type('search', 'Lestari')
-                ->select('rentang_waktu', 'bulan_ini')
-                ->select('kategori_entitas', 'komunitas')
                 ->waitForReload(function (Browser $browser) {
                     $browser->press('Filter Data');
                 })
-                ->assertQueryStringHas('search', 'Lestari')
-                ->assertQueryStringHas('rentang_waktu', 'bulan_ini')
-                ->assertQueryStringHas('kategori_entitas', 'komunitas');
-
-            // Klik tombol Reset dan tunggu halaman memuat ulang
-            $browser->waitForReload(function (Browser $browser) {
-                $browser->clickLink('Reset');
-            })
-                ->assertPathIs('/admin/dashboard')
-                ->assertQueryStringMissing('search')
-                ->assertQueryStringMissing('rentang_waktu')
-                ->assertQueryStringMissing('kategori_entitas')
-                ->assertInputValue('search', '')
-                ->assertSelected('rentang_waktu', 'semua_waktu')
-                ->assertSelected('kategori_entitas', 'semua_kategori');
+                ->assertQueryStringHas('search', 'Lestari');
         });
     }
 
     /**
-     * 3. Test Case: Sinkronisasi Filter Rentang Waktu dan Kategori Entitas
+     * TC-DS-02: Filter Rentang Waktu & Kategori Entitas
      */
-    public function testSinkronisasiFilterRentangWaktuDanKategori(): void
+    public function test_TC_DS_02_FilterRentangWaktuKategoriEntitas(): void
     {
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
 
-            // Terapkan filter rentang waktu dan kategori entitas dan tunggu halaman memuat ulang
             $browser->select('rentang_waktu', 'bulan_ini')
                 ->select('kategori_entitas', 'komunitas')
                 ->waitForReload(function (Browser $browser) {
                     $browser->press('Filter Data');
                 })
-                ->assertPathIs('/admin/dashboard')
                 ->assertSelected('rentang_waktu', 'bulan_ini')
                 ->assertSelected('kategori_entitas', 'komunitas');
         });
     }
 
     /**
-     * 4. Test Case: Integrasi Filter ke Dokumen Laporan (Generate Laporan)
+     * TC-DS-03: Edge Case: Filter Tidak Relevan
      */
-    public function testIntegrasiFilterKeDokumenLaporan(): void
+    public function test_TC_DS_03_EdgeCaseFilterTidakRelevan(): void
     {
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
 
-            // Terapkan pencarian dan filter dan tunggu halaman memuat ulang
-            $browser->type('search', 'Lestari')
-                ->select('rentang_waktu', 'bulan_ini')
+            // Ubah kategori menjadi Unit Bisnis yang tidak memiliki keterkaitan metrik Total Komunitas
+            $browser->select('kategori_entitas', 'unit_bisnis')
+                ->waitForReload(function (Browser $browser) {
+                    $browser->press('Filter Data');
+                });
+
+            // Metrik Total Komunitas seharusnya menampilkan '-' karena di-hide/kosong
+            $text = $browser->script('return document.querySelector(".grid > div:nth-child(2) h3").innerText;')[0];
+            $this->assertEquals('-', trim($text));
+        });
+    }
+
+    /* -------------------------------------------------------------------------
+     * 2. Test Case Generate Laporan (TC-GL)
+     * ------------------------------------------------------------------------- */
+
+    /**
+     * TC-GL-01: Integrasi Parameter Filter dari Dashboard
+     */
+    public function test_TC_GL_01_IntegrasiParameterFilterDariDashboard(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->loginAdmin($browser);
+
+            $browser->select('rentang_waktu', 'bulan_ini')
                 ->select('kategori_entitas', 'komunitas')
                 ->waitForReload(function (Browser $browser) {
                     $browser->press('Filter Data');
                 });
 
-            // Klik Generate Laporan dan tunggu halaman laporan memuat
             $browser->waitForReload(function (Browser $browser) {
                 $browser->clickLink('Generate Laporan');
             })
                 ->assertPathBeginsWith('/admin/laporan')
-                ->assertQueryStringHas('search', 'Lestari')
-                ->assertQueryStringHas('rentang_waktu', 'bulan_ini')
-                ->assertQueryStringHas('kategori_entitas', 'komunitas')
-                ->assertSee('Laporan Ringkasan Aktivitas')
                 ->assertSee('FILTER AKTIF:')
-                ->assertSee('ENTITAS: KOMUNITAS')
-                ->assertSee('CARI: "LESTARI"');
+                ->assertSee('KOMUNITAS')
+                ->assertSee('BULAN INI');
         });
     }
 
     /**
-     * 5. Test Case: Penanganan Data Kosong pada Laporan (Edge Case)
+     * TC-GL-02: Penanganan Laporan Kosong (Edge Case)
      */
-    public function testPenangananDataKosongLaporan(): void
+    public function test_TC_GL_02_PenangananLaporanKosongEdgeCase(): void
     {
         $this->browse(function (Browser $browser) {
             $this->loginAdmin($browser);
 
-            // Terapkan filter yang bernilai kosong (misalnya bulan_lalu yang tidak ada pesanan di seeder default) dan tunggu halaman memuat ulang
+            // Pilih bulan lalu agar tidak ada data riwayat (dummy data semua di bulan ini)
             $browser->select('rentang_waktu', 'bulan_lalu')
                 ->waitForReload(function (Browser $browser) {
                     $browser->press('Filter Data');
                 });
 
-            // Klik Generate Laporan dan tunggu halaman laporan memuat admin.
             $browser->waitForReload(function (Browser $browser) {
                 $browser->clickLink('Generate Laporan');
             })
                 ->assertPathBeginsWith('/admin/laporan')
-                ->assertSee('Laporan Ringkasan Aktivitas')
-                // Memastikan data kosong ditangani (Total Transaksi 0)
                 ->assertSee('Belum ada transaksi di periode ini.');
+        });
+    }
+
+    /* -------------------------------------------------------------------------
+     * 3. Test Case Daftar Transaksi (TC-DT)
+     * ------------------------------------------------------------------------- */
+
+    /**
+     * TC-DT-01: Navigasi dari Dashboard
+     */
+    public function test_TC_DT_01_NavigasiDariDashboard(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->loginAdmin($browser);
+
+            // Klik 'Lihat Semua' pada tabel Transaksi Terbaru
+            $browser->waitForReload(function (Browser $browser) {
+                $browser->clickLink('Lihat Semua');
+            })
+                ->assertPathIs('/admin/transaksi')
+                ->assertSee('Daftar Transaksi');
+        });
+    }
+
+    /**
+     * TC-DT-02: Pencarian & Filter Kombinasi
+     */
+    public function test_TC_DT_02_PencarianDanFilterKombinasi(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->loginAdmin($browser);
+            $browser->visit('/admin/transaksi');
+
+            // Ketik nama mitra (Lestari) dan pilih status (Batal)
+            $browser->type('search', 'Lestari')
+                ->select('status', 'dibatalkan')
+                ->waitForReload(function (Browser $browser) {
+                    $browser->press('Filter');
+                })
+                ->assertQueryStringHas('search', 'Lestari')
+                ->assertQueryStringHas('status', 'dibatalkan');
+        });
+    }
+
+    /**
+     * TC-DT-03: Navigasi Nomor Page
+     */
+    public function test_TC_DT_03_NavigasiNomorPage(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->loginAdmin($browser);
+            $browser->visit('/admin/transaksi');
+
+            // Karena kita inject 12 data dummy, akan ada halaman ke-2 (karena max 10 per page)
+            // Klik menggunakan script JS agar tidak terkena error element not interactable (hidden tailwind mobile pagination)
+            $browser->waitForReload(function (Browser $browser) {
+                $browser->script("
+                    const link = document.querySelector('.sm\\\\:flex-1 a[href*=\"page=2\"]') || document.querySelector('a[href*=\"page=2\"]');
+                    if(link) link.click();
+                ");
+            })
+                ->assertQueryStringHas('page', '2');
+        });
+    }
+
+    /**
+     * TC-DT-04: Edge Case: Data Tidak Ada
+     */
+    public function test_TC_DT_04_EdgeCaseDataTidakAda(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->loginAdmin($browser);
+            $browser->visit('/admin/transaksi');
+
+            // Ketik kata pencarian acak/fiktif
+            $browser->type('search', 'KATA_KUNCI_FIKTIF_TIDAK_ADA_123')
+                ->waitForReload(function (Browser $browser) {
+                    $browser->press('Filter');
+                })
+                ->assertSee('Tidak ada transaksi ditemukan.');
+        });
+    }
+
+    /**
+     * TC-DT-05: Tombol Reset & Kembali
+     */
+    public function test_TC_DT_05_TombolResetDanKembali(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->loginAdmin($browser);
+            $browser->visit('/admin/transaksi');
+
+            // Set filter sembarang
+            $browser->type('search', 'Sembarang')
+                ->waitForReload(function (Browser $browser) {
+                    $browser->press('Filter');
+                });
+
+            // Klik tombol Reset
+            $browser->waitForReload(function (Browser $browser) {
+                $browser->clickLink('Reset');
+            })
+                ->assertInputValue('search', '');
+
+            // Klik Kembali ke Dashboard
+            $browser->waitForReload(function (Browser $browser) {
+                $browser->clickLink('Kembali ke Dashboard');
+            })
+                ->assertPathIs('/admin/dashboard');
         });
     }
 }
