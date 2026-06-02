@@ -54,7 +54,7 @@ class Pesanan extends Model
     public function unitBisnis()
     {
         return $this->belongsTo(UnitBisnisProfile::class, 'unit_bisnis_id');
-    }
+    }   
 
     // User yang memesan (individu atau komunitas)
     public function user()
