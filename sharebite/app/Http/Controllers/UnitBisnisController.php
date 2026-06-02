@@ -35,15 +35,19 @@ class UnitBisnisController extends Controller
 
         $unitBisnis->alamat = $user->alamat ?? '';
 
-        $pesanans = Pesanan::where('user_id', $user->id)
-            ->where('status', '!=', 'dibatalkan')
-            ->with('menuAktif.masterMakanan')
-            ->get();
+        // Ambil semua pesanan selesai milik unit bisnis ini berdasarkan unit_bisnis_id
+        $pesanans = $unitBisnis->id
+            ? Pesanan::where('unit_bisnis_id', $unitBisnis->id)
+                ->where('status', 'selesai')
+                ->with('menuAktif.masterMakanan')
+                ->get()
+            : collect();
 
-        $totalPorsi = ($unitBisnis->total_makanan_terjual ?? 0) + $pesanans->sum('jumlah_porsi');
+        $totalPorsi = $pesanans->sum('jumlah_porsi');
 
-        $totalKg = ($unitBisnis->total_berat_terjual ?? 0) + $pesanans->sum(function ($pesanan) {
-            return ($pesanan->menuAktif->masterMakanan->berat ?? 0) * $pesanan->jumlah_porsi;
+        $totalKg = $pesanans->sum(function ($pesanan) {
+            $berat = $pesanan->menuAktif->masterMakanan->berat ?? 0;
+            return $berat * $pesanan->jumlah_porsi;
         });
 
         return [
@@ -310,8 +314,10 @@ class UnitBisnisController extends Controller
             'notifikasi_penjemputan' => 'nullable',
         ], [
             'jam_buka.required' => 'Jam buka harus diisi',
+            'jam_buka.date_format' => 'Format jam buka tidak valid',
             'jam_tutup.required' => 'Jam tutup harus diisi',
-            'jam_tutup.after' => 'Jam tutup harus lebih besar dari jam buka',
+            'jam_tutup.date_format' => 'Format jam tutup tidak valid',
+            'jam_tutup.after' => 'Jam tutup harus setelah jam buka',
             'radius_penjemputan.required' => 'Radius penjemputan harus diisi',
             'radius_penjemputan.min' => 'Radius minimum 1 km',
             'radius_penjemputan.max' => 'Radius maksimal 50 km',
