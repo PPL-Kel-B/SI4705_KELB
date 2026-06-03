@@ -100,7 +100,7 @@ class PembayaranController extends Controller
 
         if ($pesanan) {
             if ($status === 'Berhasil') {
-                $pesanan->update(['status' => 'proses']); 
+                $pesanan->update(['status' => 'dibayar']); 
                 
                 Pembayaran::where('pesanan_id', $pesanan->id)->update([
                     'status' => 'berhasil', 

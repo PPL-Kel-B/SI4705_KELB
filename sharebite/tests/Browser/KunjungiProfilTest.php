@@ -30,13 +30,9 @@ class KunjungiProfilTest extends DuskTestCase
             $profile = \App\Models\UnitBisnisProfile::create([
                 'user_id' => $userUnitBisnis->id,
                 'nama_usaha' => 'katsuna',
-                'nama_bisnis' => 'katsuna',
                 'jenis_usaha' => 'Kafe',
-                'tipe_bisnis' => 'Kafe',
-                'email_bisnis' => 'katsuna@gmail.com',
                 'jam_buka' => '08:00',
                 'jam_tutup' => '21:00',
-                'no_telepon' => '08787978797879',
                 'status_verifikasi' => 'terverifikasi'
             ]);
         }

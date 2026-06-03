@@ -313,7 +313,7 @@
                         {{-- Jika belum ada foto, tampilkan inisial nama bisnis --}}
                         @php
                             $namaBisnis = Auth::check() && Auth::user()->unitBisnisProfile
-                                ? (Auth::user()->unitBisnisProfile->nama_bisnis ?? Auth::user()->name)
+                                ? (Auth::user()->unitBisnisProfile->nama_usaha ?? Auth::user()->name)
                                 : Auth::user()->name ?? '';
                             $words = array_filter(explode(' ', trim($namaBisnis)));
                             $initials = count($words) >= 2

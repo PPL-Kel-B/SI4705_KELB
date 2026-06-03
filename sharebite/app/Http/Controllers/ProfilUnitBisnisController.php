@@ -38,8 +38,8 @@ class ProfilUnitBisnisController extends Controller
                 'header_image' => $profile->header_image ? asset($profile->header_image) : null,
                 'jam_buka' => $profile->jam_buka ? date('H:i', strtotime($profile->jam_buka)) : '08:00',
                 'jam_tutup' => $profile->jam_tutup ? date('H:i', strtotime($profile->jam_tutup)) : '20:00',
-                'no_telepon' => $profile->no_telepon ?? $profile->user->no_hp ?? '-',
-                'email' => $profile->email_bisnis ?? $profile->user->email ?? '-'
+                'no_telepon' => $profile->user->no_hp ?? '-',
+                'email' => $profile->user->email ?? '-'
             ];
 
             // Ambil makanan aktif real dari database untuk unit bisnis ini
@@ -304,7 +304,7 @@ class ProfilUnitBisnisController extends Controller
                 'unit_bisnis_id' => $activeMenu->unit_bisnis_id,
                 'nama_usaha' => $activeMenu->unitBisnis->nama_usaha,
                 'alamat' => $activeMenu->unitBisnis->user->alamat ?? 'Alamat belum diatur',
-                'foto_profile' => $activeMenu->unitBisnis->foto_profile ? asset('storage/' . $activeMenu->unitBisnis->foto_profile) : null,
+                'foto_profile' => $activeMenu->unitBisnis->foto_bisnis ? asset($activeMenu->unitBisnis->foto_bisnis) : null,
             ];
         } else {
             // FALLBACK: Gunakan data mockup buah salad jika kosong
