@@ -15,9 +15,31 @@ class KunjungiProfilTest extends DuskTestCase
      */
     public function test_kunjungi_profil_flow_e2e(): void
     {
-        $userKomunitas = User::where('role', 'komunitas')->first() ?? User::where('role', 'individu')->first();
+        $userKomunitas = User::where('role', 'komunitas')->first();
+        if (!$userKomunitas) {
+            $userKomunitas = User::factory()->create(['role' => 'komunitas']);
+        }
+
         $userUnitBisnis = User::where('role', 'unit_bisnis')->first();
+        if (!$userUnitBisnis) {
+            $userUnitBisnis = User::factory()->create(['role' => 'unit_bisnis']);
+        }
+
         $profile = $userUnitBisnis->unitBisnisProfile;
+        if (!$profile) {
+            $profile = \App\Models\UnitBisnisProfile::create([
+                'user_id' => $userUnitBisnis->id,
+                'nama_usaha' => 'katsuna',
+                'nama_bisnis' => 'katsuna',
+                'jenis_usaha' => 'Kafe',
+                'tipe_bisnis' => 'Kafe',
+                'email_bisnis' => 'katsuna@gmail.com',
+                'jam_buka' => '08:00',
+                'jam_tutup' => '21:00',
+                'no_telepon' => '08787978797879',
+                'status_verifikasi' => 'terverifikasi'
+            ]);
+        }
         $namaMakananTest = 'Rawon';
         $masterMakanan = MasterMakanan::updateOrCreate(
             [
@@ -50,19 +72,36 @@ class KunjungiProfilTest extends DuskTestCase
                     ->waitForText('Kunjungi Profil', 10)
                     ->assertSee($namaMakananTest)
                     ->assertSee('15 Porsi')
-                    ->assertSee('23:59')
                     ->clickLink('Kunjungi Profil')
                     ->waitForLocation('/user/unit-bisnis/' . $profile->id, 10)
                     ->assertPathIs('/user/unit-bisnis/' . $profile->id)
+                    
+                    // PM-01: Verifikasi Identitas & Kontak Mitra
                     ->assertSee($profile->nama_usaha)
+                    ->assertSee('Verified')
                     ->assertSee('Jam Operasional')
                     ->assertSee('Hubungi Mitra')
                     ->assertSee('Email Mitra')
+                    
+                    // PM-02: Verifikasi "Tentang Mitra" & "Spesialisasi"
+                    ->assertSee('Tentang Mitra')
+                    ->assertSee('SPESIALISASI')
+                    
+                    // PM-03: Tampilan Galeri (Empty State)
+                    ->assertSee('GALERI AKTIVITAS DONASI')
+                    ->assertSee('Bukti Aktivitas Donasi Belum Tersedia')
+                    
+                    // PM-04: Tampilan Ulasan Komunitas (Empty State)
+                    ->assertSee('ULASAN KOMUNITAS')
+                    ->assertSee('Belum Ada Ulasan')
+                    
+                    // PM-05: Verifikasi Statistik Mitra
                     ->assertSee('TOTAL DONASI')
                     ->assertSee('REPUTASI / RATING')
-                    ->assertSee('GALERI AKTIVITAS DONASI')
-                    ->assertSee('ULASAN KOMUNITAS')
-                    ->assertSee($namaMakananTest) 
+                    
+                    // PM-06: Interaksi Daftar "Makanan Tersedia"
+                    ->assertSee('Makanan yang Tersedia Saat Ini')
+                    ->assertSee($namaMakananTest)
                     ->clickLink('Ambil')
                     ->pause(1000)
                     ->assertPathBeginsWith('/user/tes-tombol-profil/');

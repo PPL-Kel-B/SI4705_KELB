@@ -31,10 +31,11 @@ class ProfilUnitBisnisController extends Controller
                 'nama' => $profile->nama_usaha,
                 'kategori' => $profile->jenis_usaha ? $profile->jenis_usaha . ' Verified' : 'Partner Verified',
                 'alamat' => $profile->user->alamat ?? 'Alamat belum diisi',
-                'deskripsi' => $profile->reviewer_notes ?? 'Unit bisnis ini berdedikasi meminimalisir food waste dengan membagikan makanan berkualitas.',
+                'deskripsi' => $profile->deskripsi ?? 'Unit bisnis ini berdedikasi meminimalisir food waste dengan membagikan makanan berkualitas.',
                 'total_donasi' => ($profile->total_makanan_terjual ?? 0) . ' Porsi',
                 'rating' => $ratingString,
-                'foto_profile' => $profile->foto_profile ? asset('storage/' . $profile->foto_profile) : null,
+                'foto_profile' => $profile->foto_bisnis ? asset($profile->foto_bisnis) : null,
+                'header_image' => $profile->header_image ? asset($profile->header_image) : null,
                 'jam_buka' => $profile->jam_buka ? date('H:i', strtotime($profile->jam_buka)) : '08:00',
                 'jam_tutup' => $profile->jam_tutup ? date('H:i', strtotime($profile->jam_tutup)) : '20:00',
                 'no_telepon' => $profile->no_telepon ?? $profile->user->no_hp ?? '-',
@@ -149,6 +150,7 @@ class ProfilUnitBisnisController extends Controller
                 'total_donasi' => '520 Porsi',
                 'rating' => '4.9 (120 Ulasan)',
                 'foto_profile' => null,
+                'header_image' => null,
                 'jam_buka' => '08:00',
                 'jam_tutup' => '21:00',
                 'no_telepon' => '0812-3456-7890',
@@ -225,6 +227,7 @@ class ProfilUnitBisnisController extends Controller
                     'skor_rating' => 5,
                     'catatan_pengalaman' => 'Makanan sangat lezat dan bersih! Porsinya pas banget untuk makan siang. Penjual sangat ramah dan proses penjemputan sangat cepat.',
                     'created_at' => now()->subDays(1),
+                    'foto_bukti_berbagi' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80',
                     'user' => (object) [
                         'name' => 'Budi Santoso'
                     ]
@@ -233,6 +236,7 @@ class ProfilUnitBisnisController extends Controller
                     'skor_rating' => 4,
                     'catatan_pengalaman' => 'Sangat mengapresiasi kebersihan kemasannya. Sangat membantu masyarakat sekitar dalam mengurangi sampah makanan.',
                     'created_at' => now()->subDays(3),
+                    'foto_bukti_berbagi' => null,
                     'user' => (object) [
                         'name' => 'Siti Aminah'
                     ]
