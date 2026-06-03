@@ -19,11 +19,21 @@
             {{-- Card Profil Unit Bisnis --}}
             <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-gray-100 flex flex-col w-full flex-1">
                 {{-- Banner Latar Belakang --}}
-                <div class="h-40 bg-gradient-to-br from-[#1cb764] to-[#148f4c] relative shrink-0">
+                @if($unitBisnis->header_image)
+                <div class="h-48 md:h-56 w-full relative shrink-0 bg-gray-900 overflow-hidden">
+                    {{-- Efek Latar Belakang Blur --}}
+                    <div class="absolute inset-0 bg-cover bg-center blur-xl opacity-60 scale-110" style="background-image: url('{{ $unitBisnis->header_image }}');"></div>
+                    {{-- Gambar Asli (Tidak Terpotong) --}}
+                    <img src="{{ $unitBisnis->header_image }}" class="absolute inset-0 w-full h-full object-contain drop-shadow-lg" alt="Header Profil">
+                    {{-- Overlay Gradien agar teks/badge lebih terbaca --}}
+                    <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/20"></div>
+                @else
+                <div class="h-40 md:h-48 bg-gradient-to-br from-[#1cb764] to-[#148f4c] relative shrink-0">
                     <div class="absolute inset-0 opacity-25 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                @endif
                     
                     {{-- Glassmorphism Verified Lencana --}}
-                    <span class="bg-white/20 backdrop-blur-md text-white text-[10px] font-black tracking-wider uppercase px-3 py-1 rounded-full border border-white/20 absolute top-4 right-4">
+                    <span class="bg-white/20 backdrop-blur-md text-white text-[10px] font-black tracking-wider uppercase px-3 py-1 rounded-full border border-white/20 absolute top-4 right-4 z-10">
                         Verified Partner
                     </span>
                 </div>
@@ -297,18 +307,26 @@
                         <div class="space-y-4 max-h-[320px] overflow-y-auto pr-1">
                             @foreach($ulasans as $ulasan)
                                 <div class="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 transition duration-200 hover:bg-gray-50 hover:shadow-sm">
-                                    <div class="flex items-start justify-between gap-3">
+                                    <div class="flex items-center justify-between mb-2">
                                         <div class="flex items-center gap-3">
                                             <div class="w-9 h-9 rounded-full bg-emerald-50 text-[#1cb764] flex items-center justify-center font-bold text-sm border border-[#1cb764]/10 shrink-0">
                                                 {{ strtoupper(substr($ulasan->user->name ?? 'U', 0, 1)) }}
                                             </div>
                                             <div>
-                                                <h4 class="text-xs font-black text-gray-800 leading-none">{{ $ulasan->user->name ?? 'Pengguna Anonim' }}</h4>
-                                                <p class="text-[9px] text-gray-400 font-semibold mt-1">
-                                                    {{ $ulasan->created_at instanceof \Carbon\Carbon ? $ulasan->created_at->diffForHumans() : (\Carbon\Carbon::parse($ulasan->created_at)->diffForHumans()) }}
+                                                <h4 class="text-sm font-black text-gray-800 leading-none">{{ $ulasan->user->name ?? 'Pengguna Anonim' }}</h4>
+                                                <p class="text-[10px] text-gray-400 font-semibold mt-1">
+                                                    Pelanggan ShareBite
                                                 </p>
                                             </div>
                                         </div>
+                                        <button class="text-gray-400 hover:text-gray-600 p-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="flex items-center gap-2 mb-2">
                                         <div class="flex items-center gap-0.5 text-yellow-400">
                                             @for($i = 1; $i <= 5; $i++)
                                                 <svg class="w-3.5 h-3.5" fill="{{ $i <= $ulasan->skor_rating ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -316,10 +334,20 @@
                                                 </svg>
                                             @endfor
                                         </div>
+                                        <span class="text-[10px] text-gray-400 font-medium">
+                                            {{ $ulasan->created_at instanceof \Carbon\Carbon ? $ulasan->created_at->diffForHumans() : (\Carbon\Carbon::parse($ulasan->created_at)->diffForHumans()) }}
+                                        </span>
                                     </div>
-                                    <p class="text-xs text-gray-600 font-medium mt-3 leading-relaxed">
+
+                                    <p class="text-xs text-gray-800 font-medium leading-relaxed">
                                         {{ $ulasan->catatan_pengalaman ?? 'Tidak ada komentar tertulis.' }}
                                     </p>
+
+                                    @if(!empty($ulasan->foto_bukti_berbagi))
+                                        <div class="mt-3 rounded-xl overflow-hidden border border-gray-100 shadow-sm cursor-pointer hover:opacity-90 transition-opacity" @click="openGalleryModal = true">
+                                            <img src="{{ str_starts_with($ulasan->foto_bukti_berbagi, 'http') ? $ulasan->foto_bukti_berbagi : asset('storage/' . $ulasan->foto_bukti_berbagi) }}" alt="Foto Ulasan" class="w-full h-48 object-cover">
+                                        </div>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
