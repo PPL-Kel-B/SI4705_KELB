@@ -18,8 +18,24 @@ class PembayaranController extends Controller
         $qty = $request->input('qty', 1);
         $user = auth()->user();
 
-        // Cari berdasarkan ID Menu Aktif (Sangat Akurat)
-        $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($id);
+        // 1. Deteksi apakah ID yang masuk adalah ID Pesanan atau ID Menu Aktif
+        $pesananExist = Pesanan::where('id', $id)->where('user_id', $user->id)->first();
+
+        if ($pesananExist) {
+            // Jika ID Pesanan (Akses dari Halaman Riwayat)
+            $menuAktifId = $pesananExist->menu_aktif_id;
+            $pesanan = $pesananExist;
+        } else {
+            // Jika ID Menu Aktif (Akses klik beli baru dari Dashboard)
+            $menuAktifId = $id;
+            $pesanan = Pesanan::where('user_id', $user->id)
+                            ->where('menu_aktif_id', $menuAktifId)
+                            ->where('status', 'menunggu_pembayaran')
+                            ->first();
+        }
+
+        // 2. Ambil data makanan berdasarkan ID Menu Aktif yang sudah divalidasi
+        $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($menuAktifId);
 
         if ($makanan->is_gratis == 1) { 
             $subtotal = 0;
@@ -27,11 +43,7 @@ class PembayaranController extends Controller
             $subtotal = $makanan->harga_jual * $qty;
         }
 
-        $pesanan = Pesanan::where('user_id', $user->id)
-                    ->where('menu_aktif_id', $makanan->id)
-                    ->where('status', 'menunggu_pembayaran')
-                    ->first();
-
+        // 3. Sinkronisasi atau pembuatan data pesanan baru
         if ($pesanan) {
             $pesanan->update([
                 'jumlah_porsi' => $qty,
@@ -72,12 +84,19 @@ class PembayaranController extends Controller
         $qty = $request->input('qty', 1);
         $user = auth()->user();
 
-        $makanan = MenuAktif::findOrFail($id);
+        // Deteksi ID yang masuk untuk pencarian data pesanan yang valid
+        $pesananExist = Pesanan::where('id', $id)->where('user_id', $user->id)->first();
 
-        $pesanan = Pesanan::where('user_id', $user->id)
-                    ->where('menu_aktif_id', $makanan->id)
-                    ->where('status', 'menunggu_pembayaran')
-                    ->first();
+        if ($pesananExist) {
+            $pesanan = $pesananExist;
+            $makanan = MenuAktif::findOrFail($pesanan->menu_aktif_id);
+        } else {
+            $makanan = MenuAktif::findOrFail($id);
+            $pesanan = Pesanan::where('user_id', $user->id)
+                            ->where('menu_aktif_id', $makanan->id)
+                            ->where('status', 'menunggu_pembayaran')
+                            ->first();
+        }
 
         if ($pesanan) {
             if ($status === 'Berhasil') {
@@ -90,6 +109,7 @@ class PembayaranController extends Controller
 
                 $makanan->decrement('stok_porsi', $pesanan->jumlah_porsi);
 
+                // Mengembalikan $id parameter asli agar redirect route mencocokkan URL asal
                 return redirect()->route('user.pembayaran.berhasil', ['id' => $id, 'qty' => $qty]);
             } else {
                 $pesanan->update(['status' => 'dibatalkan']);
@@ -109,13 +129,20 @@ class PembayaranController extends Controller
     {
         $user = auth()->user();
 
-        $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($id);
+        // Deteksi apakah ID dari halaman riwayat (ID Pesanan) atau dari alur pembayaran langsung (ID Menu)
+        $pesananDirect = Pesanan::where('id', $id)->where('user_id', $user->id)->first();
 
-        $pesanan = Pesanan::where('user_id', $user->id)
-                    ->where('menu_aktif_id', $makanan->id)
-                    ->where('status', 'proses') 
-                    ->latest()
-                    ->firstOrFail();
+        if ($pesananDirect) {
+            $pesanan = $pesananDirect;
+            $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($pesanan->menu_aktif_id);
+        } else {
+            $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($id);
+            $pesanan = Pesanan::where('user_id', $user->id)
+                        ->where('menu_aktif_id', $makanan->id)
+                        ->whereIn('status', ['proses', 'siap_diambil', 'dibayar']) 
+                        ->latest()
+                        ->firstOrFail();
+        }
 
         $subtotal = $pesanan->total_harga; 
         $kode_verifikasi = $pesanan->kode_unik; 

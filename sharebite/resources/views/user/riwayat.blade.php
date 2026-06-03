@@ -131,10 +131,13 @@
                     $statusPesanan = $pesanan->status;
 
                     if ($statusPesanan == 'menunggu_pembayaran') {
-                        $urlTujuan = route('user.pembayaran', $pesanan->id);
+                        // Diubah mengirim menu_aktif_id agar sesuai dengan ekspektasi PembayaranController
+                        $urlTujuan = route('user.makanan.pembayaran', $pesanan->menu_aktif_id);
                     } elseif (in_array($statusPesanan, ['proses', 'siap_diambil', 'dibayar'])) {
-                        $urlTujuan = route('user.pembayaran.berhasil', $pesanan->id);
+                        // Diubah mengirim menu_aktif_id juga di sini
+                        $urlTujuan = route('user.pembayaran.berhasil', $pesanan->menu_aktif_id);
                     } else {
+                        // Khusus detail riwayat biasa tetap gunakan ID pesanan
                         $urlTujuan = route('user.riwayat.show', $pesanan->id);
                     }
                 @endphp
