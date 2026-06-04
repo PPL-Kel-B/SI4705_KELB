@@ -18,9 +18,10 @@ class PembayaranController extends Controller
         $qty = $request->input('qty', 1);
         $user = auth()->user();
 
-        // Cari berdasarkan ID Menu Aktif (Sangat Akurat)
+        // Cari berdasarkan ID Menu Aktif 
         $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($id);
 
+        // Jika makanan diset gratis, subtotal 0
         if ($makanan->is_gratis == 1) { 
             $subtotal = 0;
         } else {
@@ -33,12 +34,27 @@ class PembayaranController extends Controller
                     ->first();
 
         if ($pesanan) {
+            // Jika ada perubahan porsi saat refresh/masuk lagi, sesuaikan stoknya
+            $selisih_porsi = $qty - $pesanan->jumlah_porsi;
+            if ($selisih_porsi != 0) {
+                $makanan->decrement('stok_porsi', $selisih_porsi);
+            }
+
             $pesanan->update([
                 'jumlah_porsi' => $qty,
                 'total_harga'  => $subtotal,
                 'waktu_pesan'  => now(),
             ]);
         } else {
+            // KURANGI STOK SAAT BARU MASUK HALAMAN PEMBAYARAN
+            $makanan->decrement('stok_porsi', $qty);
+
+            do {
+                $angkaAcak = mt_rand(100, 999); // Menghasilkan 3 angka (100 - 999)
+                $hurufAcak = substr(str_shuffle("ABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 3); // Menghasilkan 3 huruf kapital
+                $kodeBaru = 'SB-' . $angkaAcak . '-' . $hurufAcak;
+            } while (Pesanan::where('kode_unik', $kodeBaru)->exists()); // Ulangi terus jika kodenya sudah ada di database
+
             $pesanan = Pesanan::create([
                 'user_id'        => $user->id,
                 'menu_aktif_id'  => $makanan->id,
@@ -46,7 +62,7 @@ class PembayaranController extends Controller
                 'unit_bisnis_id' => $makanan->unit_bisnis_id,
                 'jumlah_porsi'   => $qty,
                 'total_harga'    => $subtotal,
-                'kode_unik'      => 'SB-' . rand(1000, 9999) . '-' . strtoupper(Str::random(3)),
+                'kode_unik'      => $kodeBaru, // Masukkan kode yang sudah dijamin unik
                 'waktu_pesan'    => now(),
             ]);
         }
@@ -81,14 +97,14 @@ class PembayaranController extends Controller
 
         if ($pesanan) {
             if ($status === 'Berhasil') {
-                $pesanan->update(['status' => 'proses']); 
+                $pesanan->update(['status' => 'dibayar']); 
                 
                 Pembayaran::where('pesanan_id', $pesanan->id)->update([
                     'status' => 'berhasil', 
                     'waktu_bayar' => now(),
                 ]);
 
-                $makanan->decrement('stok_porsi', $pesanan->jumlah_porsi);
+                // Stok TIDAK dikurangi lagi di sini karena sudah dikurangi di fungsi show()
 
                 return redirect()->route('user.pembayaran.berhasil', ['id' => $id, 'qty' => $qty]);
             } else {
@@ -97,6 +113,9 @@ class PembayaranController extends Controller
                 Pembayaran::where('pesanan_id', $pesanan->id)->update([
                     'status' => 'gagal', 
                 ]);
+
+                // KEMBALIKAN STOK karena pesanan batal/waktu habis
+                $makanan->increment('stok_porsi', $pesanan->jumlah_porsi);
 
                 return redirect()->route('user.riwayat')->with('status_pembayaran', 'Gagal');
             }
@@ -113,7 +132,7 @@ class PembayaranController extends Controller
 
         $pesanan = Pesanan::where('user_id', $user->id)
                     ->where('menu_aktif_id', $makanan->id)
-                    ->where('status', 'proses') 
+                    ->where('status', 'dibayar') 
                     ->latest()
                     ->firstOrFail();
 
