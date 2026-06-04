@@ -21,6 +21,7 @@
      data-lat="{{ $makanan->unitBisnis->user->latitude ?? -6.193125 }}" 
      data-lng="{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}"
      data-ref="{{ $ref ?? 'SB-00000000' }}"
+     data-seconds="{{ $remainingSeconds ?? 900 }}"
      data-total="{{ $makanan->is_gratis ? 'GRATIS' : 'Rp ' . number_format($subtotal ?? 0, 0, ',', '.') }}"
      style="display:none;">
 </div>
@@ -248,25 +249,12 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         const timerEl = document.getElementById('payment-timer');
         if (timerEl) {
-            // Kita ambil data ref dari meta di atas (sudah tersedia)
-            const refCode = meta.ref || 'SB-00000000';
+            let timeLeft = parseInt(meta.seconds) || 900;
             
-            // Ubah kunci agar unik untuk setiap transaksi/pesanan
-            const storageKey = 'timer_bayar_' + refCode;
-            
-            let expireTime = localStorage.getItem(storageKey);
-            if (expireTime) expireTime = parseInt(expireTime, 10);
-            if (!expireTime || isNaN(expireTime) || expireTime < Date.now()) {
-                expireTime = Date.now() + (15 * 60 * 1000); 
-                localStorage.setItem(storageKey, expireTime.toString());
-            }
             const interval = setInterval(() => {
-                const now = Date.now();
-                const timeLeft = Math.floor((expireTime - now) / 1000); 
                 if (timeLeft <= 0) {
                     clearInterval(interval);
                     timerEl.textContent = '00:00';
-                    localStorage.removeItem(storageKey); 
                     const formBatal = document.getElementById('form-batal-otomatis');
                     if(formBatal) formBatal.submit();
                     return;
@@ -274,6 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const m = Math.floor(timeLeft / 60);
                 const s = timeLeft % 60;
                 timerEl.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+                timeLeft--;
             }, 1000);
         }
     } catch (e) {}
