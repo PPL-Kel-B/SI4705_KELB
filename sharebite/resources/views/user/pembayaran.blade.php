@@ -248,8 +248,12 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         const timerEl = document.getElementById('payment-timer');
         if (timerEl) {
-            const cleanName = slugMenu.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-            const storageKey = 'timer_bayar_' + cleanName;
+            // Kita ambil data ref dari meta di atas (sudah tersedia)
+            const refCode = meta.ref || 'SB-00000000';
+            
+            // Ubah kunci agar unik untuk setiap transaksi/pesanan
+            const storageKey = 'timer_bayar_' + refCode;
+            
             let expireTime = localStorage.getItem(storageKey);
             if (expireTime) expireTime = parseInt(expireTime, 10);
             if (!expireTime || isNaN(expireTime) || expireTime < Date.now()) {

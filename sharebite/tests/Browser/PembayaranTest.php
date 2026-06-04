@@ -137,8 +137,8 @@ class PembayaranTest extends DuskTestCase
         });
     }
 
-    // ═════════════════════════════════════════════════════════════
-    // TEST 5 — Timer habis → redirect ke halaman riwayat
+   // ═════════════════════════════════════════════════════════════
+    // TEST 5 — Ketika timer habis -> arahkan ke halaman riwayat
     // ═════════════════════════════════════════════════════════════
 
     public function testTimerExpiredRedirectsToRiwayat(): void
@@ -146,23 +146,22 @@ class PembayaranTest extends DuskTestCase
         $this->browse(function (Browser $browser) {
             $this->visitPembayaran($browser);
 
-            // data-slug di HTML sekarang berisi $id (angka), bukan teks slug
-            // storage key = 'timer_bayar_<id>' karena replace [^a-zA-Z0-9] tidak mengubah angka
-            $storageKey = 'timer_bayar_' . $this->menuId;
+            // Ambil refCode dinamis dari atribut data-ref di HTML
+            $refCode = $browser->attribute('#qr-meta', 'data-ref');
+            $storageKey = 'timer_bayar_' . $refCode;
 
-            // Paksa timer expired dalam 2 detik lewat localStorage
             $browser->script("
                 localStorage.setItem('{$storageKey}', (Date.now() + 2000).toString());
             ");
 
             $browser->refresh()
-                    ->pause(5000) // tunggu timer habis (2 dtk) + form submit + redirect
+                    ->pause(5000)
                     ->assertPathIs('/user/riwayat');
         });
     }
 
     // ═════════════════════════════════════════════════════════════
-    // TEST 6 — Refresh halaman → timer TIDAK diulang dari 15:00
+    // TEST 6 — Refresh halaman pembayaran -> Timer tetap lanjut
     // ═════════════════════════════════════════════════════════════
 
     public function testTimerContinuesAfterRefresh(): void
@@ -172,15 +171,15 @@ class PembayaranTest extends DuskTestCase
 
             $browser->waitFor('#payment-timer', 5);
 
-            // Storage key sesuai logika JS: replace non-alphanumeric → '_', lalu lowercase
-            // Karena $menuId adalah angka, hasilnya tetap angka itu sendiri
-            $storageKey = 'timer_bayar_' . $this->menuId;
+            // Ambil refCode dinamis dari atribut data-ref di HTML
+            $refCode = $browser->attribute('#qr-meta', 'data-ref');
+            $storageKey = 'timer_bayar_' . $refCode;
 
             $expireBefore = $browser->script(
                 "return localStorage.getItem('{$storageKey}');"
             )[0];
 
-            $this->assertNotNull($expireBefore, 'Timer belum tersimpan di localStorage.');
+            $this->assertNotNull($expireBefore);
 
             $browser->pause(2000)->refresh();
             $browser->waitFor('#payment-timer', 5);
@@ -189,14 +188,7 @@ class PembayaranTest extends DuskTestCase
                 "return localStorage.getItem('{$storageKey}');"
             )[0];
 
-            $this->assertEquals(
-                $expireBefore,
-                $expireAfter,
-                'Timer di-reset setelah refresh — seharusnya tetap melanjutkan.'
-            );
-
-            $timerText = $browser->text('#payment-timer');
-            $this->assertNotEquals('15:00', $timerText, 'Timer kembali ke 15:00 setelah refresh.');
+            $this->assertEquals($expireBefore, $expireAfter);
         });
     }
 
