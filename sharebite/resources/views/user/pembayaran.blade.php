@@ -142,7 +142,7 @@
                         <p class="text-gray-500 font-medium text-[15px] mb-5 leading-relaxed">{{ $makanan->unitBisnis->user->alamat ?? 'Alamat gerai belum diatur' }}</p>
                         <a href="https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}" target="_blank" class="text-[#189347] text-[14px] font-bold flex items-center gap-1.5 hover:underline w-fit">
                             Buka di Google Maps
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                         </a>
                     </div>
                 </div>
@@ -176,7 +176,7 @@
 
                     <button type="button" onclick="downloadQR()" class="w-full bg-[#189347] hover:bg-[#147a3a] active:scale-[0.98] text-white font-extrabold text-[15px] py-4 rounded-[18px] transition-all flex items-center justify-center gap-2 mb-4">
                         Unduh QR Code
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
                     </button>
 
                     <div class="flex items-center justify-center gap-1.5 text-gray-400 text-[10px] font-extrabold tracking-widest mt-2">
@@ -204,6 +204,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const meta = document.getElementById('qr-meta').dataset;
+    const idPesanan = meta.id;
     const slugMenu = meta.slug;
 
     try {

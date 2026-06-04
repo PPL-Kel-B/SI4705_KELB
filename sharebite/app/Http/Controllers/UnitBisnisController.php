@@ -18,10 +18,8 @@ class UnitBisnisController extends Controller
         if (!$unitBisnis) {
             $unitBisnis = new UnitBisnisProfile([
                 'user_id' => $user->id,
-                'nama_usaha' => null,
-                'email_bisnis' => null,
-                'no_telepon' => null,
-                'tipe_bisnis' => null,
+                'nama_usaha' => $user->name,
+                'jenis_usaha' => null,
                 'lokasi_lat' => '-6.9271',
                 'lokasi_lng' => '107.6411',
                 'radius_penjemputan' => 15,
@@ -35,15 +33,19 @@ class UnitBisnisController extends Controller
 
         $unitBisnis->alamat = $user->alamat ?? '';
 
-        $pesanans = Pesanan::where('user_id', $user->id)
-            ->where('status', '!=', 'dibatalkan')
-            ->with('menuAktif.masterMakanan')
-            ->get();
+        // Ambil semua pesanan selesai milik unit bisnis ini berdasarkan unit_bisnis_id
+        $pesanans = $unitBisnis->id
+            ? Pesanan::where('unit_bisnis_id', $unitBisnis->id)
+                ->where('status', 'selesai')
+                ->with('menuAktif.masterMakanan')
+                ->get()
+            : collect();
 
-        $totalPorsi = ($unitBisnis->total_makanan_terjual ?? 0) + $pesanans->sum('jumlah_porsi');
+        $totalPorsi = $pesanans->sum('jumlah_porsi');
 
-        $totalKg = ($unitBisnis->total_berat_terjual ?? 0) + $pesanans->sum(function ($pesanan) {
-            return ($pesanan->menuAktif->masterMakanan->berat ?? 0) * $pesanan->jumlah_porsi;
+        $totalKg = $pesanans->sum(function ($pesanan) {
+            $berat = $pesanan->menuAktif->masterMakanan->berat ?? 0;
+            return $berat * $pesanan->jumlah_porsi;
         });
 
         return [
@@ -83,48 +85,56 @@ class UnitBisnisController extends Controller
         $user = Auth::user();
 
         $validated = $request->validate([
-            'nama_bisnis' => 'required|string|max:255',
-            'email_bisnis' => 'required|email|max:255',
-            'no_telepon' => 'required|regex:/^[0-9+\-() ]+$/',
-            'tipe_bisnis' => 'nullable|string|max:100',
-            'alamat' => 'required|string|max:500',
+            'nama_bisnis' => 'nullable|string|max:255',
+            'email_bisnis' => 'nullable|email|max:255',
+            'no_telepon' => ['nullable', 'string', 'regex:/^[0-9+\-() ]+$/'],
+            'jenis_usaha' => 'nullable|string|max:100',
+            'deskripsi' => 'nullable|string|max:1000',
+            'alamat' => 'nullable|string|max:500',
             'lokasi_lat' => 'nullable|numeric',
             'lokasi_lng' => 'nullable|numeric',
-            'foto_bisnis' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'foto_bisnis' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+            'header_image' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
             'delete_photo' => 'nullable|in:0,1',
+            'delete_header' => 'nullable|in:0,1',
         ], [
-            'nama_bisnis.required' => 'Nama bisnis harus diisi',
-            'email_bisnis.required' => 'Email bisnis harus diisi',
             'email_bisnis.email' => 'Email tidak valid',
-            'no_telepon.required' => 'Nomor telepon harus diisi',
             'no_telepon.regex' => 'Nomor telepon harus berupa angka (format: 08xx atau +62xxx)',
-            'tipe_bisnis.required' => 'Tipe bisnis harus dipilih',
-            'alamat.required' => 'Alamat harus diisi',
-            'foto_bisnis.image' => 'File harus berupa gambar',
-            'foto_bisnis.max' => 'Ukuran gambar maksimal 2MB',
+            'deskripsi.max' => 'Deskripsi maksimal 1000 karakter',
+            'foto_bisnis.image' => 'File foto profil harus berupa gambar.',
+            'foto_bisnis.mimes' => 'Format foto profil tidak didukung. Gunakan format: JPG atau PNG.',
+            'foto_bisnis.max' => 'Ukuran foto profil maksimal 10MB.',
+            'header_image.image' => 'File header harus berupa gambar.',
+            'header_image.mimes' => 'Format gambar header tidak didukung. Gunakan format: JPG atau PNG.',
+            'header_image.max' => 'Ukuran gambar header maksimal 10MB.',
         ]);
 
         $unitBisnis = UnitBisnisProfile::firstOrCreate(
             ['user_id' => $user->id],
             [
-                'nama_usaha' => null,
-                'email_bisnis' => null,
-                'no_telepon' => null,
-                'tipe_bisnis' => null,
+                'nama_usaha' => $user->name,
+                'jenis_usaha' => null,
                 'foto_bisnis' => 'images/placeholder-bisnis.jpg',
                 'verified' => true,
                 'tahun_bergabung' => now()->year,
             ]
         );
 
-        $user->name = $validated['nama_bisnis'];
-        $user->alamat = $validated['alamat'];
-        $user->no_hp = $validated['no_telepon'];
-
+        if (!empty($validated['nama_bisnis'])) {
+            $user->name = $validated['nama_bisnis'];
+        }
+        if (!empty($validated['email_bisnis'])) {
+            $user->email = $validated['email_bisnis'];
+        }
+        if (!empty($validated['alamat'])) {
+            $user->alamat = $validated['alamat'];
+        }
+        if (!empty($validated['no_telepon'])) {
+            $user->no_hp = $validated['no_telepon'];
+        }
         if (!empty($validated['lokasi_lat'])) {
             $user->latitude = $validated['lokasi_lat'];
         }
-
         if (!empty($validated['lokasi_lng'])) {
             $user->longitude = $validated['lokasi_lng'];
         }
@@ -153,11 +163,41 @@ class UnitBisnisController extends Controller
             $validated['foto_bisnis'] = 'images/bisnis/' . $filename;
         }
 
-        $profileData = $validated;
-        $profileData['nama_usaha'] = $validated['nama_bisnis'];
+        if ($request->input('delete_header') == '1') {
+            $this->deleteOldHeaderImage($unitBisnis);
+            $validated['header_image'] = null;
+        }
 
+        if ($request->hasFile('header_image')) {
+            $this->deleteOldHeaderImage($unitBisnis);
+
+            $file = $request->file('header_image');
+            $filename = 'header_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+
+            $file->move($uploadPath, $filename);
+
+            $validated['header_image'] = 'images/bisnis/' . $filename;
+        }
+
+        $profileData = array_filter($validated, fn($v) => $v !== null);
+
+        if (!empty($validated['nama_bisnis'])) {
+            $profileData['nama_usaha'] = $validated['nama_bisnis'];
+        }
+
+        // header_image bisa null saat dihapus — tetap masukkan
+        if (array_key_exists('header_image', $validated)) {
+            $profileData['header_image'] = $validated['header_image'];
+        }
+
+        unset($profileData['nama_bisnis']);
+        unset($profileData['email_bisnis']);
+        unset($profileData['no_telepon']);
         unset($profileData['alamat']);
+        unset($profileData['lokasi_lat']);
+        unset($profileData['lokasi_lng']);
         unset($profileData['delete_photo']);
+        unset($profileData['delete_header']);
 
         $unitBisnis->update($profileData);
 
@@ -176,10 +216,8 @@ class UnitBisnisController extends Controller
         $unitBisnis = UnitBisnisProfile::firstOrCreate(
             ['user_id' => $user->id],
             [
-                'nama_usaha' => null,
-                'email_bisnis' => null,
-                'no_telepon' => null,
-                'tipe_bisnis' => null,
+                'nama_usaha' => $user->name,
+                'jenis_usaha' => null,
                 'foto_bisnis' => 'images/placeholder-bisnis.jpg',
                 'verified' => true,
                 'tahun_bergabung' => now()->year,
@@ -243,6 +281,20 @@ class UnitBisnisController extends Controller
         }
     }
 
+    private function deleteOldHeaderImage($unitBisnis)
+    {
+        if (
+            $unitBisnis->header_image &&
+            str_contains($unitBisnis->header_image, 'images/bisnis/')
+        ) {
+            $filePath = public_path($unitBisnis->header_image);
+
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+    }
+
     public function showSettings()
     {
         $data = $this->getUnitBisnisData();
@@ -262,8 +314,10 @@ class UnitBisnisController extends Controller
             'notifikasi_penjemputan' => 'nullable',
         ], [
             'jam_buka.required' => 'Jam buka harus diisi',
+            'jam_buka.date_format' => 'Format jam buka tidak valid',
             'jam_tutup.required' => 'Jam tutup harus diisi',
-            'jam_tutup.after' => 'Jam tutup harus lebih besar dari jam buka',
+            'jam_tutup.date_format' => 'Format jam tutup tidak valid',
+            'jam_tutup.after' => 'Jam tutup harus setelah jam buka',
             'radius_penjemputan.required' => 'Radius penjemputan harus diisi',
             'radius_penjemputan.min' => 'Radius minimum 1 km',
             'radius_penjemputan.max' => 'Radius maksimal 50 km',
@@ -272,10 +326,8 @@ class UnitBisnisController extends Controller
         $unitBisnis = UnitBisnisProfile::firstOrCreate(
             ['user_id' => $user->id],
             [
-                'nama_usaha' => null,
-                'email_bisnis' => null,
-                'no_telepon' => null,
-                'tipe_bisnis' => null,
+                'nama_usaha' => $user->name,
+                'jenis_usaha' => null,
                 'foto_bisnis' => 'images/placeholder-bisnis.jpg',
                 'verified' => true,
                 'tahun_bergabung' => now()->year,
@@ -309,12 +361,12 @@ class UnitBisnisController extends Controller
 
         $user = Auth::user();
 
-        if (!auth()->attempt(['email' => $user->email, 'password' => $request->current_password])) {
+        if (!Auth::attempt(['email' => $user->email, 'password' => $request->current_password])) {
             return back()->with('error', 'Kata sandi saat ini tidak sesuai');
         }
 
         $user->password = bcrypt($validated['password']);
-        $user->password_updated_at = now();
+        $user->password_updated_at = now()->toDateTimeString();
         $user->save();
 
         return redirect()->route('unit.profil')->with('success', 'Kata sandi berhasil diubah!');

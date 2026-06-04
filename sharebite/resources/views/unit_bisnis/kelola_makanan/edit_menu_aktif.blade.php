@@ -52,7 +52,11 @@
                     {{-- Gratiskan Toggle --}}
                     <div class="bg-[#eefcf4] p-5 rounded-2xl flex justify-between items-center border border-[#d1e6db]">
                         <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center flex-shrink-0 text-xl">🎁</div>
+                            <div class="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center flex-shrink-0 text-green-600">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V6a2 2 0 10-2 2h2zm0 0H4v13a2 2 0 002 2h12a2 2 0 002-2V8H12z" />
+                                </svg>
+                            </div>
                             <div>
                                 <h4 class="font-bold text-sm text-[#0a2e1f]">Gratiskan makanan ini</h4>
                                 <p class="text-[11px] text-green-700 mt-0.5 font-medium">Menu ini akan dibagikan secara cuma-cuma</p>

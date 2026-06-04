@@ -4,9 +4,25 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4" x-data="{ 
-    notifDonasi: true, 
-    notifEmail: false,
-    showAccountModal: false 
+    notifDonasi: {{ $user->notif_donasi ? 'true' : 'false' }}, 
+    notifEmail: {{ $user->notif_email ? 'true' : 'false' }},
+    showAccountModal: false,
+    updateSetting(key, value) {
+        fetch('{{ route('user.pengaturan.update') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ [key]: value })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.dispatchEvent(new CustomEvent('show-toast', { detail: { message: data.message } }));
+            }
+        });
+    }
 }">
     <!-- Header Section -->
     <div class="mb-6">
@@ -128,23 +144,10 @@
                             <h4 class="font-black text-[#0a2e1f] text-lg">Donasi Baru</h4>
                             <p class="text-sm text-gray-400 font-bold">Makanan tersedia di dekat Anda</p>
                         </div>
-                        <button @click="notifDonasi = !notifDonasi" 
+                        <button @click="notifDonasi = !notifDonasi; updateSetting('notif_donasi', notifDonasi)" 
                                 :class="notifDonasi ? 'bg-[#1cb764]' : 'bg-gray-200'"
                                 class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-500 focus:outline-none shadow-sm">
                             <span :class="notifDonasi ? 'translate-x-7' : 'translate-x-1'"
-                                  class="inline-block h-6 w-6 transform rounded-full bg-white transition-transform duration-500 shadow-md"></span>
-                        </button>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h4 class="font-black text-[#0a2e1f] text-lg">Email Mingguan</h4>
-                            <p class="text-sm text-gray-400 font-bold">Laporan dampak sosial Anda</p>
-                        </div>
-                        <button @click="notifEmail = !notifEmail" 
-                                :class="notifEmail ? 'bg-[#1cb764]' : 'bg-gray-200'"
-                                class="relative inline-flex h-8 w-14 items-center rounded-full transition-colors duration-500 focus:outline-none shadow-sm">
-                            <span :class="notifEmail ? 'translate-x-7' : 'translate-x-1'"
                                   class="inline-block h-6 w-6 transform rounded-full bg-white transition-transform duration-500 shadow-md"></span>
                         </button>
                     </div>
@@ -262,6 +265,24 @@
                 </button>
             </div>
         </div>
+    </div>
+
+    <!-- Toast Notification (AJAX update success) -->
+    <div x-data="{ show: false, message: '' }"
+         x-on:show-toast.window="show = true; message = $event.detail.message; setTimeout(() => show = false, 3000)"
+         x-show="show" 
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0 translate-y-[-8px] scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100 scale-100"
+         x-transition:leave-end="opacity-0 scale-95"
+         class="fixed top-6 right-6 bg-[#1cb764] text-white px-8 py-4 rounded-3xl shadow-2xl flex items-center gap-4 z-[100] font-bold border-4 border-white"
+         x-cloak>
+        <div class="bg-white/20 p-2 rounded-full">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <span x-text="message"></span>
     </div>
 
 </div>

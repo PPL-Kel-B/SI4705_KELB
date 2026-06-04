@@ -28,16 +28,11 @@ class UnitBisnisSeeder extends Seeder
             ]
         );
 
-        // Create or update unit bisnis profile
         UnitBisnisProfile::updateOrCreate(
             ['user_id' => $user->id],
             [
-                'nama_bisnis' => 'Arcamanik Hotel',
                 'nama_usaha' => 'Arcamanik Hotel',
-                'tipe_bisnis' => 'Hotel',
                 'jenis_usaha' => 'Hotel',
-                'email_bisnis' => 'partnership@arcamanikhotel.com',
-                'no_telepon' => '+62 (22) 781-4455',
                 'foto_bisnis' => 'images/placeholder-bisnis.jpg',
                 'lokasi_lat' => '-6.9271',
                 'lokasi_lng' => '107.6411',
@@ -72,12 +67,8 @@ class UnitBisnisSeeder extends Seeder
             UnitBisnisProfile::updateOrCreate(
                 ['user_id' => $testUser->id],
                 [
-                    'nama_bisnis' => 'Restoran Test ' . $i,
                     'nama_usaha' => 'Restoran Test ' . $i,
-                    'tipe_bisnis' => ['Restoran', 'Kafe', 'Bakery'][$i - 2],
                     'jenis_usaha' => ['Restoran', 'Kafe', 'Bakery'][$i - 2],
-                    'email_bisnis' => 'info' . $i . '@restorantest.com',
-                    'no_telepon' => '+62 812 ' . rand(1000, 9999) . ' ' . rand(1000, 9999),
                     'lokasi_lat' => -6.9 - (rand(10, 99) / 1000),
                     'lokasi_lng' => 107.6 + (rand(10, 99) / 1000),
                     'radius_penjemputan' => rand(10, 30),
