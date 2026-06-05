@@ -27,7 +27,8 @@ class RiwayatController extends Controller
             ->select(
                 'pesanans.*', 
                 'master_makanans.nama_makanan', 
-                'master_makanans.kategori', 
+                'master_makanans.kategori',
+                'master_makanans.foto',
                 'unit_bisnis_profiles.nama_usaha'        
             );
 
