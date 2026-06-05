@@ -67,8 +67,8 @@ class UserDashboardController extends Controller
             return $menu->computed_distance <= $radius;
         })->sortBy('computed_distance')->values();
 
-        // Ambil 4 donasi terdekat untuk ditampilkan di dashboard utama
-        $limited_nearby_donations = $nearby_donations->take(4);
+        // Ambil 6 donasi terdekat untuk ditampilkan di dashboard utama
+        $limited_nearby_donations = $nearby_donations->take(6);
 
         // 6. Hitung jumlah donatur aktif sekitar (dalam radius unit bisnis masing-masing)
         $active_donors_count = User::where('role', 'unit_bisnis')
