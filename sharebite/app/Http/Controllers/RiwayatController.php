@@ -160,6 +160,14 @@ class RiwayatController extends Controller
             'updated_at'         => now(),
         ]);
 
+        // Log activity
+        \App\Models\UserActivity::log(
+            auth()->id(),
+            'ulasan',
+            'Ulasan Dikirim',
+            'Memberikan ulasan bintang ' . $request->skor_rating . ' untuk pesanan di ' . ($pesanan->nama_usaha ?? 'Mitra') . '.'
+        );
+
         return redirect()->route('user.riwayat')->with('success', 'Bukti donasi dan ulasan rating berhasil disimpan ke dalam sistem!');
     }
 }

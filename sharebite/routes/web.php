@@ -129,9 +129,9 @@ Route::middleware('auth')->group(function () {
 
     // User Dashboard Routes
     Route::prefix('user')->name('user.')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('user.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [\App\Http\Controllers\UserDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/aktivitas', [\App\Http\Controllers\UserDashboardController::class, 'activities'])->name('activities');
+        Route::get('/donasi-terdekat', [\App\Http\Controllers\UserDashboardController::class, 'nearby'])->name('nearby');
         Route::get('/riwayat', [\App\Http\Controllers\RiwayatController::class, 'index'])->name('riwayat');
         Route::get('/riwayat/{id}', [App\Http\Controllers\RiwayatController::class, 'show'])->name('riwayat.show');
         Route::post('/riwayat/{id}/rate', [App\Http\Controllers\RiwayatController::class, 'storeRating'])->name('riwayat.storeRating');

@@ -128,6 +128,14 @@ class PembayaranController extends Controller
                     'waktu_bayar' => now(),
                 ]);
 
+                // Log activity
+                \App\Models\UserActivity::log(
+                    $user->id,
+                    'pemesanan',
+                    'Pesanan Dibuat',
+                    'Berhasil memesan ' . $pesanan->jumlah_porsi . ' porsi ' . ($makanan->masterMakanan->nama_makanan ?? 'makanan') . ' di ' . ($makanan->unitBisnis->nama_usaha ?? 'Mitra ShareBite') . '.'
+                );
+
                 // Stok TIDAK dikurangi lagi di sini karena sudah dikurangi di fungsi show()
 
                 // Mengembalikan $id parameter asli agar redirect route mencocokkan URL asal

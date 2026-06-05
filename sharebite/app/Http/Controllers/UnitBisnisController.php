@@ -194,8 +194,6 @@ class UnitBisnisController extends Controller
         unset($profileData['email_bisnis']);
         unset($profileData['no_telepon']);
         unset($profileData['alamat']);
-        unset($profileData['lokasi_lat']);
-        unset($profileData['lokasi_lng']);
         unset($profileData['delete_photo']);
         unset($profileData['delete_header']);
 
