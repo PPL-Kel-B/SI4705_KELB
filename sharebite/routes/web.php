@@ -185,9 +185,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pesanan', function () {
             return view('unit_bisnis.pesanan');
         })->name('pesanan');
-        Route::get('/riwayat', function () {
-            return view('unit_bisnis.riwayat');
-        })->name('riwayat');
+        Route::get('/riwayat', [UnitBisnisController::class, 'riwayat'])->name('riwayat');
 
         // Profil Unit Bisnis
         Route::get('/profil', [UnitBisnisController::class, 'showProfile'])->name('profil');

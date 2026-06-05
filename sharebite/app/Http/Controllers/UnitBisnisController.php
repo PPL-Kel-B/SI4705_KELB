@@ -371,4 +371,81 @@ class UnitBisnisController extends Controller
 
         return redirect()->route('unit.profil')->with('success', 'Kata sandi berhasil diubah!');
     }
+
+    public function riwayat(Request $request)
+    {
+        $data = $this->getUnitBisnisData();
+        $unitBisnis = $data['unitBisnis'];
+        $user = $data['user'];
+
+        if (!$unitBisnis || !$unitBisnis->id) {
+            return redirect()->route('unit.dashboard')->with('error', 'Profil unit bisnis tidak ditemukan.');
+        }
+
+        $now = \Carbon\Carbon::now();
+
+        // 1. Total Pendapatan & Growth
+        $totalPendapatan = Pesanan::where('unit_bisnis_id', $unitBisnis->id)
+            ->whereIn('status', ['selesai', 'dibayar', 'siap_diambil'])
+            ->sum('total_harga');
+
+        $pendapatanBulanIni = Pesanan::where('unit_bisnis_id', $unitBisnis->id)
+            ->whereIn('status', ['selesai', 'dibayar', 'siap_diambil'])
+            ->whereMonth('created_at', $now->month)
+            ->whereYear('created_at', $now->year)
+            ->sum('total_harga');
+
+        $pendapatanBulanLalu = Pesanan::where('unit_bisnis_id', $unitBisnis->id)
+            ->whereIn('status', ['selesai', 'dibayar', 'siap_diambil'])
+            ->whereMonth('created_at', $now->copy()->subMonth()->month)
+            ->whereYear('created_at', $now->copy()->subMonth()->year)
+            ->sum('total_harga');
+
+        $salesGrowth = $pendapatanBulanLalu > 0
+            ? round((($pendapatanBulanIni - $pendapatanBulanLalu) / $pendapatanBulanLalu) * 100, 1)
+            : ($pendapatanBulanIni > 0 ? 100 : 0);
+
+        // 2. Makanan Terselamatkan
+        $makananTerselamatkan = Pesanan::where('unit_bisnis_id', $unitBisnis->id)
+            ->where('status', 'selesai')
+            ->sum('jumlah_porsi');
+
+        // 3. Rating Kepuasan
+        $ratingKepuasan = \App\Models\Rating::where('unit_bisnis_id', $unitBisnis->id)->avg('nilai') ?? 0;
+        $ratingKepuasan = round($ratingKepuasan, 1);
+        $totalUlasan = \App\Models\Rating::where('unit_bisnis_id', $unitBisnis->id)->count();
+
+        // 4. Query Transaksi (with search & filter)
+        $query = Pesanan::with(['menuAktif.masterMakanan', 'user.individuProfile', 'user.komunitasProfile'])
+            ->where('unit_bisnis_id', $unitBisnis->id);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->whereHas('menuAktif.masterMakanan', function($q2) use ($search) {
+                    $q2->where('nama_makanan', 'like', "%{$search}%");
+                })
+                ->orWhereHas('user', function($q3) use ($search) {
+                    $q3->where('name', 'like', "%{$search}%");
+                })
+                ->orWhere('kode_unik', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $transaksi = $query->orderBy('created_at', 'desc')->paginate(10);
+        $transaksi->appends($request->all());
+
+        return view('unit_bisnis.riwayat', array_merge($data, [
+            'totalPendapatan' => $totalPendapatan,
+            'salesGrowth' => $salesGrowth,
+            'makananTerselamatkan' => $makananTerselamatkan,
+            'ratingKepuasan' => $ratingKepuasan,
+            'totalUlasan' => $totalUlasan,
+            'transaksi' => $transaksi
+        ]));
+    }
 }
