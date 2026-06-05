@@ -6,10 +6,10 @@
 @section('title', 'Kumpulan Donasi Terdekat')
 
 @section('content')
-<div class="space-y-6 animate-fade-in pb-12">
+<div class="space-y-4 animate-fade-in pb-12 -mt-2 lg:-mt-6">
     <!-- Header Halaman -->
-    <div class="space-y-2">
-        <a href="{{ route('user.dashboard') }}" class="inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-[#1cb764] hover:border-[#1cb764] bg-white hover:bg-[#eefcf4] px-4 py-2.5 rounded-full border border-gray-100 shadow-sm transition-all duration-300 w-fit mb-4">
+    <div class="space-y-1">
+        <a href="{{ route('user.dashboard') }}" class="inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-[#1cb764] hover:border-[#1cb764] bg-white hover:bg-[#eefcf4] px-4 py-2.5 rounded-full border border-gray-100 shadow-sm transition-all duration-300 w-fit mb-2">
             <svg class="w-4 h-4 text-gray-400 transition-colors" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
@@ -46,6 +46,7 @@
             selectedCategory: 'Semua',
             selectedDistance: 'all',
             selectedPrice: 'all',
+            maxPrice: 1000000,
             items: [
                 @foreach($nearby_donations as $menu)
                 {
@@ -53,7 +54,8 @@
                     usaha: '{{ addslashes(strtolower($menu->unitBisnis->nama_usaha ?? '')) }}',
                     kategori: '{{ $menu->masterMakanan->kategori ?? 'Umum' }}',
                     distance: {{ $menu->computed_distance }},
-                    is_gratis: {{ $menu->is_gratis ? 'true' : 'false' }}
+                    is_gratis: {{ $menu->is_gratis ? 'true' : 'false' }},
+                    harga: {{ $menu->harga_jual ?? 0 }}
                 }{{ !$loop->last ? ',' : '' }}
                 @endforeach
             ],
@@ -65,7 +67,9 @@
                 const matchesPrice = this.selectedPrice === 'all' || 
                     (this.selectedPrice === 'gratis' && item.is_gratis) || 
                     (this.selectedPrice === 'berbayar' && !item.is_gratis);
-                return matchesSearch && matchesCategory && matchesDistance && matchesPrice;
+                const itemPrice = item.is_gratis ? 0 : item.harga;
+                const matchesPriceRange = itemPrice <= parseFloat(this.maxPrice);
+                return matchesSearch && matchesCategory && matchesDistance && matchesPrice && matchesPriceRange;
             },
             get hasResults() {
                 return this.items.some(item => this.matches(item));
@@ -75,12 +79,13 @@
                 this.selectedCategory = 'Semua';
                 this.selectedDistance = 'all';
                 this.selectedPrice = 'all';
+                this.maxPrice = 1000000;
             }
         }" class="space-y-6">
 
             <!-- Filter Panel -->
             <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100/80 space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <!-- Search Input -->
                     <div class="relative md:col-span-1">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
@@ -116,6 +121,15 @@
                             <option value="berbayar">Berbayar</option>
                         </select>
                     </div>
+
+                    <!-- Price Range Slider -->
+                    <div class="flex flex-col justify-center bg-gray-50 rounded-[1.25rem] px-4 py-1 border-none min-h-[38px]">
+                        <div class="flex items-center justify-between text-[9px] font-bold text-gray-500 leading-none mb-0.5">
+                            <span>Harga Maks:</span>
+                            <span class="text-[#1cb764] font-extrabold" x-text="maxPrice == 1000000 ? 'Semua Harga' : (maxPrice == 0 ? 'Gratis' : 'Rp ' + Number(maxPrice).toLocaleString('id-ID'))"></span>
+                        </div>
+                        <input type="range" min="0" max="1000000" step="10000" x-model="maxPrice" class="w-full accent-[#1cb764] h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                    </div>
                 </div>
 
                 <!-- Category Pills (Horizontal Scroll) -->
@@ -132,7 +146,7 @@
             </div>
 
             <!-- Grid Donasi -->
-            <div x-show="hasResults" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div x-show="hasResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                 @foreach($nearby_donations as $menu)
                     @php
                         $batas = \Carbon\Carbon::parse($menu->batas_pengambilan);
@@ -141,7 +155,7 @@
                         $diffInMins = now()->diffInMinutes($batas, false);
                         if ($diffInMins > 0) {
                             if ($diffInMins < 60) {
-                                $timeStr = $diffInMins . ' mnt lagi';
+                                $timeStr = round($diffInMins) . ' mnt lagi';
                             } else {
                                 $timeStr = round($diffInMins / 60) . ' jam lagi';
                             }
@@ -153,10 +167,10 @@
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0 scale-95"
                          x-transition:enter-end="opacity-100 scale-100"
-                         class="bg-white rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col overflow-hidden h-[275px] group">
+                         class="bg-white rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col overflow-hidden h-[275px] group max-w-[310px] w-full mx-auto">
                         
                         <!-- Gambar Makanan & Overlay -->
-                        <div class="relative h-[105px] w-full overflow-hidden bg-gray-55 shrink-0">
+                        <div class="relative h-[125px] w-full overflow-hidden bg-gray-50 shrink-0">
                             <img src="{{ $menu->masterMakanan->foto ? asset('storage/' . $menu->masterMakanan->foto) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80' }}" 
                                  alt="{{ $menu->masterMakanan->nama_makanan }}" 
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out">

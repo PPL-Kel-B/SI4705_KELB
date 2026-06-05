@@ -139,7 +139,7 @@
                                 $diffInMins = now()->diffInMinutes($batas, false);
                                 if ($diffInMins > 0) {
                                     if ($diffInMins < 60) {
-                                        $timeStr = $diffInMins . ' mnt lagi';
+                                        $timeStr = round($diffInMins) . ' mnt lagi';
                                     } else {
                                         $timeStr = round($diffInMins / 60) . ' jam lagi';
                                     }
@@ -149,7 +149,7 @@
                             @endphp
                             <div class="relative bg-white border border-gray-100 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col overflow-hidden h-[275px] group">
                                 <!-- Gambar Makanan & Overlay -->
-                                <div class="relative h-[105px] w-full overflow-hidden bg-gray-50 shrink-0">
+                                <div class="relative h-[125px] w-full overflow-hidden bg-gray-50 shrink-0">
                                     <img src="{{ $menu->masterMakanan->foto ? asset('storage/' . $menu->masterMakanan->foto) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80' }}" 
                                          alt="{{ $menu->masterMakanan->nama_makanan }}" 
                                          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out">
@@ -368,7 +368,7 @@
                             $diffInMins = now()->diffInMinutes($batas, false);
                             if ($diffInMins > 0) {
                                 if ($diffInMins < 60) {
-                                    $timeStr = $diffInMins . ' mnt lagi';
+                                    $timeStr = round($diffInMins) . ' mnt lagi';
                                 } else {
                                     $timeStr = round($diffInMins / 60) . ' jam lagi';
                                 }
@@ -378,7 +378,7 @@
                         @endphp
                         <div class="relative bg-white border border-gray-100 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col overflow-hidden h-[275px] group">
                             <!-- Gambar Makanan & Overlay -->
-                            <div class="relative h-[105px] w-full overflow-hidden bg-gray-50 shrink-0">
+                            <div class="relative h-[125px] w-full overflow-hidden bg-gray-50 shrink-0">
                                 <img src="{{ $menu->masterMakanan->foto ? asset('storage/' . $menu->masterMakanan->foto) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80' }}" 
                                      alt="{{ $menu->masterMakanan->nama_makanan }}" 
                                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out">
@@ -543,7 +543,7 @@
                             $diffInMins = now()->diffInMinutes($batas, false);
                             if ($diffInMins > 0) {
                                 if ($diffInMins < 60) {
-                                    $timeStr = $diffInMins . ' mnt lagi';
+                                    $timeStr = round($diffInMins) . ' mnt lagi';
                                 } else {
                                     $timeStr = round($diffInMins / 60) . ' jam lagi';
                                 }
@@ -553,7 +553,7 @@
                         @endphp
                         <div class="relative bg-white border border-gray-100 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col overflow-hidden h-[275px] group">
                             <!-- Gambar Makanan & Overlay -->
-                            <div class="relative h-[105px] w-full overflow-hidden bg-gray-50 shrink-0">
+                            <div class="relative h-[125px] w-full overflow-hidden bg-gray-50 shrink-0">
                                 <img src="{{ $menu->masterMakanan->foto ? asset('storage/' . $menu->masterMakanan->foto) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80' }}" 
                                      alt="{{ $menu->masterMakanan->nama_makanan }}" 
                                      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out">
