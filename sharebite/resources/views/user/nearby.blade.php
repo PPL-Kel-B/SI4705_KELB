@@ -6,21 +6,15 @@
 @section('title', 'Kumpulan Donasi Terdekat')
 
 @section('content')
-<div class="space-y-4 animate-fade-in pb-12 -mt-2 lg:-mt-6">
-    <!-- Header Halaman -->
-    <div class="space-y-1">
-        <a href="{{ route('user.dashboard') }}" class="inline-flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-[#1cb764] hover:border-[#1cb764] bg-white hover:bg-[#eefcf4] px-4 py-2.5 rounded-full border border-gray-100 shadow-sm transition-all duration-300 w-fit mb-2">
-            <svg class="w-4 h-4 text-gray-400 transition-colors" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+<div class="space-y-6 animate-fade-in pb-12 -mt-2 lg:-mt-6">
+    {{-- Header --}}
+    <div class="flex items-center gap-3 mb-8 w-full max-w-full mx-auto">
+        <a href="{{ route('user.dashboard') }}" class="w-9 h-9 bg-[#E3EFE7] text-[#189347] hover:bg-[#D1E6D8] rounded-full flex items-center justify-center transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Kembali ke Dashboard
         </a>
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-black text-gray-800">Semua Donasi Terdekat</h1>
-                <p class="text-xs text-gray-400 font-medium">Menampilkan makanan yang tersedia di sekitar radius Anda</p>
-            </div>
-        </div>
+        <h1 class="text-[30px] font-extrabold text-gray-800">Semua Donasi Terdekat</h1>
     </div>
 
     @if(is_null(Auth::user()->latitude) || is_null(Auth::user()->longitude))
@@ -65,8 +59,8 @@
                 const matchesCategory = this.selectedCategory === 'Semua' || item.kategori === this.selectedCategory;
                 const matchesDistance = this.selectedDistance === 'all' || item.distance <= parseFloat(this.selectedDistance);
                 const matchesPrice = this.selectedPrice === 'all' || 
-                    (this.selectedPrice === 'gratis' && item.is_gratis) || 
-                    (this.selectedPrice === 'berbayar' && !item.is_gratis);
+                     (this.selectedPrice === 'gratis' && item.is_gratis) || 
+                     (this.selectedPrice === 'berbayar' && !item.is_gratis);
                 const itemPrice = item.is_gratis ? 0 : item.harga;
                 const matchesPriceRange = itemPrice <= parseFloat(this.maxPrice);
                 return matchesSearch && matchesCategory && matchesDistance && matchesPrice && matchesPriceRange;
@@ -93,12 +87,12 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </span>
-                        <input type="text" x-model="search" placeholder="Cari makanan atau toko..." class="w-full bg-gray-50 border-none rounded-full py-2.5 pl-11 pr-4 text-xs focus:outline-none focus:ring-2 focus:ring-[#1cb764] transition-all text-gray-700 font-bold placeholder-gray-400">
+                        <input type="text" x-model="search" placeholder="Cari makanan atau toko..." class="w-full bg-gray-50 border-none rounded-full py-3 pl-11 pr-4 text-xs focus:outline-none focus:ring-2 focus:ring-[#1cb764] transition-all text-gray-700 font-bold placeholder-gray-400">
                     </div>
 
                     <!-- Distance Select -->
-                    <div class="flex items-center gap-2 bg-gray-50 rounded-full px-4 py-1.5 border-none">
-                        <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <div class="flex items-center gap-2 bg-gray-50 rounded-full px-4 py-2 border-none">
+                        <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1115 0z" />
                         </svg>
@@ -111,8 +105,8 @@
                     </div>
 
                     <!-- Price Type Select -->
-                    <div class="flex items-center gap-2 bg-gray-50 rounded-full px-4 py-1.5 border-none">
-                        <svg class="w-4 h-4 text-gray-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <div class="flex items-center gap-2 bg-gray-50 rounded-full px-4 py-2 border-none">
+                        <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <select x-model="selectedPrice" class="w-full bg-transparent border-none text-xs font-bold text-gray-700 focus:outline-none cursor-pointer">
@@ -123,12 +117,12 @@
                     </div>
 
                     <!-- Price Range Slider -->
-                    <div class="flex flex-col justify-center bg-gray-50 rounded-[1.25rem] px-4 py-1 border-none min-h-[38px]">
-                        <div class="flex items-center justify-between text-[9px] font-bold text-gray-500 leading-none mb-0.5">
+                    <div class="flex flex-col justify-center bg-gray-50 rounded-[1.25rem] px-4 py-2 border-none">
+                        <div class="flex items-center justify-between text-[11px] font-bold text-gray-500 mb-1 leading-none">
                             <span>Harga Maks:</span>
-                            <span class="text-[#1cb764] font-extrabold" x-text="maxPrice == 1000000 ? 'Semua Harga' : (maxPrice == 0 ? 'Gratis' : 'Rp ' + Number(maxPrice).toLocaleString('id-ID'))"></span>
+                            <span class="text-[#1cb764] font-black" x-text="maxPrice == 1000000 ? '1jt' : (maxPrice == 0 ? 'Gratis' : 'Rp ' + Number(maxPrice).toLocaleString('id-ID'))"></span>
                         </div>
-                        <input type="range" min="0" max="1000000" step="10000" x-model="maxPrice" class="w-full accent-[#1cb764] h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <input type="range" min="0" max="1000000" step="10000" x-model="maxPrice" class="w-full accent-[#1cb764] h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1">
                     </div>
                 </div>
 
@@ -146,11 +140,11 @@
             </div>
 
             <!-- Grid Donasi -->
-            <div x-show="hasResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+            <div x-show="hasResults" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 @foreach($nearby_donations as $menu)
                     @php
                         $batas = \Carbon\Carbon::parse($menu->batas_pengambilan);
-                        $segera_habis = $batas->diffInMinutes(now(), false) > -60;
+                        $segera_habis = $menu->stok_porsi <= 5;
                         
                         $diffInMins = now()->diffInMinutes($batas, false);
                         if ($diffInMins > 0) {
@@ -167,7 +161,7 @@
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0 scale-95"
                          x-transition:enter-end="opacity-100 scale-100"
-                         class="bg-white rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col overflow-hidden h-[290px] group max-w-[310px] w-full mx-auto">
+                         class="bg-white rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col overflow-hidden h-[290px] group w-full">
                         
                         <!-- Gambar Makanan & Overlay -->
                         <a href="{{ route('user.makanan.detail', $menu->id) }}" class="relative h-[140px] w-full overflow-hidden bg-gray-50 shrink-0 block">
@@ -197,25 +191,25 @@
                         </a>
 
                         <!-- Informasi Makanan -->
-                        <div class="px-5 pb-3.5 pt-2.5 flex-1 flex flex-col justify-between">
+                        <div class="px-5 pb-2.5 pt-2 flex-1 flex flex-col justify-between">
                             <div class="space-y-1">
                                 <!-- Kategori & Harga -->
                                 <div class="flex items-center justify-between gap-1.5 mb-1">
-                                    <span class="inline-block bg-[#eefcf4] text-[#1cb764] text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border border-[#d2f4e1]">
+                                    <span class="inline-block bg-[#eefcf4] text-[#1cb764] text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border border-[#d2f4e1]">
                                         {{ $menu->masterMakanan->kategori ?? 'Umum' }}
                                     </span>
-                                    <span class="text-[10px] font-black {{ $menu->is_gratis ? 'text-[#1cb764] bg-[#eefcf4] px-2 py-0.5 rounded-md border border-[#d2f4e1]' : 'text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100' }}">
+                                    <span class="text-xs font-black {{ $menu->is_gratis ? 'text-[#1cb764] bg-[#eefcf4] px-2 py-0.5 rounded-md border border-[#d2f4e1]' : 'text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100' }}">
                                         {{ $menu->is_gratis ? 'Gratis' : 'Rp ' . number_format($menu->harga_jual, 0, ',', '.') }}
                                     </span>
                                 </div>
                                 
                                 <a href="{{ route('user.makanan.detail', $menu->id) }}" class="block hover:text-[#1cb764] transition-colors">
-                                    <h3 class="font-extrabold text-gray-900 text-sm leading-snug line-clamp-1">
+                                    <h3 class="font-black text-gray-900 text-base sm:text-[17px] leading-snug line-clamp-1">
                                         {{ $menu->masterMakanan->nama_makanan }}
                                     </h3>
                                 </a>
                                 
-                                <a href="{{ route('user.unit-bisnis.show', $menu->unit_bisnis_id) }}" class="text-[10px] text-gray-400 font-semibold flex items-center gap-1.5 truncate hover:text-[#1cb764] transition-colors mt-1">
+                                <a href="{{ route('user.unit-bisnis.show', $menu->unit_bisnis_id) }}" class="text-[11px] text-gray-400 font-semibold flex items-center gap-1.5 truncate hover:text-[#1cb764] transition-colors mt-0.5">
                                     <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                                         <path d="M3 9h18M3 9v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9M3 9L5 3h14l2 6M9 9v4M15 9v4" />
                                     </svg>
@@ -230,7 +224,7 @@
                             <div class="flex items-center justify-between mt-auto">
                                 <div class="flex items-center gap-2">
                                     <!-- Limit Waktu -->
-                                    <div class="inline-flex items-center gap-1 bg-[#fdf4e9] text-[#9a5b15] text-[10px] font-extrabold px-2.5 py-1.5 rounded-full">
+                                    <div class="inline-flex items-center gap-1 bg-[#fdf4e9] text-[#9a5b15] text-[11px] font-extrabold px-2.5 py-1 rounded-full">
                                         <svg class="w-3.5 h-3.5 text-[#e09121]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
@@ -245,7 +239,7 @@
                                     </div>
                                 </div>
                                 <a href="{{ route('user.makanan.detail', $menu->id) }}" 
-                                   class="bg-gradient-to-r from-[#0b472e] to-[#1cb764] hover:from-[#093522] hover:to-[#159a54] text-white text-xs font-bold px-4 py-2.5 rounded-2xl transition shadow-sm transform active:scale-95 cursor-pointer">
+                                   class="bg-gradient-to-r from-[#0b472e] to-[#1cb764] hover:from-[#093522] hover:to-[#159a54] text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-sm transform active:scale-95 cursor-pointer">
                                     Ambil
                                 </a>
                             </div>

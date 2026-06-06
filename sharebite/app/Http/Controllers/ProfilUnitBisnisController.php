@@ -34,7 +34,7 @@ class ProfilUnitBisnisController extends Controller
                 'deskripsi' => $profile->deskripsi ?? 'Unit bisnis ini berdedikasi meminimalisir food waste dengan membagikan makanan berkualitas.',
                 'total_donasi' => ($profile->total_makanan_terjual ?? 0) . ' Porsi',
                 'rating' => $ratingString,
-                'foto_profile' => $profile->foto_bisnis ? asset($profile->foto_bisnis) : null,
+                'foto_profile' => ($profile->foto_bisnis && $profile->foto_bisnis !== 'images/placeholder-bisnis.jpg') ? (str_starts_with($profile->foto_bisnis, 'images/') || str_starts_with($profile->foto_bisnis, 'http') ? asset($profile->foto_bisnis) : asset('storage/' . $profile->foto_bisnis)) : null,
                 'header_image' => $profile->header_image ? asset($profile->header_image) : null,
                 'jam_buka' => $profile->jam_buka ? date('H:i', strtotime($profile->jam_buka)) : '08:00',
                 'jam_tutup' => $profile->jam_tutup ? date('H:i', strtotime($profile->jam_tutup)) : '20:00',

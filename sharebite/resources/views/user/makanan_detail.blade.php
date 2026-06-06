@@ -15,12 +15,10 @@
 
 <div class="space-y-4 animate-fade-in pb-12 -mt-2 lg:-mt-6">
     {{-- BREADCRUMB --}}
-    <nav class="text-xs font-semibold text-gray-400 mb-6 flex items-center gap-2">
-        <a href="{{ route('user.dashboard') }}" class="hover:text-[#1cb764] transition">Dashboard</a> 
-        <span>/</span>
-        <a href="{{ route('user.nearby') }}" class="hover:text-[#1cb764] transition">Makanan</a> 
-        <span>/</span>
-        <span class="text-gray-600 font-extrabold">{{ $menu->masterMakanan->nama_makanan }}</span>
+    <nav class="text-sm text-gray-500 mb-4">
+        <a href="{{ route('user.dashboard') }}" class="hover:underline cursor-pointer">Dashboard</a> / 
+        <a href="{{ route('user.nearby') }}" class="hover:underline cursor-pointer">Makanan</a> / 
+        <span class="text-[#1cb764] font-semibold">{{ $menu->masterMakanan->nama_makanan }}</span>
     </nav>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -43,9 +41,6 @@
                                 {{ $menu->masterMakanan->kategori ?? 'Umum' }}
                             </span>
                             <h1 class="text-2xl sm:text-3xl font-black text-white mt-3 drop-shadow-sm">{{ $menu->masterMakanan->nama_makanan }}</h1>
-                            <p class="text-green-300 text-xs font-semibold mt-1.5 flex items-center gap-1.5 drop-shadow-sm">
-                                🍴 Organic Curator Verified
-                            </p>
                         </div>
                         <span class="bg-black/30 backdrop-blur-md text-white text-xs px-4 py-2.5 rounded-2xl font-bold flex flex-col items-center justify-center border border-white/10 min-w-[80px] leading-tight">
                             <span class="text-[9px] font-bold text-gray-300 uppercase tracking-widest leading-none mb-1">Jarak</span>
@@ -57,7 +52,7 @@
 
             {{-- 3-COLUMN HORIZONTAL QUICK STATS BAR --}}
             <div class="bg-white rounded-[2rem] border border-gray-50 p-6 shadow-sm">
-                <div class="grid grid-cols-3 divide-x divide-gray-100 text-center">
+                <div class="grid grid-cols-3 divide-x-2 divide-gray-200 text-center">
                     <div class="flex items-center justify-center gap-3">
                         <div class="w-10 h-10 bg-[#eefcf4] rounded-xl flex items-center justify-center text-[#1cb764] shrink-0">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -65,8 +60,8 @@
                             </svg>
                         </div>
                         <div class="text-left">
-                            <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider leading-none">Tersedia</p>
-                            <p class="text-sm font-extrabold text-gray-800 mt-1 leading-none">{{ $menu->stok_porsi }} Porsi</p>
+                            <p class="text-[11px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider leading-none">Tersedia</p>
+                            <p class="text-base sm:text-lg font-black text-gray-800 mt-1 leading-none">{{ $menu->stok_porsi }} Porsi</p>
                         </div>
                     </div>
                     <div class="flex items-center justify-center gap-3">
@@ -76,8 +71,8 @@
                             </svg>
                         </div>
                         <div class="text-left">
-                            <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider leading-none">Kadaluarsa</p>
-                            <p class="text-sm font-extrabold text-[#9a5b15] mt-1 leading-none">{{ $menu->time_remaining }}</p>
+                            <p class="text-[11px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider leading-none">Kadaluarsa</p>
+                            <p class="text-base sm:text-lg font-black text-[#9a5b15] mt-1 leading-none">{{ $menu->time_remaining }}</p>
                         </div>
                     </div>
                     <div class="flex items-center justify-center gap-3">
@@ -89,8 +84,8 @@
                             </svg>
                         </div>
                         <div class="text-left">
-                            <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider leading-none">Harga / Porsi</p>
-                            <p class="text-sm font-extrabold text-[#1cb764] mt-1 leading-none">
+                            <p class="text-[11px] sm:text-xs text-gray-400 font-bold uppercase tracking-wider leading-none">Harga / Porsi</p>
+                            <p class="text-base sm:text-lg font-black text-[#1cb764] mt-1 leading-none">
                                 {{ $menu->is_gratis ? 'Gratis' : 'Rp ' . number_format($menu->harga_jual, 0, ',', '.') }}
                             </p>
                         </div>
@@ -104,7 +99,15 @@
                 <div class="flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
                     <div class="flex items-center gap-4">
                         <div class="w-14 h-14 bg-gray-50 rounded-2xl overflow-hidden shadow-sm shrink-0 border border-gray-100">
-                            <img src="{{ $menu->unitBisnis->foto_bisnis ? asset('storage/' . $menu->unitBisnis->foto_bisnis) : 'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=120&q=80' }}" 
+                            @php
+                                $fotoProfile = 'https://ui-avatars.com/api/?name=' . urlencode($menu->unitBisnis->nama_usaha ?? 'Mitra') . '&background=eefcf4&color=1cb764&bold=true&size=128';
+                                if ($menu->unitBisnis && $menu->unitBisnis->foto_bisnis && $menu->unitBisnis->foto_bisnis !== 'images/placeholder-bisnis.jpg') {
+                                    $fotoProfile = str_starts_with($menu->unitBisnis->foto_bisnis, 'images/') || str_starts_with($menu->unitBisnis->foto_bisnis, 'http') 
+                                        ? asset($menu->unitBisnis->foto_bisnis) 
+                                        : asset('storage/' . $menu->unitBisnis->foto_bisnis);
+                                }
+                            @endphp
+                            <img src="{{ $fotoProfile }}" 
                                  alt="{{ $menu->unitBisnis->nama_usaha }}"
                                  class="w-full h-full object-cover">
                         </div>
@@ -136,22 +139,6 @@
                     <p class="text-gray-600 text-xs sm:text-sm leading-relaxed">
                         {{ $menu->masterMakanan->deskripsi ?? 'Tidak ada deskripsi makanan.' }}
                     </p>
-                    
-                    {{-- Tags --}}
-                    <div class="flex flex-wrap gap-2 pt-2">
-                        <span class="bg-[#eefcf4] text-[#1cb764] text-[10px] px-3.5 py-1.5 rounded-full font-black border border-[#d2f4e1] flex items-center gap-1">
-                            <svg class="w-3 h-3 text-[#1cb764]" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                            Segar & Higienis
-                        </span>
-                        <span class="bg-[#eefcf4] text-[#1cb764] text-[10px] px-3.5 py-1.5 rounded-full font-black border border-[#d2f4e1] flex items-center gap-1">
-                            <svg class="w-3 h-3 text-[#1cb764]" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                            Kemasan Ramah Lingkungan
-                        </span>
-                        <span class="bg-[#eefcf4] text-[#1cb764] text-[10px] px-3.5 py-1.5 rounded-full font-black border border-[#d2f4e1] flex items-center gap-1">
-                            <svg class="w-3 h-3 text-[#1cb764]" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
-                            Sertifikasi Halal
-                        </span>
-                    </div>
                 </div>
             </div>
 
@@ -240,61 +227,125 @@
     </div>
 
     {{-- MAKANAN SERUPA --}}
+    @if($similar_items->isNotEmpty())
     <div class="mt-12">
         <div class="flex justify-between items-center mb-6">
             <div>
-                <h2 class="text-xl font-black text-gray-800">Makanan Serupa</h2>
+                <h2 class="text-xl font-black text-gray-800">{{ $menu->masterMakanan->kategori ?? 'Makanan' }} Serupa</h2>
                 <p class="text-xs text-gray-400 mt-1">Mungkin Anda juga tertarik dengan ini</p>
             </div>
-            <a href="{{ route('user.nearby') }}" class="text-xs text-[#1cb764] font-extrabold hover:underline flex items-center gap-1 transition-all">
-                Lihat Semua <span class="text-sm">➔</span>
-            </a>
+            @if($similar_items->count() >= 4)
+                <a href="{{ route('user.nearby') }}" class="text-xs text-[#1cb764] font-extrabold hover:underline flex items-center gap-1 transition-all">
+                    Lihat Semua <span class="text-sm">➔</span>
+                </a>
+            @endif
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             @foreach($similar_items as $item)
-            <div class="relative bg-white border border-gray-100 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col overflow-hidden h-[275px] group max-w-[310px] w-full mx-auto">
-                <!-- Gambar Makanan & Overlay -->
-                <a href="{{ route('user.makanan.detail', $item->id) }}" class="relative h-[135px] w-full overflow-hidden bg-gray-50 shrink-0 block">
-                    <img src="{{ $item->masterMakanan->foto ? asset('storage/' . $item->masterMakanan->foto) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80' }}" 
-                         alt="{{ $item->masterMakanan->nama_makanan }}" 
-                         class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out">
+                @php
+                    $batasItem = \Carbon\Carbon::parse($item->batas_pengambilan);
+                    $segeraHabisItem = $item->stok_porsi <= 5;
                     
-                    <!-- Exp Badge (Sudut Kanan Atas) -->
-                    <span class="absolute top-3 right-3 bg-white/95 text-[#c2410c] text-[10px] font-black px-3 py-1 rounded-full shadow-sm">
-                        Exp {{ str_ireplace(' lagi', '', $item->time_remaining) }}
-                    </span>
-                </a>
-
-                <!-- Informasi Makanan -->
-                <div class="px-5 pb-4 pt-3 flex-1 flex flex-col justify-between">
-                    <a href="{{ route('user.makanan.detail', $item->id) }}" class="space-y-1 block">
-                        <h3 class="font-extrabold text-gray-900 text-sm leading-snug line-clamp-1 group-hover:text-[#1cb764] transition-colors">
-                            {{ $item->masterMakanan->nama_makanan }}
-                        </h3>
-                    </a>
+                    $diffInMinsItem = now()->diffInMinutes($batasItem, false);
+                    if ($diffInMinsItem > 0) {
+                        if ($diffInMinsItem < 60) {
+                            $timeStrItem = round($diffInMinsItem) . ' mnt lagi';
+                        } else {
+                            $timeStrItem = round($diffInMinsItem / 60) . ' jam lagi';
+                        }
+                    } else {
+                        $timeStrItem = 'Habis';
+                    }
+                @endphp
+                <div class="bg-white rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col overflow-hidden h-[290px] group w-full">
                     
-                    <a href="{{ route('user.unit-bisnis.show', $item->unit_bisnis_id) }}" class="text-[10px] text-gray-400 font-semibold flex items-center gap-1.5 truncate hover:text-[#1cb764] transition-colors mt-0.5">
-                        <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                            <path d="M3 9h18M3 9v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9M3 9L5 3h14l2 6M9 9v4M15 9v4" />
-                        </svg>
-                        {{ $item->unitBisnis->nama_usaha ?? 'Mitra ShareBite' }}
-                    </a>
+                    <!-- Gambar Makanan & Overlay -->
+                    <a href="{{ route('user.makanan.detail', $item->id) }}" class="relative h-[140px] w-full overflow-hidden bg-gray-50 shrink-0 block">
+                        <img src="{{ $item->masterMakanan->foto ? asset('storage/' . $item->masterMakanan->foto) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80' }}" 
+                             alt="{{ $item->masterMakanan->nama_makanan }}" 
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out">
+                        
+                        <!-- Status Tag -->
+                        @if($segeraHabisItem)
+                            <span class="absolute top-3 left-3 bg-[#9a5b15] text-white text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm">
+                                SEGERA HABIS
+                            </span>
+                        @else
+                            <span class="absolute top-3 left-3 bg-[#1cb764] text-white text-[9px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm">
+                                TERSEDIA
+                            </span>
+                        @endif
 
-                    <!-- Baris Bawah (Detail Porsi & Jarak) -->
-                    <div class="flex items-center justify-between mt-auto pt-2">
-                        <span class="text-xs font-black text-[#1cb764]">
-                            {{ $item->stok_porsi }} Porsi
-                        </span>
-                        <span class="text-xs text-gray-400 font-bold">
+                        <!-- Jarak Tag -->
+                        <span class="absolute bottom-3 right-3 bg-white text-gray-800 text-[10px] font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-[#e09121]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1115 0z" />
+                            </svg>
                             {{ number_format($item->computed_distance, 1, ',', '.') }} km
                         </span>
+                    </a>
+
+                    <!-- Informasi Makanan -->
+                    <div class="px-5 pb-2.5 pt-2 flex-1 flex flex-col justify-between">
+                        <div class="space-y-1">
+                            <!-- Kategori & Harga -->
+                            <div class="flex items-center justify-between gap-1.5 mb-1 flex-wrap">
+                                <span class="inline-block bg-[#eefcf4] text-[#1cb764] text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border border-[#d2f4e1]">
+                                    {{ $item->masterMakanan->kategori ?? 'Umum' }}
+                                </span>
+                                <span class="text-xs font-black {{ $item->is_gratis ? 'text-[#1cb764] bg-[#eefcf4] px-2 py-0.5 rounded-md border border-[#d2f4e1]' : 'text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100' }}">
+                                    {{ $item->is_gratis ? 'Gratis' : 'Rp ' . number_format($item->harga_jual, 0, ',', '.') }}
+                                </span>
+                            </div>
+                            
+                            <a href="{{ route('user.makanan.detail', $item->id) }}" class="block hover:text-[#1cb764] transition-colors">
+                                <h3 class="font-black text-gray-900 text-base sm:text-[17px] leading-snug line-clamp-1">
+                                    {{ $item->masterMakanan->nama_makanan }}
+                                </h3>
+                            </a>
+                            
+                            <a href="{{ route('user.unit-bisnis.show', $item->unit_bisnis_id) }}" class="text-[11px] text-gray-400 font-semibold flex items-center gap-1.5 truncate hover:text-[#1cb764] transition-colors mt-0.5">
+                                <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <path d="M3 9h18M3 9v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9M3 9L5 3h14l2 6M9 9v4M15 9v4" />
+                                </svg>
+                                {{ $item->unitBisnis->nama_usaha ?? 'Mitra ShareBite' }}
+                            </a>
+                        </div>
+
+                        <!-- Garis Pembatas -->
+                        <hr class="border-t border-gray-100 my-2">
+
+                        <!-- Baris Bawah (Detail & Aksi) -->
+                        <div class="flex items-center justify-between mt-auto">
+                            <div class="flex items-center gap-2">
+                                <!-- Limit Waktu -->
+                                <div class="inline-flex items-center gap-1 bg-[#fdf4e9] text-[#9a5b15] text-[11px] font-extrabold px-2.5 py-1 rounded-full">
+                                    <svg class="w-3.5 h-3.5 text-[#e09121]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>{{ $timeStrItem }}</span>
+                                </div>
+                                <!-- Porsi -->
+                                <div class="flex items-center gap-1 text-[11px] text-gray-500 font-extrabold">
+                                    <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                                    </svg>
+                                    <span>{{ $item->stok_porsi }} Porsi</span>
+                                </div>
+                            </div>
+                            <a href="{{ route('user.makanan.detail', $item->id) }}" 
+                               class="bg-gradient-to-r from-[#0b472e] to-[#1cb764] hover:from-[#093522] hover:to-[#159a54] text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-sm transform active:scale-95 cursor-pointer">
+                                Ambil
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
             @endforeach
         </div>
     </div>
+    @endif
 </div>
 
 <script>

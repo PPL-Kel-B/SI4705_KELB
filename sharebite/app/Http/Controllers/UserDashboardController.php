@@ -273,9 +273,9 @@ class UserDashboardController extends Controller
         }
         $menu->time_remaining = $timeStr;
 
-        // Fetch "Makanan Serupa" (similar food items)
+        // Fetch "Makanan Serupa" (similar food items) - matching category & closest radius
         $kategori = $menu->masterMakanan->kategori;
-        $similar_items = MenuAktif::where('status', 'aktif')
+        $allSimilar = MenuAktif::where('status', 'aktif')
             ->where('id', '!=', $menu->id)
             ->where('stok_porsi', '>', 0)
             ->where('batas_pengambilan', '>', now())
@@ -283,22 +283,9 @@ class UserDashboardController extends Controller
                 $query->where('kategori', $kategori);
             })
             ->with(['masterMakanan', 'unitBisnis.user'])
-            ->take(4)
             ->get();
 
-        if ($similar_items->count() < 4) {
-            $exclude_ids = $similar_items->pluck('id')->push($menu->id)->toArray();
-            $extra_items = MenuAktif::where('status', 'aktif')
-                ->whereNotIn('id', $exclude_ids)
-                ->where('stok_porsi', '>', 0)
-                ->where('batas_pengambilan', '>', now())
-                ->with(['masterMakanan', 'unitBisnis.user'])
-                ->take(4 - $similar_items->count())
-                ->get();
-            $similar_items = $similar_items->concat($extra_items);
-        }
-
-        $similar_items = $similar_items->map(function ($item) use ($user) {
+        $similar_items = $allSimilar->map(function ($item) use ($user) {
             $latItem = $item->unitBisnis->lokasi_lat ?? $item->unitBisnis->user->latitude ?? null;
             $lngItem = $item->unitBisnis->lokasi_lng ?? $item->unitBisnis->user->longitude ?? null;
             $dist = 0.8;
@@ -325,7 +312,10 @@ class UserDashboardController extends Controller
             }
 
             return $item;
-        });
+        })->filter(function ($item) {
+            $radius = (float) ($item->unitBisnis->radius_penjemputan ?? 5);
+            return $item->computed_distance <= $radius;
+        })->sortBy('computed_distance')->values()->take(4);
 
         return view('user.makanan_detail', compact('menu', 'similar_items'));
     }

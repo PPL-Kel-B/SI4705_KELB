@@ -127,7 +127,7 @@
                     @foreach($limited_nearby_donations->take(2) as $menu)
                         @php
                             $batas = \Carbon\Carbon::parse($menu->batas_pengambilan);
-                            $segera_habis = $batas->diffInMinutes(now(), false) > -60;
+                            $segera_habis = $menu->stok_porsi <= 5;
                             
                             $diffInMins = now()->diffInMinutes($batas, false);
                             if ($diffInMins > 0) {
@@ -169,25 +169,25 @@
                             </a>
  
                             <!-- Informasi Makanan -->
-                            <div class="px-5 pb-3.5 pt-2.5 flex-1 flex flex-col justify-between">
+                            <div class="px-5 pb-2.5 pt-2 flex-1 flex flex-col justify-between">
                                 <div class="space-y-1">
                                     <!-- Kategori & Harga -->
                                     <div class="flex items-center justify-between gap-1.5 mb-1">
-                                        <span class="inline-block bg-[#eefcf4] text-[#1cb764] text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border border-[#d2f4e1]">
+                                        <span class="inline-block bg-[#eefcf4] text-[#1cb764] text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border border-[#d2f4e1]">
                                             {{ $menu->masterMakanan->kategori ?? 'Umum' }}
                                         </span>
-                                        <span class="text-[10px] font-black {{ $menu->is_gratis ? 'text-[#1cb764] bg-[#eefcf4] px-2 py-0.5 rounded-md border border-[#d2f4e1]' : 'text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100' }}">
+                                        <span class="text-xs font-black {{ $menu->is_gratis ? 'text-[#1cb764] bg-[#eefcf4] px-2 py-0.5 rounded-md border border-[#d2f4e1]' : 'text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100' }}">
                                             {{ $menu->is_gratis ? 'Gratis' : 'Rp ' . number_format($menu->harga_jual, 0, ',', '.') }}
                                         </span>
                                     </div>
                                     
                                     <a href="{{ route('user.makanan.detail', $menu->id) }}" class="block hover:text-[#1cb764] transition-colors">
-                                        <h3 class="font-extrabold text-gray-900 text-sm leading-snug line-clamp-1">
+                                        <h3 class="font-black text-gray-900 text-base sm:text-[17px] leading-snug line-clamp-1">
                                             {{ $menu->masterMakanan->nama_makanan }}
                                         </h3>
                                     </a>
                                     
-                                    <a href="{{ route('user.unit-bisnis.show', $menu->unit_bisnis_id) }}" class="text-[10px] text-gray-400 font-semibold flex items-center gap-1.5 truncate hover:text-[#1cb764] transition-colors mt-1">
+                                    <a href="{{ route('user.unit-bisnis.show', $menu->unit_bisnis_id) }}" class="text-[11px] text-gray-400 font-semibold flex items-center gap-1.5 truncate hover:text-[#1cb764] transition-colors mt-0.5">
                                         <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                                             <path d="M3 9h18M3 9v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9M3 9L5 3h14l2 6M9 9v4M15 9v4" />
                                         </svg>
@@ -202,7 +202,7 @@
                                 <div class="flex items-center justify-between mt-auto">
                                     <div class="flex items-center gap-2">
                                         <!-- Limit Waktu -->
-                                        <div class="inline-flex items-center gap-1 bg-[#fdf4e9] text-[#9a5b15] text-[10px] font-extrabold px-2.5 py-1.5 rounded-full">
+                                        <div class="inline-flex items-center gap-1 bg-[#fdf4e9] text-[#9a5b15] text-[11px] font-extrabold px-2.5 py-1 rounded-full">
                                             <svg class="w-3.5 h-3.5 text-[#e09121]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
@@ -217,7 +217,7 @@
                                         </div>
                                     </div>
                                     <a href="{{ route('user.makanan.detail', $menu->id) }}" 
-                                       class="bg-gradient-to-r from-[#0b472e] to-[#1cb764] hover:from-[#093522] hover:to-[#159a54] text-white text-xs font-bold px-4 py-2.5 rounded-2xl transition shadow-sm transform active:scale-95 cursor-pointer">
+                                       class="bg-gradient-to-r from-[#0b472e] to-[#1cb764] hover:from-[#093522] hover:to-[#159a54] text-white text-xs font-bold px-5 py-2.5 rounded-2xl transition shadow-sm transform active:scale-95 cursor-pointer">
                                         Ambil
                                     </a>
                                 </div>
@@ -230,26 +230,28 @@
 
         <!-- Kolom Kanan: Aktivitas Terakhir -->
         <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-50 flex flex-col justify-between min-h-[300px] h-[370px]">
-            <div class="space-y-6 p-1 overflow-y-auto">
-                <div class="flex items-start gap-2.5">
-                    <div class="w-9 h-9 rounded-xl bg-[#eefcf4] text-[#1cb764] flex items-center justify-center shrink-0 shadow-sm border border-green-50">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h2 class="text-base font-black text-gray-800">Aktivitas Terakhir</h2>
-                        <p class="text-[10px] text-gray-400 font-medium">Aktivitas utama yang telah dilakukan</p>
-                    </div>
+            <!-- Header (Fixed) -->
+            <div class="flex items-start gap-2.5 pb-3 border-b border-gray-50 shrink-0">
+                <div class="w-9 h-9 rounded-xl bg-[#eefcf4] text-[#1cb764] flex items-center justify-center shrink-0 shadow-sm border border-green-50">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                 </div>
+                <div>
+                    <h2 class="text-base font-black text-gray-800">Aktivitas Terakhir</h2>
+                    <p class="text-[10px] text-gray-400 font-medium">Aktivitas utama yang telah dilakukan</p>
+                </div>
+            </div>
 
+            <!-- Scrollable Timeline Content -->
+            <div class="flex-1 overflow-y-auto space-y-5 p-1 mt-4 relative no-scrollbar">
                 @if($recent_activities->isEmpty())
                     <div class="text-center py-6 text-gray-400 text-xs font-bold">
                         Belum ada aktivitas tercatat.
                     </div>
                 @else
                     <!-- Timeline -->
-                    <div class="space-y-6 relative before:absolute before:left-4 before:top-2 before:bottom-2 before:w-[2px] before:bg-gray-100">
+                    <div class="space-y-5 relative before:absolute before:left-4 before:top-2 before:bottom-2 before:w-[2px] before:bg-gray-100">
                         @foreach($recent_activities as $act)
                             @php
                                 $bgColor = 'bg-[#f0f4ff] text-[#4f46e5]';
@@ -291,7 +293,9 @@
                     </div>
                 @endif
             </div>
-            <a href="{{ route('user.activities') }}" class="w-full bg-[#f4f7f5] hover:bg-gray-200 text-gray-700 text-xs font-extrabold py-3 text-center rounded-2xl block transition shadow-sm mt-4">
+
+            <!-- Footer (Fixed) -->
+            <a href="{{ route('user.activities') }}" class="w-full bg-[#f4f7f5] hover:bg-gray-200 text-gray-700 text-xs font-extrabold py-3 text-center rounded-2xl block transition shadow-sm mt-4 shrink-0">
                 Lihat Semua Aktivitas
             </a>
         </div>
@@ -306,7 +310,7 @@
                     @foreach($limited_nearby_donations->slice(2, 2) as $menu)
                         @php
                             $batas = \Carbon\Carbon::parse($menu->batas_pengambilan);
-                            $segera_habis = $batas->diffInMinutes(now(), false) > -60;
+                            $segera_habis = $menu->stok_porsi <= 5;
                             
                             $diffInMins = now()->diffInMinutes($batas, false);
                             if ($diffInMins > 0) {
@@ -348,25 +352,25 @@
                             </a>
  
                             <!-- Informasi Makanan -->
-                            <div class="px-5 pb-3.5 pt-2.5 flex-1 flex flex-col justify-between">
+                            <div class="px-5 pb-2.5 pt-2 flex-1 flex flex-col justify-between">
                                 <div class="space-y-1">
                                     <!-- Kategori & Harga -->
                                     <div class="flex items-center justify-between gap-1.5 mb-1">
-                                        <span class="inline-block bg-[#eefcf4] text-[#1cb764] text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md border border-[#d2f4e1]">
+                                        <span class="inline-block bg-[#eefcf4] text-[#1cb764] text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border border-[#d2f4e1]">
                                             {{ $menu->masterMakanan->kategori ?? 'Umum' }}
                                         </span>
-                                        <span class="text-[10px] font-black {{ $menu->is_gratis ? 'text-[#1cb764] bg-[#eefcf4] px-2 py-0.5 rounded-md border border-[#d2f4e1]' : 'text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100' }}">
+                                        <span class="text-xs font-black {{ $menu->is_gratis ? 'text-[#1cb764] bg-[#eefcf4] px-2 py-0.5 rounded-md border border-[#d2f4e1]' : 'text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100' }}">
                                             {{ $menu->is_gratis ? 'Gratis' : 'Rp ' . number_format($menu->harga_jual, 0, ',', '.') }}
                                         </span>
                                     </div>
                                     
                                     <a href="{{ route('user.makanan.detail', $menu->id) }}" class="block hover:text-[#1cb764] transition-colors">
-                                        <h3 class="font-extrabold text-gray-900 text-sm leading-snug line-clamp-1">
+                                        <h3 class="font-black text-gray-900 text-base sm:text-[17px] leading-snug line-clamp-1">
                                             {{ $menu->masterMakanan->nama_makanan }}
                                         </h3>
                                     </a>
                                     
-                                    <a href="{{ route('user.unit-bisnis.show', $menu->unit_bisnis_id) }}" class="text-[10px] text-gray-400 font-semibold flex items-center gap-1.5 truncate hover:text-[#1cb764] transition-colors mt-1">
+                                    <a href="{{ route('user.unit-bisnis.show', $menu->unit_bisnis_id) }}" class="text-[11px] text-gray-400 font-semibold flex items-center gap-1.5 truncate hover:text-[#1cb764] transition-colors mt-0.5">
                                         <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                                             <path d="M3 9h18M3 9v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9M3 9L5 3h14l2 6M9 9v4M15 9v4" />
                                         </svg>
@@ -381,7 +385,7 @@
                                 <div class="flex items-center justify-between mt-auto">
                                     <div class="flex items-center gap-2">
                                         <!-- Limit Waktu -->
-                                        <div class="inline-flex items-center gap-1 bg-[#fdf4e9] text-[#9a5b15] text-[10px] font-extrabold px-2.5 py-1.5 rounded-full">
+                                        <div class="inline-flex items-center gap-1 bg-[#fdf4e9] text-[#9a5b15] text-[11px] font-extrabold px-2.5 py-1 rounded-full">
                                             <svg class="w-3.5 h-3.5 text-[#e09121]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
@@ -396,7 +400,7 @@
                                         </div>
                                     </div>
                                     <a href="{{ route('user.makanan.detail', $menu->id) }}" 
-                                       class="bg-gradient-to-r from-[#0b472e] to-[#1cb764] hover:from-[#093522] hover:to-[#159a54] text-white text-xs font-bold px-4 py-2.5 rounded-2xl transition shadow-sm transform active:scale-95 cursor-pointer">
+                                       class="bg-gradient-to-r from-[#0b472e] to-[#1cb764] hover:from-[#093522] hover:to-[#159a54] text-white text-xs font-bold px-5 py-2.5 rounded-2xl transition shadow-sm transform active:scale-95 cursor-pointer">
                                         Ambil
                                     </a>
                                 </div>
