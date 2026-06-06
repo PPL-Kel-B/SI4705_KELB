@@ -90,6 +90,11 @@ class Pesanan extends Model
         return $this->hasMany(BuktiDonasi::class);
     }
 
+    public function rating()
+    {
+        return $this->hasOne(Rating::class);
+    }
+
     // -------------------------------------------------------
     // Helpers
     // -------------------------------------------------------

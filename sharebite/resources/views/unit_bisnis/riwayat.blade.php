@@ -80,12 +80,28 @@
                 <input type="text" name="search" value="{{ request('search') }}" class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 sm:text-sm" placeholder="Cari transaksi, nama makanan, atau relawan...">
             </form>
         </div>
-        <div class="flex gap-2 w-full md:w-auto">
-            <button class="flex items-center justify-center px-4 py-3 border border-gray-200 shadow-sm text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 w-full md:w-auto">
-                <svg class="mr-2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                Rentang Waktu
-                <svg class="ml-2 h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </button>
+            <div class="relative" x-data="{ open: false }">
+                <button @click="open = !open" type="button" class="flex items-center justify-center px-4 py-3 border border-gray-200 shadow-sm text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 w-full md:w-auto">
+                    <svg class="mr-2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Rentang Waktu
+                    <svg class="ml-2 h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                
+                <div x-show="open" @click.away="open = false" x-cloak x-transition class="absolute z-10 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 p-5 left-0 md:left-auto md:right-0">
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tanggal Mulai</label>
+                        <input type="date" name="start_date" form="searchForm" value="{{ request('start_date') }}" class="block w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-green-500 focus:border-green-500 text-gray-700 font-medium">
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tanggal Selesai</label>
+                        <input type="date" name="end_date" form="searchForm" value="{{ request('end_date') }}" class="block w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-green-500 focus:border-green-500 text-gray-700 font-medium">
+                    </div>
+                    <div class="flex gap-3">
+                        <button type="button" onclick="document.querySelector('input[name=start_date]').value=''; document.querySelector('input[name=end_date]').value=''; document.getElementById('searchForm').submit();" class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold rounded-xl transition-colors">Reset</button>
+                        <button type="button" onclick="document.getElementById('searchForm').submit()" class="flex-1 px-4 py-2.5 bg-[#0a5232] hover:bg-[#073d25] text-white text-sm font-bold rounded-xl transition-colors">Terapkan</button>
+                    </div>
+                </div>
+            </div>
             <div class="relative w-full md:w-auto">
                 <select name="status" form="searchForm" onchange="document.getElementById('searchForm').submit()" class="appearance-none flex items-center justify-center px-4 py-3 pl-10 pr-10 border border-gray-200 shadow-sm text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 w-full md:w-auto cursor-pointer">
                     <option value="">Filter Status</option>
@@ -108,7 +124,7 @@
     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         <div class="p-6 border-b border-gray-100 flex justify-between items-center">
             <h3 class="text-lg font-bold text-gray-900">Detail Transaksi Terbaru</h3>
-            <a href="#" class="text-green-600 hover:text-green-700 font-medium text-sm flex items-center">
+            <a href="{{ route('unit.riwayat.export', request()->all()) }}" class="text-green-600 hover:text-green-700 font-medium text-sm flex items-center">
                 Unduh Laporan
                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
             </a>
@@ -153,7 +169,7 @@
                                         <img src="{{ $makananFoto }}" alt="{{ $makananName }}" class="w-full h-full object-cover">
                                     </div>
                                     <div>
-                                        <div class="font-medium text-gray-900">{{ $makananName }}</div>
+                                        <a href="{{ route('unit.riwayat.show', $item->id) }}" class="font-bold text-gray-900 hover:text-green-600 transition-colors block">{{ $makananName }}</a>
                                         <div class="text-xs text-green-600 mt-0.5">{{ $kategori }}</div>
                                     </div>
                                 </div>
