@@ -101,7 +101,7 @@
             </a>
 
             <!-- Pesanan -->
-            <a href="{{ route('unit.pesanan') }}"
+            <a href="{{ route('unit.pesanan.index') }}"
                 class="flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all {{ request()->routeIs('unit.pesanan') ? 'bg-[#dcfce7] text-[#1cb764] font-semibold' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700 font-medium' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">

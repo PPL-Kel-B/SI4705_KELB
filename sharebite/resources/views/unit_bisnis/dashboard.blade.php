@@ -197,7 +197,7 @@
                         Pesanan Masuk
                     </h2>
 
-                    <a href="{{ route('unit.pesanan') }}"
+                    <a href="{{ route('unit.pesanan.index') }}"
                     class="text-[#1cb764] text-xs font-bold">
                         Lihat Semua →
                     </a>
@@ -220,7 +220,7 @@
                             };
                         @endphp
 
-                        <a href="{{ route('unit.pesanan') }}"
+                        <a href="{{ route('unit.pesanan.index') }}"
                             class="group flex items-center justify-between
                                 bg-[#F4F8F6]
                                 rounded-2xl
