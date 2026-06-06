@@ -146,8 +146,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/unit-bisnis/{id}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'show'])->name('unit-bisnis.show');
 
-        // ROUTE SEMENTARA UNTUK TES TOMBOL (Nanti dihapus saat digabung)
-        Route::get('/tes-tombol-profil/{menu_aktif_id?}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'simulasiDetail'])->name('tes-tombol-profil');
+        Route::get('/makanan/{id}', [\App\Http\Controllers\UserDashboardController::class, 'makananDetail'])->name('makanan.detail');
 
         // Route Pembayaran Utama
         Route::get('/dashboard/{id}/pembayaran', [PembayaranController::class, 'show'])->name('makanan.pembayaran');

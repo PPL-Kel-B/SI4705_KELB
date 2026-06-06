@@ -67,8 +67,8 @@ class UserDashboardController extends Controller
             return $menu->computed_distance <= $radius;
         })->sortBy('computed_distance')->values();
 
-        // Ambil 6 donasi terdekat untuk ditampilkan di dashboard utama
-        $limited_nearby_donations = $nearby_donations->take(6);
+        // Ambil 4 donasi terdekat untuk ditampilkan di dashboard utama
+        $limited_nearby_donations = $nearby_donations->take(4);
 
         // 6. Hitung jumlah donatur aktif sekitar (dalam radius unit bisnis masing-masing)
         $active_donors_count = User::where('role', 'unit_bisnis')
@@ -235,5 +235,98 @@ class UserDashboardController extends Controller
         })->sortBy('computed_distance')->values();
 
         return view('user.nearby', compact('nearby_donations'));
+    }
+
+    public function makananDetail($id)
+    {
+        $user = auth()->user();
+        
+        // Find the active menu
+        $menu = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($id);
+
+        // Compute distance
+        $latBisnis = $menu->unitBisnis->lokasi_lat ?? $menu->unitBisnis->user->latitude ?? null;
+        $lngBisnis = $menu->unitBisnis->lokasi_lng ?? $menu->unitBisnis->user->longitude ?? null;
+        
+        $distance = 0.8; // default fallback
+        if ($user && !is_null($user->latitude) && !is_null($user->longitude) && !is_null($latBisnis) && !is_null($lngBisnis)) {
+            $distance = User::calculateDistance(
+                $user->latitude,
+                $user->longitude,
+                $latBisnis,
+                $lngBisnis
+            );
+        }
+        $menu->computed_distance = $distance;
+
+        // Calculate dynamic remaining time
+        $batas = \Carbon\Carbon::parse($menu->batas_pengambilan);
+        $diffInMins = now()->diffInMinutes($batas, false);
+        if ($diffInMins > 0) {
+            if ($diffInMins < 60) {
+                $timeStr = round($diffInMins) . ' mnt lagi';
+            } else {
+                $timeStr = round($diffInMins / 60) . ' jam lagi';
+            }
+        } else {
+            $timeStr = 'Habis';
+        }
+        $menu->time_remaining = $timeStr;
+
+        // Fetch "Makanan Serupa" (similar food items)
+        $kategori = $menu->masterMakanan->kategori;
+        $similar_items = MenuAktif::where('status', 'aktif')
+            ->where('id', '!=', $menu->id)
+            ->where('stok_porsi', '>', 0)
+            ->where('batas_pengambilan', '>', now())
+            ->whereHas('masterMakanan', function($query) use ($kategori) {
+                $query->where('kategori', $kategori);
+            })
+            ->with(['masterMakanan', 'unitBisnis.user'])
+            ->take(4)
+            ->get();
+
+        if ($similar_items->count() < 4) {
+            $exclude_ids = $similar_items->pluck('id')->push($menu->id)->toArray();
+            $extra_items = MenuAktif::where('status', 'aktif')
+                ->whereNotIn('id', $exclude_ids)
+                ->where('stok_porsi', '>', 0)
+                ->where('batas_pengambilan', '>', now())
+                ->with(['masterMakanan', 'unitBisnis.user'])
+                ->take(4 - $similar_items->count())
+                ->get();
+            $similar_items = $similar_items->concat($extra_items);
+        }
+
+        $similar_items = $similar_items->map(function ($item) use ($user) {
+            $latItem = $item->unitBisnis->lokasi_lat ?? $item->unitBisnis->user->latitude ?? null;
+            $lngItem = $item->unitBisnis->lokasi_lng ?? $item->unitBisnis->user->longitude ?? null;
+            $dist = 0.8;
+            if ($user && !is_null($user->latitude) && !is_null($user->longitude) && !is_null($latItem) && !is_null($lngItem)) {
+                $dist = User::calculateDistance(
+                    $user->latitude,
+                    $user->longitude,
+                    $latItem,
+                    $lngItem
+                );
+            }
+            $item->computed_distance = $dist;
+
+            $batasItem = \Carbon\Carbon::parse($item->batas_pengambilan);
+            $diffMins = now()->diffInMinutes($batasItem, false);
+            if ($diffMins > 0) {
+                if ($diffMins < 60) {
+                    $item->time_remaining = round($diffMins) . ' mnt lagi';
+                } else {
+                    $item->time_remaining = round($diffMins / 60) . ' jam lagi';
+                }
+            } else {
+                $item->time_remaining = 'Habis';
+            }
+
+            return $item;
+        });
+
+        return view('user.makanan_detail', compact('menu', 'similar_items'));
     }
 }

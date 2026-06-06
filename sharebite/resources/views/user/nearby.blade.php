@@ -167,10 +167,10 @@
                          x-transition:enter="transition ease-out duration-300"
                          x-transition:enter-start="opacity-0 scale-95"
                          x-transition:enter-end="opacity-100 scale-100"
-                         class="bg-white rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col overflow-hidden h-[275px] group max-w-[310px] w-full mx-auto">
+                         class="bg-white rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col overflow-hidden h-[290px] group max-w-[310px] w-full mx-auto">
                         
                         <!-- Gambar Makanan & Overlay -->
-                        <div class="relative h-[125px] w-full overflow-hidden bg-gray-50 shrink-0">
+                        <a href="{{ route('user.makanan.detail', $menu->id) }}" class="relative h-[140px] w-full overflow-hidden bg-gray-50 shrink-0 block">
                             <img src="{{ $menu->masterMakanan->foto ? asset('storage/' . $menu->masterMakanan->foto) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80' }}" 
                                  alt="{{ $menu->masterMakanan->nama_makanan }}" 
                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out">
@@ -194,7 +194,7 @@
                                 </svg>
                                 {{ number_format($menu->computed_distance, 1, ',', '.') }} km
                             </span>
-                        </div>
+                        </a>
 
                         <!-- Informasi Makanan -->
                         <div class="px-5 pb-3.5 pt-2.5 flex-1 flex flex-col justify-between">
@@ -209,16 +209,18 @@
                                     </span>
                                 </div>
                                 
-                                <h3 class="font-extrabold text-gray-900 text-sm leading-snug line-clamp-1 group-hover:text-[#1cb764] transition-colors">
-                                    {{ $menu->masterMakanan->nama_makanan }}
-                                </h3>
+                                <a href="{{ route('user.makanan.detail', $menu->id) }}" class="block hover:text-[#1cb764] transition-colors">
+                                    <h3 class="font-extrabold text-gray-900 text-sm leading-snug line-clamp-1">
+                                        {{ $menu->masterMakanan->nama_makanan }}
+                                    </h3>
+                                </a>
                                 
-                                <p class="text-[10px] text-gray-400 font-semibold flex items-center gap-1.5 truncate">
+                                <a href="{{ route('user.unit-bisnis.show', $menu->unit_bisnis_id) }}" class="text-[10px] text-gray-400 font-semibold flex items-center gap-1.5 truncate hover:text-[#1cb764] transition-colors mt-1">
                                     <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                                         <path d="M3 9h18M3 9v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V9M3 9L5 3h14l2 6M9 9v4M15 9v4" />
                                     </svg>
                                     {{ $menu->unitBisnis->nama_usaha ?? 'Mitra ShareBite' }}
-                                </p>
+                                </a>
                             </div>
 
                             <!-- Garis Pembatas -->
@@ -242,7 +244,7 @@
                                         <span>{{ $menu->stok_porsi }} Porsi</span>
                                     </div>
                                 </div>
-                                <a href="{{ route('user.makanan.pembayaran', $menu->id) }}" 
+                                <a href="{{ route('user.makanan.detail', $menu->id) }}" 
                                    class="bg-gradient-to-r from-[#0b472e] to-[#1cb764] hover:from-[#093522] hover:to-[#159a54] text-white text-xs font-bold px-4 py-2.5 rounded-2xl transition shadow-sm transform active:scale-95 cursor-pointer">
                                     Ambil
                                 </a>
