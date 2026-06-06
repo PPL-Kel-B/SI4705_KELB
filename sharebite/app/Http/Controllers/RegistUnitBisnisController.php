@@ -110,6 +110,8 @@ class RegistUnitBisnisController extends Controller
             $profileData = [
                 'nama_usaha'        => $validated['Nama_Usaha'],
                 'jenis_usaha'       => $validated['Jenis_Usaha'],
+                'lokasi_lat'        => $validated['Latitude'] ?? $existingUser->latitude,
+                'lokasi_lng'        => $validated['Longitude'] ?? $existingUser->longitude,
                 'status_verifikasi' => 'pending',
                 'reviewer_notes'    => null, // Reset pesan penolakan
             ];
@@ -147,6 +149,8 @@ class RegistUnitBisnisController extends Controller
                 'nama_usaha'        => $validated['Nama_Usaha'],
                 'jenis_usaha'       => $validated['Jenis_Usaha'],
                 'nib_file'          => $nibPath,
+                'lokasi_lat'        => $validated['Latitude'] ?? null,
+                'lokasi_lng'        => $validated['Longitude'] ?? null,
                 'status_verifikasi' => 'pending',
             ]);
 

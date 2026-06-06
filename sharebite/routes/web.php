@@ -15,6 +15,7 @@ use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\RiwayatController;
 use App\Http\Controllers\DashboardUnitBisnisController;
 use App\Http\Controllers\UnitBisnisController;
+use App\Http\Controllers\LokasiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -138,6 +139,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
         Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
+
+        Route::get('/lokasi', [LokasiController::class, 'index'])->name('lokasi');
+        Route::get('/api/lokasi/terdekat', [LokasiController::class, 'getTerdekat'])->name('api.lokasi.terdekat');
 
         Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');
         Route::get('/pengaturan/kebijakan/{type}', [\App\Http\Controllers\SettingsController::class, 'policy'])->name('pengaturan.policy');
