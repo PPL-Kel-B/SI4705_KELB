@@ -4,49 +4,11 @@
 
 @section('content')
 
-<div class="grid grid-cols-12 gap-6">
-
-    {{-- Sidebar --}}
-    <div class="col-span-4">
-
-        <div class="bg-white rounded-3xl shadow-sm overflow-hidden">
-
-            <div class="p-6 border-b">
-                <h2 class="text-2xl font-extrabold text-[#0A2E1F]">
-                    Chat Pusat Bantuan
-                </h2>
-
-                <p class="text-gray-500 mt-1">
-                    Komunikasi dengan Admin
-                </p>
-            </div>
-
-            <div class="flex items-center gap-4 p-5">
-
-                <div class="w-14 h-14 rounded-full bg-[#1CB764] text-white flex items-center justify-center font-bold text-xl">
-                    AD
-                </div>
-
-                <div>
-                    <h4 class="font-bold">
-                        Admin ShareBite
-                    </h4>
-
-                    <p class="text-sm text-gray-500">
-                        Tim Dukungan
-                    </p>
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
+<div class="max-w-screen-2xl mx-auto px-6 py-8">
     {{-- Chat Area --}}
     <div class="col-span-8">
 
-        <div class="bg-white rounded-3xl shadow-sm overflow-hidden flex flex-col h-[700px]">
+        <div class="bg-white rounded-3xl shadow-sm overflow-hidden flex flex-col h-[82vh]">
 
             {{-- Header --}}
             <div class="p-5 border-b bg-gray-50">
@@ -76,7 +38,8 @@
             {{-- Messages --}}
             <div
                 id="messagesContainer"
-                class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50"
+                class="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8faf8] min-h-[600px]"
+                style="min-height:600px"
             >
 
                 @forelse($messages as $message)
@@ -91,7 +54,8 @@
                                 @if($message->gambar)
                                     <img
                                         src="{{ asset('storage/'.$message->gambar) }}"
-                                        class="rounded-xl mb-2 max-w-[260px]"
+                                        class="rounded-xl mb-2 w-full max-w-[280px] cursor-pointer hover:opacity-90"
+                                        onclick="openImage(this.src)"
                                     >
                                 @endif
                                 @if($message->pesan)
@@ -116,13 +80,12 @@
 
                         {{-- Pesan Admin --}}
                         <div class="flex justify-start">
-
-                            <div class="bg-white border shadow-sm px-3 py-3 rounded-2xl max-w-[320px]">
-
+                            <div class="bg-white border border-gray-200 px-4 py-3 rounded-2xl max-w-[70%] shadow-sm">
                                 @if($message->gambar)
                                     <img
                                         src="{{ asset('storage/'.$message->gambar) }}"
-                                        class="rounded-xl mb-2 max-w-[260px]"
+                                        class="rounded-xl mb-2 w-full max-w-[280px] cursor-pointer hover:opacity-90"
+                                        onclick="openImage(this.src)"
                                     >
 
                                 @endif
@@ -279,34 +242,7 @@
 
                 </div>
             </form>
-            <!-- Info Box -->
-            <div class="m-4 bg-[#eefcf4] border border-[#1cb764] rounded-2xl p-4">
-                <div class="flex gap-3">
-                    <svg class="w-5 h-5 text-[#1cb764] flex-shrink-0 mt-0.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-
-                    <div>
-                        <p class="font-semibold text-gray-800 mb-1">
-                            Tips Menghubungi Admin
-                        </p>
-
-                        <ul class="text-gray-700 text-sm space-y-1">
-                            <li>• Jelaskan masalah secara detail dan spesifik</li>
-                            <li>• Sertakan informasi tentang unit bisnis atau akun Anda jika relevan</li>
-                            <li>• Admin akan merespons dalam waktu secepatnya</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
         </div>
-
     </div>
 
 </div>
@@ -390,5 +326,60 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 });
+</script>
+<div
+    id="imageModal"
+    class="fixed inset-0 bg-black/90 hidden items-center justify-center z-50"
+>
+
+    <button
+        onclick="closeImage()"
+        class="absolute top-5 right-5 text-white text-5xl"
+    >
+        &times;
+    </button>
+
+    <img
+        id="modalImage"
+        class="max-w-[90vw] max-h-[90vh] rounded-xl"
+    >
+</div>
+<script>
+
+function openImage(src)
+{
+    document.getElementById('modalImage').src = src;
+
+    document
+        .getElementById('imageModal')
+        .classList.remove('hidden');
+
+    document
+        .getElementById('imageModal')
+        .classList.add('flex');
+}
+
+function closeImage()
+{
+    document
+        .getElementById('imageModal')
+        .classList.add('hidden');
+
+    document
+        .getElementById('imageModal')
+        .classList.remove('flex');
+}
+    window.addEventListener('load', () => {
+
+        const container =
+            document.getElementById('messagesContainer');
+
+        if(container)
+        {
+            container.scrollTop =
+                container.scrollHeight;
+        }
+
+    });
 </script>
 @endsection
