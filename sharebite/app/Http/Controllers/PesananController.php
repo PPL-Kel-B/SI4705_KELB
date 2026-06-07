@@ -12,15 +12,46 @@ class PesananController extends Controller
     {
         $unitBisnis = UnitBisnisProfile::where('user_id', auth()->id())->firstOrFail();
 
-        $pesanans = Pesanan::with(['menuAktif.masterMakanan', 'user'])
+        // Auto-update expired orders
+        Pesanan::updateExpiredOrders();
+
+        $pesanans = Pesanan::with(['menuAktif.masterMakanan', 'user', 'pembayaran'])
             ->where('unit_bisnis_id', $unitBisnis->id)
+            ->where(function($query) {
+                $query->whereIn('status', ['dibayar', 'siap_diambil', 'selesai'])
+                      ->orWhere(function($q) {
+                          $q->where('status', 'dibatalkan')
+                            ->whereHas('pembayaran', function($pQuery) {
+                                $pQuery->where('status', 'berhasil');
+                            });
+                      });
+            })
+            ->orderByRaw("CASE WHEN status = 'selesai' OR status = 'dibatalkan' THEN 1 ELSE 0 END ASC")
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $menunggu = $pesanans->where('status', 'dibayar');
-        $selesai = $pesanans->whereIn('status', ['diambil', 'selesai']);
+        $menunggu = $pesanans->whereIn('status', ['dibayar', 'siap_diambil']);
+        
+        // Stat card "Selesai Distribusi" counts only successfully completed orders ('selesai')
+        $selesai = $pesanans->where('status', 'selesai');
 
-        return view('unit_bisnis.pesanan', compact('pesanans', 'menunggu', 'selesai'));
+        // Perhitungan pesanan masuk hari ini
+        $todayCount = Pesanan::where('unit_bisnis_id', $unitBisnis->id)
+            ->where(function($query) {
+                $query->whereIn('status', ['dibayar', 'siap_diambil', 'selesai'])
+                      ->orWhere(function($q) {
+                          $q->where('status', 'dibatalkan')
+                            ->whereHas('pembayaran', function($pQuery) {
+                                $pQuery->where('status', 'berhasil');
+                            });
+                      });
+            })
+            ->whereDate('waktu_pesan', today())
+            ->count();
+
+        $percentChangeText = '+' . $todayCount . ' pesanan masuk hari ini';
+
+        return view('unit_bisnis.pesanan', compact('pesanans', 'menunggu', 'selesai', 'percentChangeText'));
     }
 
     public function create() {}
@@ -28,19 +59,25 @@ class PesananController extends Controller
 
     public function show(string $id)
     {
-        $pesanan = Pesanan::with(['menuAktif.masterMakanan', 'user'])->findOrFail($id);
+        Pesanan::updateExpiredOrders();
+
+        $pesanan = Pesanan::with(['menuAktif.masterMakanan', 'user', 'pembayaran'])->findOrFail($id);
 
         $buyer = $pesanan->user;
-        $tahun = $buyer->created_at->format('Y');
+        $tahun = $buyer->created_at ? $buyer->created_at->format('Y') : date('Y');
         $idPad = str_pad($buyer->id, 3, '0', STR_PAD_LEFT);
         $prefix = ($buyer->role === 'individu') ? 'ID' : 'KM';
         $volId = "{$prefix}-{$tahun}-{$idPad}";
 
         $totalPesananBuyer = Pesanan::where('user_id', $buyer->id)
-            ->whereIn('status', ['dibayar', 'diambil', 'selesai'])
+            ->where('status', 'selesai')
             ->count();
 
-        return view('unit_bisnis.detail_pesanan', compact('pesanan', 'volId', 'totalPesananBuyer'));
+        $averageRating = \App\Models\Rating::where('user_id', $buyer->id)->avg('skor_rating') 
+            ?? \App\Models\Rating::where('user_id', $buyer->id)->avg('nilai') 
+            ?? 5.0;
+
+        return view('unit_bisnis.detail_pesanan', compact('pesanan', 'volId', 'totalPesananBuyer', 'averageRating'));
     }
 
     public function edit(string $id) {}
@@ -49,12 +86,12 @@ class PesananController extends Controller
     {
         $pesanan = Pesanan::findOrFail($id);
         
-        if ($pesanan->status == 'dibayar') {
+        if (in_array($pesanan->status, ['dibayar', 'siap_diambil'])) {
             $pesanan->update([
-                'status' => 'diambil', 
+                'status' => 'selesai', 
                 'waktu_diambil' => now()
             ]);
-            return redirect()->route('unit.pesanan.index')->with('success', 'Pesanan berhasil diserahkan!');
+            return redirect()->to(route('unit.pesanan.index') . '#')->with('success', 'Pesanan berhasil diserahkan!');
         }
 
         return back()->with('error', 'Gagal memverifikasi pesanan.');
@@ -65,31 +102,56 @@ class PesananController extends Controller
     public function verifikasi(Request $request)
     {
         $unitBisnis = UnitBisnisProfile::where('user_id', auth()->id())->firstOrFail();
+        $averageRating = 0;
         $pesanan = null;
         $volId = null;
         $totalPesananBuyer = 0;
 
+        // Auto-update expired orders
+        Pesanan::updateExpiredOrders();
+
         if ($request->has('code')) {
             $fullCode = 'SB-' . strtoupper($request->code);
             
-            $pesanan = Pesanan::with(['menuAktif.masterMakanan', 'user'])
+            $foundPesanan = Pesanan::with(['menuAktif.masterMakanan', 'user', 'pembayaran'])
                 ->where('unit_bisnis_id', $unitBisnis->id)
                 ->where('kode_unik', $fullCode)
-                ->where('status', 'dibayar')
                 ->first();
 
-            if ($pesanan) {
+            if ($foundPesanan) {
+                if ($foundPesanan->isTidakDiambil() || ($foundPesanan->menuAktif && $foundPesanan->menuAktif->isKadaluarsa())) {
+                    if ($foundPesanan->status !== 'dibatalkan') {
+                        $foundPesanan->update(['status' => 'dibatalkan']);
+                    }
+                    return back()->with('error', 'Pesanan ini sudah kadaluarsa (tidak diambil oleh relawan)!');
+                }
+
+                if (!in_array($foundPesanan->status, ['dibayar', 'siap_diambil'])) {
+                    return back()->with('error', 'Kode salah atau pesanan sudah diambil!');
+                }
+
+                $pesanan = $foundPesanan;
                 $buyer = $pesanan->user;
-                $tahun = $buyer->created_at->format('Y');
+                $tahun = $buyer->created_at ? $buyer->created_at->format('Y') : date('Y');
                 $idPad = str_pad($buyer->id, 3, '0', STR_PAD_LEFT);
                 $prefix = ($buyer->role === 'individu') ? 'ID' : 'KM';
                 $volId = "{$prefix}-{$tahun}-{$idPad}";
-                $totalPesananBuyer = Pesanan::where('user_id', $buyer->id)->whereIn('status', ['dibayar', 'diambil', 'selesai'])->count();
+                $totalPesananBuyer = Pesanan::where('user_id', $buyer->id)
+                    ->where('status', 'selesai')
+                    ->count();
+                $averageRating = \App\Models\Rating::where('user_id', $buyer->id)->avg('skor_rating') 
+                    ?? \App\Models\Rating::where('user_id', $buyer->id)->avg('nilai') 
+                    ?? 5.0;
             } else {
                 return back()->with('error', 'Kode salah atau pesanan sudah diambil!');
             }
         }
 
-        return view('unit_bisnis.verifikasi_code', compact('pesanan', 'volId', 'totalPesananBuyer'));
+        return view('unit_bisnis.verifikasi_code', compact('pesanan', 'volId', 'totalPesananBuyer', 'averageRating'));
+    }
+
+    public function panduan()
+    {
+        return view('unit_bisnis.panduan_pengambilan');
     }
 }

@@ -18,17 +18,23 @@ class RiwayatController extends Controller
         // 2. Ambil ID akun yang sedang login saat ini
         $userId = auth()->id();
 
+        // Auto-update expired orders
+        \App\Models\Pesanan::updateExpiredOrders();
+
         // 3. Query dasar + PROTEKSI: Hanya ambil data riwayat milik user yang sedang login
         $query = DB::table('pesanans')
             ->join('menu_aktifs', 'pesanans.menu_aktif_id', '=', 'menu_aktifs.id')
             ->join('master_makanans', 'menu_aktifs.master_makanan_id', '=', 'master_makanans.id')
             ->join('unit_bisnis_profiles', 'pesanans.unit_bisnis_id', '=', 'unit_bisnis_profiles.id')
+            ->leftJoin('pembayarans', 'pesanans.id', '=', 'pembayarans.pesanan_id')
             ->where('pesanans.user_id', $userId) // Proteksi riwayat per akun
             ->select(
                 'pesanans.*', 
                 'master_makanans.nama_makanan', 
                 'master_makanans.kategori', 
-                'unit_bisnis_profiles.nama_usaha'        
+                'unit_bisnis_profiles.nama_usaha',
+                'menu_aktifs.batas_pengambilan',
+                'pembayarans.status as status_pembayaran'
             );
 
         // 4. Logic Filter Status 
@@ -89,16 +95,21 @@ class RiwayatController extends Controller
     {
         $userId = auth()->id();
 
+        \App\Models\Pesanan::updateExpiredOrders();
+
         $pesanan = DB::table('pesanans')
             ->join('menu_aktifs', 'pesanans.menu_aktif_id', '=', 'menu_aktifs.id')
             ->join('master_makanans', 'menu_aktifs.master_makanan_id', '=', 'master_makanans.id')
             ->join('unit_bisnis_profiles', 'pesanans.unit_bisnis_id', '=', 'unit_bisnis_profiles.id')
+            ->leftJoin('pembayarans', 'pesanans.id', '=', 'pembayarans.pesanan_id')
             ->select(
                 'pesanans.*', 
                 'master_makanans.nama_makanan', 
                 'master_makanans.kategori',
                 'master_makanans.foto',
-                'unit_bisnis_profiles.nama_usaha'        
+                'unit_bisnis_profiles.nama_usaha',
+                'menu_aktifs.batas_pengambilan',
+                'pembayarans.status as status_pembayaran'
             )
             ->where('pesanans.id', $id)
             ->where('pesanans.user_id', $userId) // Proteksi detail riwayat agar tidak bisa diintip via URL

@@ -50,19 +50,20 @@ class PembayaranController extends Controller
             $selisih_porsi = $qty - $pesanan->jumlah_porsi;
             if ($selisih_porsi != 0) {
                 $makanan->decrement('stok_porsi', $selisih_porsi);
-
-                $pesanan->update([
-                    'jumlah_porsi' => $qty,
-                    'total_harga'  => $subtotal,
-                    'waktu_pesan'  => $pesanan->waktu_pesan,
-                ]);
             }
+            
+            // Selalu pastikan jumlah_porsi dan total_harga sinkron dengan state terpilih
+            $pesanan->update([
+                'jumlah_porsi' => $qty,
+                'total_harga'  => $subtotal,
+                'waktu_pesan'  => $pesanan->waktu_pesan,
+            ]);
         } else {
             // KURANGI STOK SAAT BARU MASUK HALAMAN PEMBAYARAN
             $makanan->decrement('stok_porsi', $qty);
 
             do {
-                $kodeBaru = 'SB-' . rand(1000, 9999) . '-' . strtoupper(Str::random(3));
+                $kodeBaru = 'SB-' . rand(100, 999) . '-' . strtoupper(Str::random(3));
             } while (Pesanan::where('kode_unik', $kodeBaru)->exists());
 
             $pesanan = Pesanan::create([

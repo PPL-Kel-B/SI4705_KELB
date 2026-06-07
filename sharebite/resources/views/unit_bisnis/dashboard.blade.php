@@ -222,7 +222,7 @@
 
                         <a href="{{ route('unit.pesanan.index') }}"
                             class="group flex items-center justify-between
-                                bg-[#F4F8F6]
+                                bg-[#F0F7F2]
                                 rounded-2xl
                                 p-4
                                 hover:shadow-md
@@ -311,7 +311,7 @@
                 <h2 class="text-xl font-extrabold text-gray-800 mb-6">Kelola Menu Aktif</h2>
                 <div class="space-y-4 flex-1">
                     <!-- Status 1: Tersedia — count dari controller -->
-                    <div class="bg-[#F4F8F6] border border-gray-100 rounded-2xl p-4">
+                    <div class="bg-[#F0F7F2] border border-gray-100 rounded-2xl p-4">
                         <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
                                 <div class="w-2 h-2 rounded-full bg-[#1cb764]"></div>

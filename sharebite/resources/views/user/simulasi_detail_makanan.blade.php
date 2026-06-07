@@ -217,7 +217,7 @@
                 </div>
 
                 {{-- Action Button --}}
-                <button class="w-full bg-[#1cb764] hover:bg-[#158f4e] text-white font-extrabold text-xs py-4 rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 uppercase tracking-wider">
+                <button @click="window.location.href = '{{ route('user.makanan.pembayaran', $makanan->id) }}?qty=' + porsi" class="w-full bg-[#1cb764] hover:bg-[#158f4e] text-white font-extrabold text-xs py-4 rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 uppercase tracking-wider">
                     <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>

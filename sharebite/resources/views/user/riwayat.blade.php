@@ -244,10 +244,17 @@
                                 PROSES
                             </span>
                         @else
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider text-[#C5221F] bg-[#FCE8E6]">
-                                <div class="w-1.5 h-1.5 rounded-full bg-[#D93025]"></div>
-                                BATAL
-                            </span>
+                            @if($pesanan->status == 'dibatalkan' && ($pesanan->status_pembayaran ?? '') == 'berhasil')
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider text-[#C5221F] bg-[#FCE8E6]">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-[#D93025]"></div>
+                                    TIDAK DIAMBIL
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider text-[#C5221F] bg-[#FCE8E6]">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-[#D93025]"></div>
+                                    BATAL
+                                </span>
+                            @endif
                         @endif
                     </td>
                 </tr>
