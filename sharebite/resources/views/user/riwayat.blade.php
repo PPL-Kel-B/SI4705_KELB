@@ -167,40 +167,17 @@
                             }
                         @endphp
 
-                        @if(strpos($kategori, 'berat') !== false)
-                            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="{{ $statusStyle }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                                    <rect x="3" y="7" width="18" height="13" rx="3" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 11h18M10 3h4v4h-4zM7 15h3m4 0h3" />
-                                </svg>
-                            </div>
-                        @elseif(strpos($kategori, 'ringan') !== false || strpos($kategori, 'cemilan') !== false)
-                            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="{{ $statusStyle }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12h18M4 12a8 8 0 0 1 16 0M3 15h18M5 15a4 4 0 0 0 14 0M4 18h16a1 1 0 0 1 1 1v1H3v-1a1 1 0 0 1 1-1Z" />
-                                </svg>
-                            </div>
-                        @elseif(strpos($kategori, 'dessert') !== false)
-                            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="{{ $statusStyle }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 16V8a1 1 0 0 0-.6-.9L12 3 3.6 7.1A1 1 0 0 0 3 8v8a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3ZM3 12h18M12 3v16" />
-                                    <circle cx="12" cy="7" r="1" fill="currentColor" />
-                                </svg>
-                            </div>
-                        @elseif(strpos($kategori, 'minuman') !== false)
-                            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="{{ $statusStyle }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 3h12l-1.5 15a2 2 0 0 1-2 1.8h-5A2 2 0 0 1 6 18L4.5 3Z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h18M15 3l1-2" />
-                                </svg>
-                            </div>
-                        @else
-                            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="{{ $statusStyle }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 2v20M17 5v6a3 3 0 0 1-3 3h-4a3 3 0 0 1-3-3V5M7 2v3M17 2v3" />
-                                </svg>
-                            </div>
-                        @endif
+                        <div class="w-12 h-12 rounded-xl overflow-hidden shrink-0 shadow-sm border border-gray-150 flex items-center justify-center bg-gray-50">
+                            @if($pesanan->foto)
+                                <img src="{{ asset('storage/' . $pesanan->foto) }}" 
+                                     alt="{{ $pesanan->nama_makanan }}" 
+                                     class="w-full h-full object-cover">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center text-[11px] font-black tracking-wider" style="{{ $statusStyle }}">
+                                    {{ strtoupper(substr($pesanan->nama_makanan, 0, 2)) }}
+                                </div>
+                            @endif
+                        </div>
 
                         @php
                             if (strpos($kategori, 'berat') !== false) { $label = 'Makanan Berat'; }

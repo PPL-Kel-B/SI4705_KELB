@@ -9,6 +9,44 @@ use Tests\DuskTestCase;
 
 class UnitBisnisProfileTest extends DuskTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Pastikan user unit bisnis dan profilnya ada di database dusk
+        $user = User::firstOrCreate(
+            ['email' => 'unit@sharebite.com'],
+            [
+                'name'     => 'Lestari Food',
+                'password' => bcrypt('password'),
+                'role'     => 'unit_bisnis',
+                'no_hp'    => '+6282178830750',
+            ]
+        );
+
+        UnitBisnisProfile::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'nama_usaha'           => 'Lestari Food',
+                'jenis_usaha'          => 'Restoran',
+                'email_bisnis'         => 'lestari@gmail.com',
+                'no_telepon'           => '+6282178830750',
+                'foto_bisnis'          => 'images/placeholder-bisnis.jpg',
+                'lokasi_lat'           => '-6.9271',
+                'lokasi_lng'           => '107.6411',
+                'radius_penjemputan'   => 15,
+                'jam_buka'             => '08:00',
+                'jam_tutup'            => '21:00',
+                'verified'             => true,
+                'status_verifikasi'    => 'terverifikasi',
+                'tahun_bergabung'      => 2023,
+                'notifikasi_aktif'     => true,
+                'notifikasi_pesanan'   => true,
+                'notifikasi_penjemputan' => true,
+            ]
+        );
+    }
+
     public function test_unit_bisnis_dapat_melihat_halaman_profile()
     {
         $user = User::where('email', 'unit@sharebite.com')->first();
