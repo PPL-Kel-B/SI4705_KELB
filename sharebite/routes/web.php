@@ -15,6 +15,7 @@ use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\RiwayatController;
 use App\Http\Controllers\DashboardUnitBisnisController;
 use App\Http\Controllers\UnitBisnisController;
+use App\Http\Controllers\ChatController;
 
 /*
 |--------------------------------------------------------------------------
@@ -158,6 +159,13 @@ Route::middleware('auth')->group(function () {
         // Proses Pembayaran & Halaman Berhasil
         Route::post('/dashboard/{id}/pembayaran/proses', [PembayaranController::class, 'store'])->name('pembayaran.proses');
         Route::get('/dashboard/{id}/pembayaran/berhasil', [PembayaranController::class, 'berhasil'])->name('pembayaran.berhasil');
+        
+        // Menu Chat dengan Admin
+        Route::get('/chat', [ChatController::class, 'chatWithAdmin'])
+        ->name('chat');
+
+        Route::post('/chat/send', [ChatController::class, 'sendToAdmin'])
+            ->name('chat.send');
     });
 
     // Unit Bisnis Dashboard Routes
@@ -177,6 +185,7 @@ Route::middleware('auth')->group(function () {
             'index' => 'master_data.index',
             'create' => 'master_data.create',
             'store' => 'master_data.store',
+            'show'    => 'master_data.show',
             'edit' => 'master_data.edit',
             'update' => 'master_data.update',
             'destroy' => 'master_data.destroy',
@@ -203,6 +212,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengaturan', [UnitBisnisController::class, 'showSettings'])->name('pengaturan');
         Route::post('/pengaturan/update', [UnitBisnisController::class, 'updateSettings'])->name('pengaturan.update');
         Route::post('/pengaturan/update-password', [UnitBisnisController::class, 'updatePassword'])->name('pengaturan.update-password');
+
+        // Menu Chat dengan Admin
+        Route::get('/chat', [ChatController::class, 'chatWithAdmin'])
+            ->name('chat');
+
+        Route::post('/chat/send', [ChatController::class, 'sendToAdmin'])
+            ->name('chat.send');
     });
 
     // Admin Dashboard Routes
@@ -215,9 +231,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/manajemen-pengguna/verifikasi/{id}', [ManajemenUserController::class, 'processNib'])->name('manajemen_pengguna.process_nib');
         Route::put('/manajemen-pengguna/{id}', [ManajemenUserController::class, 'update'])->name('manajemen_pengguna.update');
         Route::delete('/manajemen-pengguna/{id}', [ManajemenUserController::class, 'destroy'])->name('manajemen_pengguna.destroy');
-        Route::get('/chat', function () {
-            return view('admin.chat');
-        })->name('chat');
+        Route::get('/chat', [ChatController::class, 'index'])
+            ->name('chat');
+        Route::get('/chat/{userId}', [ChatController::class, 'index'])
+            ->name('chat.show');
+        Route::post('/chat/send', [ChatController::class, 'store'])
+            ->name('chat.store');
     });
 });
 

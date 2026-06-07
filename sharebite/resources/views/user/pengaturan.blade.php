@@ -226,7 +226,7 @@
                     </div>
                     
                     <!-- Tombol Hubungi CS -->
-                    <a href="#" class="w-full bg-white text-[#f89b29] py-5 rounded-full font-black text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                    <a href="{{ route('user.chat') }}" class="w-full bg-white text-[#f89b29] py-5 rounded-full font-black text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                         Hubungi CS
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
