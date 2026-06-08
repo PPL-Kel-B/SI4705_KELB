@@ -15,6 +15,7 @@ use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\RiwayatController;
 use App\Http\Controllers\DashboardUnitBisnisController;
 use App\Http\Controllers\UnitBisnisController;
+use App\Http\Controllers\RiwayatUnitBisnisController;
 use App\Http\Controllers\LokasiController;
 
 /*
@@ -188,9 +189,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/pesanan', function () {
             return view('unit_bisnis.pesanan');
         })->name('pesanan');
-        Route::get('/riwayat', function () {
-            return view('unit_bisnis.riwayat');
-        })->name('riwayat');
+        Route::get('/riwayat', [RiwayatUnitBisnisController::class, 'index'])->name('riwayat');
+        Route::get('/riwayat/export', [RiwayatUnitBisnisController::class, 'export'])->name('riwayat.export');
+        Route::get('/riwayat/{id}', [RiwayatUnitBisnisController::class, 'show'])->name('riwayat.show');
 
         // Profil Unit Bisnis
         Route::get('/profil', [UnitBisnisController::class, 'showProfile'])->name('profil');
