@@ -8,8 +8,7 @@
     {{-- Chat Area --}}
     <div class="col-span-8">
 
-        <div class="bg-white rounded-3xl shadow-sm overflow-hidden flex flex-col h-[82vh]">
-
+        <div class="bg-white rounded-3xl shadow-sm overflow-hidden flex flex-col h-[calc(100vh-140px)]">
             {{-- Header --}}
             <div class="p-5 border-b bg-gray-50">
 
@@ -38,8 +37,7 @@
             {{-- Messages --}}
             <div
                 id="messagesContainer"
-                class="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8faf8] min-h-[600px]"
-                style="min-height:600px"
+                class="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8faf8]"
             >
 
                 @forelse($messages as $message)
@@ -126,6 +124,10 @@
                                 Mulai percakapan dengan admin
                             </p>
 
+                            <p class="text-xs text-gray-400 mt-2">
+                                Kirim pesan pertama Anda menggunakan form di bawah
+                            </p>
+
                         </div>
 
                     </div>
@@ -147,7 +149,7 @@
 
             {{-- Form --}}
             <form
-                action="{{ route('unit.chat.send') }}"
+                action="{{ route('user.chat.send') }}"
                 method="POST"
                 enctype="multipart/form-data"
                 class="border-t border-gray-100 bg-white p-4"
