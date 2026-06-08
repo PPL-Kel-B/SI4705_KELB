@@ -91,7 +91,7 @@ class PesananController extends Controller
                 'status' => 'selesai', 
                 'waktu_diambil' => now()
             ]);
-            return redirect()->to(route('unit.pesanan.index') . '#')->with('success', 'Pesanan berhasil diserahkan!');
+            return redirect()->route('unit.riwayat.show', $pesanan->id)->with('success', 'Pesanan berhasil diserahkan!');
         }
 
         return back()->with('error', 'Gagal memverifikasi pesanan.');

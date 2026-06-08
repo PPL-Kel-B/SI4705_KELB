@@ -69,7 +69,8 @@ class PembayaranController extends Controller
             $makanan->decrement('stok_porsi', $qty);
 
             do {
-                $kodeBaru = 'SB-' . rand(100, 999) . '-' . strtoupper(Str::random(3));
+                $randomLetters = chr(random_int(65, 90)) . chr(random_int(65, 90)) . chr(random_int(65, 90));
+                $kodeBaru = 'SB-' . rand(100, 999) . '-' . $randomLetters;
             } while (Pesanan::where('kode_unik', $kodeBaru)->exists());
 
             $pesanan = Pesanan::create([
