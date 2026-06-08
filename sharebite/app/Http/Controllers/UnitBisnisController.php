@@ -185,9 +185,16 @@ class UnitBisnisController extends Controller
             $profileData['nama_usaha'] = $validated['nama_bisnis'];
         }
 
-        // header_image bisa null saat dihapus — tetap masukkan
         if (array_key_exists('header_image', $validated)) {
             $profileData['header_image'] = $validated['header_image'];
+        }
+
+        // Simpan juga koordinat ke UnitBisnisProfile jika ada perubahan
+        if (!empty($validated['lokasi_lat'])) {
+            $profileData['lokasi_lat'] = $validated['lokasi_lat'];
+        }
+        if (!empty($validated['lokasi_lng'])) {
+            $profileData['lokasi_lng'] = $validated['lokasi_lng'];
         }
 
         unset($profileData['nama_bisnis']);
