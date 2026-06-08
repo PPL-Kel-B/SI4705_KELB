@@ -5,19 +5,30 @@ namespace Tests\Browser;
 use App\Models\User;
 use App\Models\MasterMakanan;
 use App\Models\MenuAktif;
+use App\Models\UnitBisnisProfile;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class KunjungiProfilTest extends DuskTestCase
 {
-    /**
-     * Menguji alur E2E Kunjungi Profil dari POV Komunitas/Individu.
-     */
-    public function test_kunjungi_profil_flow_e2e(): void
+    use DatabaseMigrations;
+
+    protected $userKomunitas;
+    protected $profile;
+    protected $menuAktif;
+    protected $namaMakananTest = 'Rawon';
+
+    protected function setUp(): void
     {
-        $userKomunitas = User::where('role', 'komunitas')->first();
-        if (!$userKomunitas) {
-            $userKomunitas = User::factory()->create(['role' => 'komunitas']);
+        parent::setUp();
+        
+        // 1. Jalankan seeder bawaan (untuk role, default users, dll jika ada)
+        $this->artisan('db:seed');
+
+        $this->userKomunitas = User::where('role', 'komunitas')->first();
+        if (!$this->userKomunitas) {
+            $this->userKomunitas = User::factory()->create(['role' => 'komunitas']);
         }
 
         $userUnitBisnis = User::where('role', 'unit_bisnis')->first();
@@ -25,9 +36,9 @@ class KunjungiProfilTest extends DuskTestCase
             $userUnitBisnis = User::factory()->create(['role' => 'unit_bisnis']);
         }
 
-        $profile = $userUnitBisnis->unitBisnisProfile;
-        if (!$profile) {
-            $profile = \App\Models\UnitBisnisProfile::create([
+        $this->profile = $userUnitBisnis->unitBisnisProfile;
+        if (!$this->profile) {
+            $this->profile = UnitBisnisProfile::create([
                 'user_id' => $userUnitBisnis->id,
                 'nama_usaha' => 'katsuna',
                 'jenis_usaha' => 'Kafe',
@@ -36,11 +47,11 @@ class KunjungiProfilTest extends DuskTestCase
                 'status_verifikasi' => 'terverifikasi'
             ]);
         }
-        $namaMakananTest = 'Rawon';
+
         $masterMakanan = MasterMakanan::updateOrCreate(
             [
-                'unit_bisnis_id' => $profile->id, 
-                'nama_makanan' => $namaMakananTest
+                'unit_bisnis_id' => $this->profile->id, 
+                'nama_makanan' => $this->namaMakananTest
             ],
             [
                 'kategori' => 'Makanan Berat', 
@@ -49,58 +60,113 @@ class KunjungiProfilTest extends DuskTestCase
             ]
         );
 
-        $menuAktif = MenuAktif::updateOrCreate(
+        $this->menuAktif = MenuAktif::updateOrCreate(
             [
                 'master_makanan_id' => $masterMakanan->id,
-                'unit_bisnis_id' => $profile->id,
+                'unit_bisnis_id' => $this->profile->id,
             ],
             [
                 'stok_porsi' => 15, 
-                'batas_pengambilan' => '23:59', 
+                'batas_pengambilan' => now()->endOfDay(), 
                 'status' => 'aktif'
             ]
         );
+    }
 
-        $this->browse(function (Browser $browser) use ($userKomunitas, $profile, $menuAktif, $namaMakananTest) {
+    /**
+     * Helper method untuk login dan navigasi ke halaman profil unit bisnis.
+     */
+    protected function goToProfile(Browser $browser): void
+    {
+        $browser->loginAs($this->userKomunitas)
+                ->visit('/user/makanan/' . $this->menuAktif->id)
+                ->waitForText('Kunjungi Profil', 10)
+                ->clickLink('Kunjungi Profil')
+                ->waitForLocation('/user/unit-bisnis/' . $this->profile->id, 10)
+                ->assertPathIs('/user/unit-bisnis/' . $this->profile->id);
+    }
+
+    /**
+     * PM-01: Verifikasi Identitas & Kontak Mitra
+     */
+    public function test_PM_01_VerifikasiIdentitasDanKontakMitra(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->goToProfile($browser);
             
-            $browser->loginAs($userKomunitas)
-                    ->visit('/user/tes-tombol-profil/' . $menuAktif->id)
-                    ->waitForText('Kunjungi Profil', 10)
-                    ->assertSee($namaMakananTest)
-                    ->assertSee('15 Porsi')
-                    ->clickLink('Kunjungi Profil')
-                    ->waitForLocation('/user/unit-bisnis/' . $profile->id, 10)
-                    ->assertPathIs('/user/unit-bisnis/' . $profile->id)
-                    
-                    // PM-01: Verifikasi Identitas & Kontak Mitra
-                    ->assertSee($profile->nama_usaha)
+            $browser->assertSee($this->profile->nama_usaha)
                     ->assertSee('Verified')
                     ->assertSee('Jam Operasional')
                     ->assertSee('Hubungi Mitra')
-                    ->assertSee('Email Mitra')
-                    
-                    // PM-02: Verifikasi "Tentang Mitra" & "Spesialisasi"
-                    ->assertSee('Tentang Mitra')
-                    ->assertSee('SPESIALISASI')
-                    
-                    // PM-03: Tampilan Galeri (Empty State)
-                    ->assertSee('GALERI AKTIVITAS DONASI')
-                    ->assertSee('Bukti Aktivitas Donasi Belum Tersedia')
-                    
-                    // PM-04: Tampilan Ulasan Komunitas (Empty State)
-                    ->assertSee('ULASAN KOMUNITAS')
-                    ->assertSee('Belum Ada Ulasan')
-                    
-                    // PM-05: Verifikasi Statistik Mitra
-                    ->assertSee('TOTAL DONASI')
-                    ->assertSee('REPUTASI / RATING')
-                    
-                    // PM-06: Interaksi Daftar "Makanan Tersedia"
-                    ->assertSee('Makanan yang Tersedia Saat Ini')
-                    ->assertSee($namaMakananTest)
+                    ->assertSee('Email Mitra');
+        });
+    }
+
+    /**
+     * PM-02: Verifikasi "Tentang Mitra" & "Spesialisasi"
+     */
+    public function test_PM_02_VerifikasiTentangMitraDanSpesialisasi(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->goToProfile($browser);
+            
+            $browser->assertSee('Tentang Mitra')
+                    ->assertSee('SPESIALISASI');
+        });
+    }
+
+    /**
+     * PM-03: Tampilan Galeri (Empty State)
+     */
+    public function test_PM_03_TampilanGaleriEmptyState(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->goToProfile($browser);
+            
+            $browser->assertSee('GALERI AKTIVITAS DONASI')
+                    ->assertSee('Bukti Aktivitas Donasi Belum Tersedia');
+        });
+    }
+
+    /**
+     * PM-04: Tampilan Ulasan Komunitas (Empty State)
+     */
+    public function test_PM_04_TampilanUlasanKomunitasEmptyState(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->goToProfile($browser);
+            
+            $browser->assertSee('ULASAN KOMUNITAS')
+                    ->assertSee('Belum Ada Ulasan');
+        });
+    }
+
+    /**
+     * PM-05: Verifikasi Statistik Mitra
+     */
+    public function test_PM_05_VerifikasiStatistikMitra(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->goToProfile($browser);
+            
+            $browser->assertSee('TOTAL DONASI')
+                    ->assertSee('REPUTASI / RATING');
+        });
+    }
+
+    /**
+     * PM-06: Interaksi Daftar "Makanan Tersedia"
+     */
+    public function test_PM_06_InteraksiDaftarMakananTersedia(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->goToProfile($browser);
+            
+            $browser->assertSee('Makanan yang Tersedia Saat Ini')
+                    ->assertSee($this->namaMakananTest)
                     ->clickLink('Ambil')
                     ->pause(1000)
-                    ->assertPathBeginsWith('/user/tes-tombol-profil/');
+                    ->assertPathBeginsWith('/user/makanan/');
         });
     }
 }
