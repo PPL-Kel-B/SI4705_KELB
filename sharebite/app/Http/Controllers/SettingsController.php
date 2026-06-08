@@ -77,6 +77,14 @@ class SettingsController extends Controller
 
         $user->save();
 
+        // Log activity
+        \App\Models\UserActivity::log(
+            $user->id,
+            'pengaturan',
+            'Pengaturan Diubah',
+            'Berhasil mengubah preferensi notifikasi.'
+        );
+
         return response()->json([
             'success' => true,
             'message' => 'Pengaturan notifikasi berhasil diperbarui!'

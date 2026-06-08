@@ -12,9 +12,22 @@ class Pesanan extends Model
     protected static function booted()
     {
         static::created(function ($pesanan) {
-            $unitBisnisUser = $pesanan->unitBisnis->user ?? null;
-            if ($unitBisnisUser) {
-                $unitBisnisUser->notify(new \App\Notifications\PesananMasukNotification($pesanan));
+            // Hanya kirim notifikasi jika statusnya langsung dibayar (seperti di seeder/test)
+            if ($pesanan->status === 'dibayar') {
+                $unitBisnisUser = $pesanan->unitBisnis->user ?? null;
+                if ($unitBisnisUser) {
+                    $unitBisnisUser->notify(new \App\Notifications\PesananMasukNotification($pesanan));
+                }
+            }
+        });
+
+        static::updated(function ($pesanan) {
+            // Kirim notifikasi jika status diubah menjadi dibayar (alur pembayaran real sukses)
+            if ($pesanan->isDirty('status') && $pesanan->status === 'dibayar') {
+                $unitBisnisUser = $pesanan->unitBisnis->user ?? null;
+                if ($unitBisnisUser) {
+                    $unitBisnisUser->notify(new \App\Notifications\PesananMasukNotification($pesanan));
+                }
             }
         });
     }
@@ -75,6 +88,11 @@ class Pesanan extends Model
     public function buktiDonasis()
     {
         return $this->hasMany(BuktiDonasi::class);
+    }
+
+    public function rating()
+    {
+        return $this->hasOne(Rating::class);
     }
 
     // -------------------------------------------------------

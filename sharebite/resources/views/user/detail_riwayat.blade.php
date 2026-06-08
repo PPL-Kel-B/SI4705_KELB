@@ -79,7 +79,7 @@
                         </div>
                         <div class="flex justify-between items-center text-xs font-semibold text-gray-600">
                             <span>Waktu Pembatalan</span>
-                            <span class="text-gray-800 font-semibold">{{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->translatedFormat('d M Y, H:i') }} WIB</span>
+                            <span class="text-gray-800 font-semibold">{{ \Carbon\Carbon::parse($pesanan->updated_at)->translatedFormat('d M Y, H:i') }} WIB</span>
                         </div>
                     </div>
                 @else

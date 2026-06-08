@@ -16,6 +16,8 @@ use App\Http\Controllers\RiwayatController;
 use App\Http\Controllers\DashboardUnitBisnisController;
 use App\Http\Controllers\UnitBisnisController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\RiwayatUnitBisnisController;
+use App\Http\Controllers\LokasiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -130,15 +132,18 @@ Route::middleware('auth')->group(function () {
 
     // User Dashboard Routes
     Route::prefix('user')->name('user.')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('user.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [\App\Http\Controllers\UserDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/aktivitas', [\App\Http\Controllers\UserDashboardController::class, 'activities'])->name('activities');
+        Route::get('/donasi-terdekat', [\App\Http\Controllers\UserDashboardController::class, 'nearby'])->name('nearby');
         Route::get('/riwayat', [\App\Http\Controllers\RiwayatController::class, 'index'])->name('riwayat');
         Route::get('/riwayat/{id}', [App\Http\Controllers\RiwayatController::class, 'show'])->name('riwayat.show');
         Route::post('/riwayat/{id}/rate', [App\Http\Controllers\RiwayatController::class, 'storeRating'])->name('riwayat.storeRating');
         Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
         Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
+
+        Route::get('/lokasi', [LokasiController::class, 'index'])->name('lokasi');
+        Route::get('/api/lokasi/terdekat', [LokasiController::class, 'getTerdekat'])->name('api.lokasi.terdekat');
 
         Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');
         Route::get('/pengaturan/kebijakan/{type}', [\App\Http\Controllers\SettingsController::class, 'policy'])->name('pengaturan.policy');
@@ -147,8 +152,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/unit-bisnis/{id}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'show'])->name('unit-bisnis.show');
 
-        // ROUTE SEMENTARA UNTUK TES TOMBOL (Nanti dihapus saat digabung)
-        Route::get('/tes-tombol-profil/{menu_aktif_id?}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'simulasiDetail'])->name('tes-tombol-profil');
+        Route::get('/makanan/{id}', [\App\Http\Controllers\UserDashboardController::class, 'makananDetail'])->name('makanan.detail');
 
         // Route Pembayaran Utama
         Route::get('/dashboard/{id}/pembayaran', [PembayaranController::class, 'show'])->name('makanan.pembayaran');
@@ -194,9 +198,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/pesanan', function () {
             return view('unit_bisnis.pesanan');
         })->name('pesanan');
-        Route::get('/riwayat', function () {
-            return view('unit_bisnis.riwayat');
-        })->name('riwayat');
+        Route::get('/riwayat', [RiwayatUnitBisnisController::class, 'index'])->name('riwayat');
+        Route::get('/riwayat/export', [RiwayatUnitBisnisController::class, 'export'])->name('riwayat.export');
+        Route::get('/riwayat/{id}', [RiwayatUnitBisnisController::class, 'show'])->name('riwayat.show');
 
         // Profil Unit Bisnis
         Route::get('/profil', [UnitBisnisController::class, 'showProfile'])->name('profil');

@@ -18,10 +18,8 @@ class UnitBisnisController extends Controller
         if (!$unitBisnis) {
             $unitBisnis = new UnitBisnisProfile([
                 'user_id' => $user->id,
-                'nama_usaha' => null,
-                'email_bisnis' => null,
-                'no_telepon' => null,
-                'tipe_bisnis' => null,
+                'nama_usaha' => $user->name,
+                'jenis_usaha' => null,
                 'lokasi_lat' => '-6.9271',
                 'lokasi_lng' => '107.6411',
                 'radius_penjemputan' => 15,
@@ -90,7 +88,7 @@ class UnitBisnisController extends Controller
             'nama_bisnis' => 'nullable|string|max:255',
             'email_bisnis' => 'nullable|email|max:255',
             'no_telepon' => ['nullable', 'string', 'regex:/^[0-9+\-() ]+$/'],
-            'tipe_bisnis' => 'nullable|string|max:100',
+            'jenis_usaha' => 'nullable|string|max:100',
             'deskripsi' => 'nullable|string|max:1000',
             'alamat' => 'nullable|string|max:500',
             'lokasi_lat' => 'nullable|numeric',
@@ -114,10 +112,8 @@ class UnitBisnisController extends Controller
         $unitBisnis = UnitBisnisProfile::firstOrCreate(
             ['user_id' => $user->id],
             [
-                'nama_usaha' => null,
-                'email_bisnis' => null,
-                'no_telepon' => null,
-                'tipe_bisnis' => null,
+                'nama_usaha' => $user->name,
+                'jenis_usaha' => null,
                 'foto_bisnis' => 'images/placeholder-bisnis.jpg',
                 'verified' => true,
                 'tahun_bergabung' => now()->year,
@@ -126,6 +122,9 @@ class UnitBisnisController extends Controller
 
         if (!empty($validated['nama_bisnis'])) {
             $user->name = $validated['nama_bisnis'];
+        }
+        if (!empty($validated['email_bisnis'])) {
+            $user->email = $validated['email_bisnis'];
         }
         if (!empty($validated['alamat'])) {
             $user->alamat = $validated['alamat'];
@@ -186,14 +185,22 @@ class UnitBisnisController extends Controller
             $profileData['nama_usaha'] = $validated['nama_bisnis'];
         }
 
-        // header_image bisa null saat dihapus — tetap masukkan
         if (array_key_exists('header_image', $validated)) {
             $profileData['header_image'] = $validated['header_image'];
         }
 
+        // Simpan juga koordinat ke UnitBisnisProfile jika ada perubahan
+        if (!empty($validated['lokasi_lat'])) {
+            $profileData['lokasi_lat'] = $validated['lokasi_lat'];
+        }
+        if (!empty($validated['lokasi_lng'])) {
+            $profileData['lokasi_lng'] = $validated['lokasi_lng'];
+        }
+
+        unset($profileData['nama_bisnis']);
+        unset($profileData['email_bisnis']);
+        unset($profileData['no_telepon']);
         unset($profileData['alamat']);
-        unset($profileData['lokasi_lat']);
-        unset($profileData['lokasi_lng']);
         unset($profileData['delete_photo']);
         unset($profileData['delete_header']);
 
@@ -214,10 +221,8 @@ class UnitBisnisController extends Controller
         $unitBisnis = UnitBisnisProfile::firstOrCreate(
             ['user_id' => $user->id],
             [
-                'nama_usaha' => null,
-                'email_bisnis' => null,
-                'no_telepon' => null,
-                'tipe_bisnis' => null,
+                'nama_usaha' => $user->name,
+                'jenis_usaha' => null,
                 'foto_bisnis' => 'images/placeholder-bisnis.jpg',
                 'verified' => true,
                 'tahun_bergabung' => now()->year,
@@ -326,10 +331,8 @@ class UnitBisnisController extends Controller
         $unitBisnis = UnitBisnisProfile::firstOrCreate(
             ['user_id' => $user->id],
             [
-                'nama_usaha' => null,
-                'email_bisnis' => null,
-                'no_telepon' => null,
-                'tipe_bisnis' => null,
+                'nama_usaha' => $user->name,
+                'jenis_usaha' => null,
                 'foto_bisnis' => 'images/placeholder-bisnis.jpg',
                 'verified' => true,
                 'tahun_bergabung' => now()->year,

@@ -273,16 +273,16 @@ class="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {{-- Email Bisnis --}}
             <div>
                 <label class="text-[10px] font-extrabold text-[#7c9a8d] uppercase tracking-wider block mb-2">Email Bisnis</label>
-                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm break-all {{ $unitBisnis->email_bisnis ? 'font-bold text-[#0a2e1f]' : 'text-gray-400 italic' }}">
-                    {{ $unitBisnis->email_bisnis ?: 'Belum diisi' }}
+                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm break-all {{ $user->email ? 'font-bold text-[#0a2e1f]' : 'text-gray-400 italic' }}">
+                    {{ $user->email ?: 'Belum diisi' }}
                 </div>
             </div>
 
             {{-- Nomor Hotline --}}
             <div>
                 <label class="text-[10px] font-extrabold text-[#7c9a8d] uppercase tracking-wider block mb-2">Nomor Hotline</label>
-                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm {{ $unitBisnis->no_telepon ? 'font-bold text-[#0a2e1f]' : 'text-gray-400 italic' }}">
-                    {{ $unitBisnis->no_telepon ?: 'Belum diisi' }}
+                <div class="px-4 py-3.5 bg-gray-50 border border-gray-100 rounded-2xl text-sm {{ $user->no_hp ? 'font-bold text-[#0a2e1f]' : 'text-gray-400 italic' }}">
+                    {{ $user->no_hp ?: 'Belum diisi' }}
                 </div>
             </div>
         </div>
@@ -318,11 +318,6 @@ class="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             </a>
         </div>
     </div>
-
-<<<<<<< HEAD
-
-=======
->>>>>>> 4a7a54eb95ec1b6c3e6fd86c247fadf5627c9ae9
 </div>
 
 <style>

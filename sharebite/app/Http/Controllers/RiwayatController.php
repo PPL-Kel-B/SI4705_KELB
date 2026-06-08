@@ -27,7 +27,8 @@ class RiwayatController extends Controller
             ->select(
                 'pesanans.*', 
                 'master_makanans.nama_makanan', 
-                'master_makanans.kategori', 
+                'master_makanans.kategori',
+                'master_makanans.foto',
                 'unit_bisnis_profiles.nama_usaha'        
             );
 
@@ -158,6 +159,14 @@ class RiwayatController extends Controller
             'created_at'         => now(),
             'updated_at'         => now(),
         ]);
+
+        // Log activity
+        \App\Models\UserActivity::log(
+            auth()->id(),
+            'ulasan',
+            'Ulasan Dikirim',
+            'Memberikan ulasan bintang ' . $request->skor_rating . ' untuk pesanan di ' . ($pesanan->nama_usaha ?? 'Mitra') . '.'
+        );
 
         return redirect()->route('user.riwayat')->with('success', 'Bukti donasi dan ulasan rating berhasil disimpan ke dalam sistem!');
     }

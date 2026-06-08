@@ -194,10 +194,7 @@ test('unit bisnis can toggle notification settings on business settings page (TC
     $profile = UnitBisnisProfile::create([
         'user_id' => $user->id,
         'nama_usaha' => $user->name,
-        'nama_bisnis' => $user->name,
         'jenis_usaha' => 'Restoran',
-        'email_bisnis' => $user->email,
-        'no_telepon' => '08123456789',
         'lokasi_lat' => '-6.900000',
         'lokasi_lng' => '107.600000',
         'verified' => true,

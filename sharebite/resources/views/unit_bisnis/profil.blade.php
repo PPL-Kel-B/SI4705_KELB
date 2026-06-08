@@ -18,17 +18,17 @@
     isEditMode: false,
     isEditDeskripsi: false,
     formData: {
-        nama_bisnis: @js(old('nama_bisnis', $unitBisnis->nama_bisnis ?? '')),
-        tipe_bisnis: @js(old('tipe_bisnis', $unitBisnis->tipe_bisnis ?? '')),
-        email_bisnis: @js(old('email_bisnis', $unitBisnis->email_bisnis ?? '')),
-        no_telepon: @js(old('no_telepon', $unitBisnis->no_telepon ?? '')),
+        nama_bisnis: @js(old('nama_bisnis', $unitBisnis->nama_usaha ?? $user->name ?? '')),
+        jenis_usaha: @js(old('jenis_usaha', $unitBisnis->jenis_usaha ?? '')),
+        email_bisnis: @js(old('email_bisnis', $user->email ?? '')),
+        no_telepon: @js(old('no_telepon', $user->no_hp ?? '')),
         deskripsi: @js(old('deskripsi', $unitBisnis->deskripsi ?? '')),
     },
     origData: {
-        nama_bisnis: @js(old('nama_bisnis', $unitBisnis->nama_bisnis ?? '')),
-        tipe_bisnis: @js(old('tipe_bisnis', $unitBisnis->tipe_bisnis ?? '')),
-        email_bisnis: @js(old('email_bisnis', $unitBisnis->email_bisnis ?? '')),
-        no_telepon: @js(old('no_telepon', $unitBisnis->no_telepon ?? '')),
+        nama_bisnis: @js(old('nama_bisnis', $unitBisnis->nama_usaha ?? $user->name ?? '')),
+        jenis_usaha: @js(old('jenis_usaha', $unitBisnis->jenis_usaha ?? '')),
+        email_bisnis: @js(old('email_bisnis', $user->email ?? '')),
+        no_telepon: @js(old('no_telepon', $user->no_hp ?? '')),
         deskripsi: @js(old('deskripsi', $unitBisnis->deskripsi ?? '')),
     },
     cancelEdit() {
@@ -114,7 +114,7 @@
 
         {{-- Hidden inputs informasi bisnis — selalu terkirim meski field disabled --}}
         <input type="hidden" name="nama_bisnis" :value="formData.nama_bisnis">
-        <input type="hidden" name="tipe_bisnis" :value="formData.tipe_bisnis">
+        <input type="hidden" name="jenis_usaha" :value="formData.jenis_usaha">
         <input type="hidden" name="email_bisnis" :value="formData.email_bisnis">
         <input type="hidden" name="no_telepon" :value="formData.no_telepon">
         <input type="hidden" name="deskripsi" :value="formData.deskripsi">
@@ -256,7 +256,7 @@
                         <div class="pt-2 min-w-0">
                             <div class="flex flex-wrap items-center gap-2 mb-1">
                                 <h2 class="text-2xl font-black text-[#0a2e1f] tracking-tight leading-tight">
-                                    {{ $unitBisnis->nama_bisnis ?: Auth::user()->name }}
+                                    {{ $unitBisnis->nama_usaha ?: Auth::user()->name }}
                                 </h2>
                             </div>
                             @if($unitBisnis->verified || $unitBisnis->status_verifikasi === 'terverifikasi')
@@ -359,22 +359,22 @@
                             @enderror
                         </div>
 
-                        {{-- Tipe Bisnis --}}
+                        {{-- Jenis Usaha --}}
                         <div class="space-y-1 relative">
                             <label class="text-[10px] font-extrabold text-[#7c9a8d] uppercase tracking-wider block">
-                                Tipe Bisnis
+                                Jenis Usaha
                             </label>
 
                             <div class="relative">
-                                <select x-model="formData.tipe_bisnis"
+                                <select x-model="formData.jenis_usaha"
                                     :disabled="!isEditMode"
                                     :class="[
                                         isEditMode ? 'bg-white text-[#0a2e1f] border-2 border-[#1cb764]' : 'bg-gray-100 text-gray-500 border border-gray-200',
-                                        formData.tipe_bisnis === '' ? 'text-gray-300' : ''
+                                        formData.jenis_usaha === '' ? 'text-gray-300' : ''
                                     ]"
                                     class="w-full text-base font-bold rounded-xl px-4 py-3 pr-8 focus:border-[#1cb764] focus:ring-0 transition-all appearance-none disabled:cursor-not-allowed">
 
-                                    <option value="" hidden>— Pilih Tipe Bisnis —</option>
+                                    <option value="" hidden>— Pilih Jenis Usaha —</option>
                                     <option value="Tidak Ada">Tidak Ada</option>
                                     <option value="Restoran">Restoran</option>
                                     <option value="Kafe">Kafe</option>
@@ -398,7 +398,7 @@
                                 </svg>
                             </div>
 
-                            @error('tipe_bisnis')
+                            @error('jenis_usaha')
                                 <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -850,7 +850,7 @@
 
     const initLat = parseFloat("{{ $unitBisnis->lokasi_lat ?? '-6.9271' }}");
     const initLng = parseFloat("{{ $unitBisnis->lokasi_lng ?? '107.6411' }}");
-    const businessName = "{{ addslashes($unitBisnis->nama_bisnis ?? Auth::user()->name) }}";
+    const businessName = "{{ addslashes($unitBisnis->nama_usaha ?? Auth::user()->name) }}";
 
     const greenIcon = L.icon({
         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',

@@ -27,10 +27,7 @@ class PesananSelesaiSeeder extends Seeder
             ['user_id' => $unitUser->id],
             [
                 'nama_usaha'           => 'Lestari Food',
-                'nama_bisnis'          => 'Lestari Food',
-                'tipe_bisnis'          => 'Restoran',
-                'email_bisnis'         => 'lestari@gmail.com',
-                'no_telepon'           => '+6282178830750',
+                'jenis_usaha'          => 'Restoran',
                 'lokasi_lat'           => '-6.9271',
                 'lokasi_lng'           => '107.6411',
                 'radius_penjemputan'   => 15,

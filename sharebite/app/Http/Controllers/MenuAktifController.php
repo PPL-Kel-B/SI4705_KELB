@@ -165,15 +165,34 @@ class MenuAktifController extends Controller
             $batasWaktu->addDay();
         }
 
-        $menuAktif = MenuAktif::create([
-            'master_makanan_id' => $masterMakanan->id,
-            'unit_bisnis_id' => $profile->id,
-            'is_gratis' => $isGratis,
-            'harga_jual' => $masterMakanan->harga, // Save current price at time of publication
-            'stok_porsi' => $request->stok_porsi,
-            'batas_pengambilan' => $batasWaktu,
-            'status' => $request->stok_porsi <= 0 ? 'habis' : 'aktif',
-        ]);
+        // Cek apakah sudah ada menu aktif yang sama (master_makanan_id, unit_bisnis_id, is_gratis, status='aktif')
+        $existingMenuAktif = MenuAktif::where('unit_bisnis_id', $profile->id)
+            ->where('master_makanan_id', $masterMakanan->id)
+            ->where('is_gratis', $isGratis)
+            ->where('status', 'aktif')
+            ->where('batas_pengambilan', '>=', Carbon::now())
+            ->first();
+
+        if ($existingMenuAktif) {
+            // Update stok yang ada
+            $existingMenuAktif->increment('stok_porsi', $request->stok_porsi);
+            // Update batas pengambilan ke yang baru diinput
+            $existingMenuAktif->update([
+                'batas_pengambilan' => $batasWaktu,
+                'harga_jual' => $masterMakanan->harga,
+            ]);
+            $menuAktif = $existingMenuAktif;
+        } else {
+            $menuAktif = MenuAktif::create([
+                'master_makanan_id' => $masterMakanan->id,
+                'unit_bisnis_id' => $profile->id,
+                'is_gratis' => $isGratis,
+                'harga_jual' => $masterMakanan->harga, // Save current price at time of publication
+                'stok_porsi' => $request->stok_porsi,
+                'batas_pengambilan' => $batasWaktu,
+                'status' => $request->stok_porsi <= 0 ? 'habis' : 'aktif',
+            ]);
+        }
 
         if ($menuAktif->status === 'aktif') {
             $nearbyUsers = \App\Models\User::getUsersWithinRadius($user->latitude, $user->longitude, 5);
