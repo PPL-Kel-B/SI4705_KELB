@@ -172,45 +172,7 @@
                     </svg>
                 </button>
 
-                @if(!isset($hideSearch) || !$hideSearch)
-                    <!-- Search Bar & Kategori -->
-                    <div class="hidden md:flex items-center gap-3" x-data="{ categoryOpen: false }">
-                        <form action="{{ route('user.dashboard') }}" method="GET" class="m-0">
-                            <div class="relative">
-                                <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                                    <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                </span>
-                                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari makanan..." class="bg-[#f0f4f1] border-none rounded-full py-2 pl-10 pr-4 text-xs w-64 focus:outline-none focus:ring-2 focus:ring-[#1cb764] focus:bg-white transition-all text-gray-700 font-medium placeholder-gray-400">
-                            </div>
-                        </form>
-                        <div class="relative">
-                            <button @click="categoryOpen = !categoryOpen" @click.outside="categoryOpen = false" class="bg-[#f0f4f1] hover:bg-[#e2e8e3] text-gray-700 text-xs font-bold px-4 py-2 rounded-full transition flex items-center gap-1.5 border-none cursor-pointer">
-                                <svg class="h-3.5 w-3.5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                                </svg>
-                                Kategori
-                            </button>
-                            <!-- Dropdown Menu -->
-                            <div x-show="categoryOpen" 
-                                 x-transition:enter="transition ease-out duration-100"
-                                 x-transition:enter-start="opacity-0 scale-95"
-                                 x-transition:enter-end="opacity-100 scale-100"
-                                 x-transition:leave="transition ease-in duration-75"
-                                 x-transition:leave-start="opacity-100 scale-100"
-                                 x-transition:leave-end="opacity-0 scale-95"
-                                 class="absolute left-0 mt-2 w-48 bg-white rounded-2xl shadow-lg border border-gray-100 py-2 z-50 text-left"
-                                 x-cloak>
-                                 @foreach(['Makanan Berat', 'Cemilan / Makanan Ringan', 'Minuman', 'Dessert'] as $kategori)
-                                     <a href="{{ route('user.dashboard', ['category' => $kategori]) }}" class="block px-4 py-2 text-xs font-bold text-gray-700 hover:bg-[#eefcf4] hover:text-[#1cb764] transition">
-                                         {{ $kategori }}
-                                     </a>
-                                 @endforeach
-                            </div>
-                        </div>
-                    </div>
-                @endif
+
             </div>
 
             <!-- Right Side (Notifications & Profile) -->

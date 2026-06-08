@@ -24,6 +24,12 @@ x-init="
 "
 class="space-y-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
+    <!-- Header Section -->
+    <div class="mb-6">
+        <h1 class="text-4xl font-black text-[#1cb764] tracking-tight">Pengaturan</h1>
+        <p class="text-gray-500 font-medium mt-2 text-lg">Kelola preferensi akun dan aplikasi Anda untuk pengalaman berbagi terbaik.</p>
+    </div>
+
     {{-- Success Notification --}}
     <div x-show="showSuccess" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-[-8px]" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
         class="fixed top-4 right-4 z-50 bg-[#eefcf4] border border-green-200 rounded-2xl p-4 shadow-xl max-w-sm" x-cloak>

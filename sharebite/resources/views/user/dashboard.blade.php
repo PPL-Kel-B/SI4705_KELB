@@ -428,7 +428,8 @@
                 </a>
             </div>
         @else
-            <div class="relative overflow-hidden rounded-[2rem] text-white shadow-lg shadow-green-900/10 border border-gray-100 bg-white h-[290px] flex flex-col justify-between">
+            <div class="relative overflow-hidden rounded-[2rem] text-white shadow-lg shadow-green-900/10 border border-gray-100 bg-white h-[290px] flex flex-col justify-between group hover:scale-[1.02] hover:shadow-xl hover:shadow-green-900/20 transition-all duration-300">
+                <a href="{{ route('user.lokasi') }}" class="absolute inset-0 z-30 cursor-pointer" title="Lihat Lokasi Selengkapnya"></a>
                 <div id="map-radius" class="absolute inset-0 z-0"></div>
                 <div class="absolute inset-0 bg-gradient-to-t from-[#0b472e] via-[#0b472e]/60 to-[#0b472e]/15 z-10 pointer-events-none"></div>
                 <div class="relative z-20 p-6 flex flex-col justify-between h-full pointer-events-none">

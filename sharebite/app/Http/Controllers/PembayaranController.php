@@ -17,24 +17,22 @@ class PembayaranController extends Controller
     {
         $user = auth()->user();
 
-        // 1. Deteksi Cerdas (Ide Tim): Apakah ini ID Pesanan atau ID Menu?
-        $pesananExist = Pesanan::where('id', $id)->where('user_id', $user->id)->first();
+        // 1. Tentukan apakah ID ini adalah MenuAktif ID
+        $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->find($id);
 
-        if ($pesananExist) {
-            // Jika masuk dari Riwayat (ID adalah ID Pesanan)
-            $menuAktifId = $pesananExist->menu_aktif_id;
-            $pesanan = $pesananExist;
-        } else {
-            // Jika masuk dari Dashboard (ID adalah ID Menu Aktif)
+        if ($makanan) {
+            // Jika ID adalah MenuAktif ID (masuk dari Dashboard atau Riwayat Baru)
             $menuAktifId = $id;
             $pesanan = Pesanan::where('user_id', $user->id)
                             ->where('menu_aktif_id', $menuAktifId)
                             ->where('status', 'menunggu_pembayaran')
                             ->first();
+        } else {
+            // Jika ID adalah Pesanan ID (fallback jika ada link lama)
+            $pesanan = Pesanan::where('id', $id)->where('user_id', $user->id)->firstOrFail();
+            $menuAktifId = $pesanan->menu_aktif_id;
+            $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($menuAktifId);
         }
-
-        // 2. Ambil data makanan berdasarkan ID yang sudah divalidasi
-        $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($menuAktifId);
 
         // Tentukan jumlah porsi (qty)
         if ($pesanan) {
@@ -56,14 +54,13 @@ class PembayaranController extends Controller
             $selisih_porsi = $qty - $pesanan->jumlah_porsi;
             if ($selisih_porsi != 0) {
                 $makanan->decrement('stok_porsi', $selisih_porsi);
+                
+                // Selalu pastikan jumlah_porsi dan total_harga sinkron dengan state terpilih
+                $pesanan->update([
+                    'jumlah_porsi' => $qty,
+                    'total_harga'  => $subtotal,
+                ]);
             }
-            
-            // Selalu pastikan jumlah_porsi dan total_harga sinkron dengan state terpilih
-            $pesanan->update([
-                'jumlah_porsi' => $qty,
-                'total_harga'  => $subtotal,
-                'waktu_pesan'  => $pesanan->waktu_pesan,
-            ]);
         } else {
             // KURANGI STOK SAAT BARU MASUK HALAMAN PEMBAYARAN
             $makanan->decrement('stok_porsi', $qty);
@@ -109,25 +106,23 @@ class PembayaranController extends Controller
         $qty = $request->input('qty', 1);
         $user = auth()->user();
 
-        // Deteksi ID yang masuk untuk pencarian data pesanan yang valid
-        $pesananExist = Pesanan::where('id', $id)->where('user_id', $user->id)->first();
+        // Cari makanan berdasarkan menu_aktif_id ($id)
+        $makanan = MenuAktif::find($id);
 
-        if ($pesananExist) {
-            $pesanan = $pesananExist;
-            $makanan = MenuAktif::findOrFail($pesanan->menu_aktif_id);
-        } else {
-            $makanan = MenuAktif::findOrFail($id);
+        if ($makanan) {
             $pesanan = Pesanan::where('user_id', $user->id)
                             ->where('menu_aktif_id', $makanan->id)
                             ->where('status', 'menunggu_pembayaran')
                             ->first();
+        } else {
+            $pesanan = Pesanan::where('id', $id)->where('user_id', $user->id)->firstOrFail();
+            $makanan = MenuAktif::findOrFail($pesanan->menu_aktif_id);
         }
 
         if ($pesanan) {
             if ($status === 'Berhasil') {
                 $pesanan->update([
                     'status' => 'dibayar',
-                    'waktu_pesan' => $pesanan->waktu_pesan,
                 ]); 
                 
                 Pembayaran::where('pesanan_id', $pesanan->id)->update([
@@ -150,7 +145,6 @@ class PembayaranController extends Controller
             } else {
                 $pesanan->update([
                     'status' => 'dibatalkan',
-                    'waktu_pesan' => $pesanan->waktu_pesan,
                 ]);
                 
                 Pembayaran::where('pesanan_id', $pesanan->id)->update([
@@ -171,20 +165,19 @@ class PembayaranController extends Controller
     {
         $user = auth()->user();
 
-        // Deteksi apakah ID dari halaman riwayat (ID Pesanan) atau dari alur pembayaran langsung (ID Menu)
-        $pesananDirect = Pesanan::where('id', $id)->where('user_id', $user->id)->first();
+        // Tentukan apakah ID ini adalah MenuAktif ID
+        $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->find($id);
 
-        if ($pesananDirect) {
-            $pesanan = $pesananDirect;
-            $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($pesanan->menu_aktif_id);
-        } else {
-            $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($id);
+        if ($makanan) {
             $pesanan = Pesanan::where('user_id', $user->id)
                         ->where('menu_aktif_id', $makanan->id)
-                        // (Ide Kamu) Memastikan semua status sukses dikenali
+                        // Memastikan semua status sukses dikenali
                         ->whereIn('status', ['proses', 'siap_diambil', 'dibayar', 'diambil']) 
                         ->latest()
                         ->firstOrFail();
+        } else {
+            $pesanan = Pesanan::where('id', $id)->where('user_id', $user->id)->firstOrFail();
+            $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($pesanan->menu_aktif_id);
         }
 
         $subtotal = $pesanan->total_harga; 

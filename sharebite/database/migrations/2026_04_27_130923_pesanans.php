@@ -27,7 +27,7 @@ return new class extends Migration {
             ])->default('menunggu_pembayaran');
             // kode unik untuk verifikasi pengambilan
             $table->string('kode_unik', 100)->unique();
-            $table->timestamp('waktu_pesan')->useCurrent();
+            $table->dateTime('waktu_pesan')->useCurrent();
             $table->date('waktu_diambil')->nullable();
             $table->timestamps();
         });
