@@ -12,6 +12,17 @@ class LoginController extends Controller
     // Tampilkan halaman login
     public function index()
     {
+        if (Auth::check()) {
+            $user = Auth::user();
+            if ($user->role == 'unit_bisnis') {
+                return redirect('/unit/dashboard');
+            } elseif ($user->role == 'komunitas' || $user->role == 'individu') {
+                return redirect('/user/dashboard');
+            } elseif ($user->role == 'admin') {
+                return redirect('/admin/dashboard');
+            }
+        }
+
         return view('auth.login_custom');
     }
 

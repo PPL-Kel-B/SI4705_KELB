@@ -6,7 +6,7 @@
 
 <div class="max-w-screen-2xl mx-auto px-6 py-8">
     {{-- AREA CHAT --}}
-    <<div class="col-span-8">
+    <div class="col-span-8">
     <div class="bg-white rounded-3xl shadow-sm overflow-hidden flex flex-col h-[calc(100vh-180px)]">
             {{-- Header --}}
             <div class="p-6 border-b bg-gray-50">

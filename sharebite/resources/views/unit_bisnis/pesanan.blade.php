@@ -136,7 +136,7 @@
                     </div>
                     
                     @if($isSelesai || $isTidakDiambil)
-                        <a href="#" class="mt-auto w-full bg-white hover:bg-gray-50 border border-gray-200 text-gray-500 text-center py-3.5 rounded-xl font-bold text-[14px] flex justify-center items-center gap-2 transition">
+                        <a href="{{ route('unit.riwayat.show', $p->id) }}" class="mt-auto w-full bg-white hover:bg-gray-50 border border-gray-200 text-gray-500 text-center py-3.5 rounded-xl font-bold text-[14px] flex justify-center items-center gap-2 transition">
                             Detail Riwayat
                         </a>
                     @else

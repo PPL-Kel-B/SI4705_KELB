@@ -593,7 +593,7 @@
             @if(session('rejection_message'))
                 Swal.fire({
                     title: 'Verifikasi Ditolak',
-                    html: `{!! session('rejection_message') !!}<br><br><div class="text-left bg-red-50 p-5 rounded-2xl border border-red-100"><p class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Catatan Admin:</p><p class="text-sm text-red-600 font-bold italic">"${ {!! json_encode(session('rejection_notes')) !!} }"</p></div>`,
+                    html: `{!! session('rejection_message') !!}<br><br><div class="text-left bg-red-50 p-5 rounded-2xl border border-red-100"><p class="text-[10px] font-black text-red-400 uppercase tracking-widest mb-1">Catatan Admin:</p><p class="text-sm text-red-600 font-bold italic">"${ {!! json_encode(session('rejection_notes') ?? 'Tidak ada catatan tambahan.') !!} }"</p></div>`,
                     icon: 'error',
                     confirmButtonColor: '#22c55e',
                     confirmButtonText: 'Daftar Ulang',

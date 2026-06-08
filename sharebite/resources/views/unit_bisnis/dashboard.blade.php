@@ -147,7 +147,6 @@
                     <div class="bg-[#0D4D36] text-white px-5 py-2 rounded-full text-sm font-bold">
                         {{ now()->year }}
                     </div>
-                    </div>
                 </div>
 
                 @php
@@ -187,6 +186,7 @@
                 </div>
             </div>
         </div>
+    </div>
 
         <!-- Left: Pesanan Masuk (2/3 width) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">

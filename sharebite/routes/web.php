@@ -203,13 +203,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pesanan/panduan', [\App\Http\Controllers\PesananController::class, 'panduan'])->name('pesanan.panduan');
         
         // Resource Controller untuk Pesanan
-        Route::resource('pesanan', \App\Http\Controllers\PesananController::class)->names('pesanan');
-        Route::get('/riwayat', function () {
-            return view('unit_bisnis.riwayat');
-        })->name('riwayat');
-        Route::get('/pesanan', function () {
-            return view('unit_bisnis.pesanan');
-        })->name('pesanan');
+        Route::resource('pesanan', \App\Http\Controllers\PesananController::class);
         Route::get('/riwayat', [RiwayatUnitBisnisController::class, 'index'])->name('riwayat');
         Route::get('/riwayat/export', [RiwayatUnitBisnisController::class, 'export'])->name('riwayat.export');
         Route::get('/riwayat/{id}', [RiwayatUnitBisnisController::class, 'show'])->name('riwayat.show');

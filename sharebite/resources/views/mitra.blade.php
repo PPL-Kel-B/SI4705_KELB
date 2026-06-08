@@ -85,10 +85,22 @@
                     <!-- CTA Auth -->
                     <div class="hidden md:flex items-center">
                         @auth
-                            <a href="/login"
-                                class="bg-dark-green hover:bg-[#064225] text-white px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black transition-all shadow-xl shadow-[#0a5c36]/20 hover:-translate-y-0.5">
-                                Dashboard
-                            </a>
+                            @if (auth()->user()->role == 'unit_bisnis')
+                                <a href="/unit/dashboard"
+                                    class="bg-dark-green hover:bg-[#064225] text-white px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black transition-all shadow-xl shadow-[#0a5c36]/20 hover:-translate-y-0.5">
+                                    Dashboard
+                                </a>
+                            @elseif (auth()->user()->role == 'admin')
+                                <a href="/admin/dashboard"
+                                    class="bg-dark-green hover:bg-[#064225] text-white px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black transition-all shadow-xl shadow-[#0a5c36]/20 hover:-translate-y-0.5">
+                                    Dashboard
+                                </a>
+                            @else
+                                <a href="/user/dashboard"
+                                    class="bg-dark-green hover:bg-[#064225] text-white px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black transition-all shadow-xl shadow-[#0a5c36]/20 hover:-translate-y-0.5">
+                                    Dashboard
+                                </a>
+                            @endif
                         @else
                             <a href="/login"
                                 class="bg-dark-green hover:bg-[#064225] text-white px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black transition-all shadow-xl shadow-[#0a5c36]/20 hover:-translate-y-0.5">

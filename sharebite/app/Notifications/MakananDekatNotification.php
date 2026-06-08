@@ -33,7 +33,7 @@ class MakananDekatNotification extends Notification
         return [
             'title' => 'Makanan Tersedia Dekat Anda!',
             'message' => "{$namaUsaha} baru saja merilis menu surplus '{$namaMakanan}'. Segera klaim sebelum habis!",
-            'action_url' => route('home'),
+            'action_url' => route('user.makanan.detail', $this->menuAktif->id),
             'icon' => 'menu',
             'type' => 'menu',
             'menu_aktif_id' => $this->menuAktif->id,
