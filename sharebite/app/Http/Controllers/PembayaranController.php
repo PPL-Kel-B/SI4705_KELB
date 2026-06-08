@@ -17,6 +17,9 @@ class PembayaranController extends Controller
     {
         $user = auth()->user();
 
+        // Bersihkan pesanan-pesanan expired secara global terlebih dahulu
+        Pesanan::cancelExpiredPaymentOrders();
+
         // 1. Tentukan apakah ID ini adalah MenuAktif ID
         $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->find($id);
 
@@ -96,6 +99,16 @@ class PembayaranController extends Controller
         $waktuPesan = \Carbon\Carbon::parse($pesanan->waktu_pesan);
         $deadline = $waktuPesan->copy()->addSeconds(900);
         $remainingSeconds = now()->greaterThanOrEqualTo($deadline) ? 0 : (int) ceil(now()->diffInSeconds($deadline));
+
+        if ($remainingSeconds <= 0 && $pesanan->status === 'menunggu_pembayaran') {
+            $pesanan->update(['status' => 'dibatalkan']);
+            if ($pesanan->pembayaran) {
+                $pesanan->pembayaran->update(['status' => 'gagal']);
+            }
+            $makanan->increment('stok_porsi', $pesanan->jumlah_porsi);
+
+            return redirect()->route('user.riwayat')->with('status_pembayaran', 'Gagal')->with('error', 'Batas waktu pembayaran pesanan Anda telah habis.');
+        }
 
         return view('user.pembayaran', compact('makanan', 'qty', 'subtotal', 'ref', 'id', 'remainingSeconds'));
     }

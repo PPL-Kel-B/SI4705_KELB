@@ -249,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         const timerEl = document.getElementById('payment-timer');
         if (timerEl) {
-            let timeLeft = parseInt(meta.seconds) || 900;
+            let timeLeft = (meta.seconds !== undefined && meta.seconds !== '') ? parseInt(meta.seconds) : 900;
             
             const interval = setInterval(() => {
                 if (timeLeft <= 0) {

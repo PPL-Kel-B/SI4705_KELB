@@ -19,6 +19,7 @@ class RiwayatController extends Controller
         $userId = auth()->id();
 
         // Auto-update expired orders
+        \App\Models\Pesanan::cancelExpiredPaymentOrders();
         \App\Models\Pesanan::updateExpiredOrders();
 
         // 3. Query dasar + PROTEKSI: Hanya ambil data riwayat milik user yang sedang login
@@ -96,6 +97,7 @@ class RiwayatController extends Controller
     {
         $userId = auth()->id();
 
+        \App\Models\Pesanan::cancelExpiredPaymentOrders();
         \App\Models\Pesanan::updateExpiredOrders();
 
         $pesanan = DB::table('pesanans')

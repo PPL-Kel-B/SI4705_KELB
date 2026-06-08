@@ -122,6 +122,26 @@ class Pesanan extends Model
         }
     }
 
+    public static function cancelExpiredPaymentOrders()
+    {
+        // Temukan semua pesanan yang statusnya 'menunggu_pembayaran' dan sudah lewat 15 menit
+        $expiredOrders = self::where('status', 'menunggu_pembayaran')
+            ->where('waktu_pesan', '<', now()->subMinutes(15))
+            ->get();
+
+        foreach ($expiredOrders as $order) {
+            $order->update(['status' => 'dibatalkan']);
+            
+            if ($order->pembayaran) {
+                $order->pembayaran->update(['status' => 'gagal']);
+            }
+            
+            if ($order->menuAktif) {
+                $order->menuAktif->increment('stok_porsi', $order->jumlah_porsi);
+            }
+        }
+    }
+
     public function isTidakDiambil(): bool
     {
         return $this->status === 'dibatalkan' && 
