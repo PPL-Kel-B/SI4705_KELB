@@ -23,6 +23,7 @@ class Chat extends Model
         'sender_id',
         'receiver_id',
         'pesan',
+        'gambar',
         'waktu',
         'is_read',
     ];

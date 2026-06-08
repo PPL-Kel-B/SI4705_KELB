@@ -11,6 +11,7 @@ return new class extends Migration {
             $table->id();
             // pengirim pesan
             $table->foreignId('sender_id')->constrained('users')->cascadeOnDelete();
+            $table->string('gambar')->nullable();
             // penerima pesan
             $table->foreignId('receiver_id')->constrained('users')->cascadeOnDelete();
             $table->text('pesan');
@@ -18,7 +19,7 @@ return new class extends Migration {
             // tanda sudah dibaca atau belum
             $table->boolean('is_read')->default(false);
             $table->timestamps();
-
+            
             $table->index(['sender_id', 'receiver_id']);
         });
     }
