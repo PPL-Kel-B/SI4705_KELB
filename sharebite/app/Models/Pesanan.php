@@ -108,4 +108,24 @@ class Pesanan extends Model
     {
         return $this->status === 'selesai';
     }
+
+    public static function updateExpiredOrders()
+    {
+        $expiredOrders = self::whereIn('status', ['dibayar', 'siap_diambil'])
+            ->whereHas('menuAktif', function($query) {
+                $query->where('batas_pengambilan', '<', now());
+            })
+            ->get();
+
+        foreach ($expiredOrders as $order) {
+            $order->update(['status' => 'dibatalkan']);
+        }
+    }
+
+    public function isTidakDiambil(): bool
+    {
+        return $this->status === 'dibatalkan' && 
+               $this->pembayaran && 
+               $this->pembayaran->status === 'berhasil';
+    }
 }

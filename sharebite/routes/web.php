@@ -195,6 +195,18 @@ Route::middleware('auth')->group(function () {
             'destroy' => 'master_data.destroy',
         ])->parameters(['kelola-master-data' => 'master_datum']);
 
+        // ==========================================
+        // Manajemen Pesanan & Verifikasi Kode
+        // ==========================================
+        // Halaman Verifikasi (Custom) harus ditaruh di atas Resource
+        Route::get('/pesanan/verifikasi', [\App\Http\Controllers\PesananController::class, 'verifikasi'])->name('pesanan.verifikasi');
+        Route::get('/pesanan/panduan', [\App\Http\Controllers\PesananController::class, 'panduan'])->name('pesanan.panduan');
+        
+        // Resource Controller untuk Pesanan
+        Route::resource('pesanan', \App\Http\Controllers\PesananController::class)->names('pesanan');
+        Route::get('/riwayat', function () {
+            return view('unit_bisnis.riwayat');
+        })->name('riwayat');
         Route::get('/pesanan', function () {
             return view('unit_bisnis.pesanan');
         })->name('pesanan');

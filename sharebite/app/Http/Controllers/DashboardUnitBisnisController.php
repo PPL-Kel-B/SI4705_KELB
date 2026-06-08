@@ -32,6 +32,9 @@ class DashboardUnitBisnisController extends Controller
         $unitBisnisId = $unitBisnisProfile->id;
         $now          = Carbon::now();
 
+        // Auto-update expired orders
+        Pesanan::updateExpiredOrders();
+
         // ── Kelola Menu Aktif ──────────────────────
         $menuAktifCount = MenuAktif::where('unit_bisnis_id', $unitBisnisId)
             ->where('status', 'aktif')

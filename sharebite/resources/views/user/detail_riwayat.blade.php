@@ -40,9 +40,15 @@
                 @elseif($pesanan->status == 'proses' || $pesanan->status == 'siap_diambil' || $pesanan->status == 'dibayar')
                     <span class="px-3 py-1 rounded-full text-[10px] font-black tracking-wider text-white" style="background-color: #F9AB00;">PROSES</span>
                 @else
-                    <span class="px-3 py-1 rounded-full text-[10px] font-black tracking-wider text-white" style="background-color: #D93025;">BATAL</span>
+                    @php
+                        $isTidakDiambil = $pesanan->status == 'dibatalkan' && ($pesanan->status_pembayaran ?? '') == 'berhasil';
+                    @endphp
+                    @if($isTidakDiambil)
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black tracking-wider text-white bg-red-600">TIDAK DIAMBIL</span>
+                    @else
+                        <span class="px-3 py-1 rounded-full text-[10px] font-black tracking-wider text-white" style="background-color: #D93025;">BATAL</span>
+                    @endif
                 @endif
-
             </div>
         </div>
 
@@ -70,12 +76,19 @@
                 </div>
 
                 @if(in_array($pesanan->status, ['batal', 'dibatalkan']))
+                    @php
+                        $isTidakDiambil = $pesanan->status == 'dibatalkan' && ($pesanan->status_pembayaran ?? '') == 'berhasil';
+                    @endphp
                     {{-- TAMPILAN JIKA STATUS DONASI BATAL / DIBATALKAN --}}
                     <div class="bg-red-50/60 border border-red-100 rounded-xl p-4">
                         <span class="block text-[10px] font-black uppercase text-red-400 tracking-wider mb-2">Informasi Transaksi</span>
                         <div class="flex justify-between items-center text-xs font-semibold text-gray-600 mb-1.5">
                             <span>Status Transaksi</span>
-                            <span class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded-lg text-[10px] tracking-wide">DIBATALKAN</span>
+                            @if($isTidakDiambil)
+                                <span class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded-lg text-[10px] tracking-wide">TIDAK DIAMBIL</span>
+                            @else
+                                <span class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded-lg text-[10px] tracking-wide">DIBATALKAN</span>
+                            @endif
                         </div>
                         <div class="flex justify-between items-center text-xs font-semibold text-gray-600">
                             <span>Waktu Pembatalan</span>
@@ -110,6 +123,9 @@
                         <span>Verifikasi Berhasil</span>
                     </div>
                 @else
+                    @php
+                        $isTidakDiambil = $pesanan->status == 'dibatalkan' && ($pesanan->status_pembayaran ?? '') == 'berhasil';
+                    @endphp
                     {{-- Opsional: Tampilan penanda jika dibatalkan agar layout kiri-kanan tidak kosong/pincang --}}
                     <div class="flex items-center gap-2 text-red-600 font-bold text-sm">
                         <div class="w-5 h-5 rounded-full bg-red-50 flex items-center justify-center shrink-0">
@@ -117,13 +133,18 @@
                                 <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z" clip-rule="evenodd" />
                             </svg>
                         </div>
-                        <span>Pesanan Dibatalkan</span>
+                        <span>@if($isTidakDiambil) Makanan Tidak Diambil @else Pesanan Dibatalkan @endif</span>
                     </div>
                 @endif
 
+                @php
+                    $orderIdPad = str_pad($pesanan->id, 3, '0', STR_PAD_LEFT);
+                    $orderSuffix = (auth()->user()->role === 'individu') ? 'A' : 'B';
+                    $formattedOrderId = "SB-{$orderIdPad}-{$orderSuffix}";
+                @endphp
                 <div class="text-right">
                     <span class="block text-[9px] font-bold uppercase text-gray-400 tracking-widest">ID:</span>
-                    <span class="text-xs font-bold text-gray-600">SB-{{ $pesanan->id ?? '882910' }}</span>
+                    <span class="text-xs font-bold text-gray-600">{{ $formattedOrderId }}</span>
                 </div>
             </div>
         </div>
@@ -131,8 +152,15 @@
 
     @if((isset($ratingTerisi) && $ratingTerisi) || $pesanan->status == 'batal' || $pesanan->status == 'dibatalkan')
         @if($pesanan->status == 'batal' || $pesanan->status == 'dibatalkan')
+            @php
+                $isTidakDiambil = $pesanan->status == 'dibatalkan' && ($pesanan->status_pembayaran ?? '') == 'berhasil';
+            @endphp
             <div class="bg-red-50 border border-red-200 rounded-[2rem] p-8 text-center text-red-700 font-bold text-sm">
-                Donasi ini telah dibatalkan. Anda tidak dapat mengirimkan bukti berbagi maupun penilaian rating.
+                @if($isTidakDiambil)
+                    Donasi ini tidak diambil hingga batas waktu berakhir. Anda tidak dapat mengirimkan bukti berbagi maupun penilaian rating.
+                @else
+                    Donasi ini telah dibatalkan. Anda tidak dapat mengirimkan bukti berbagi maupun penilaian rating.
+                @endif
             </div>
         @else
             <div class="bg-gray-50 border border-gray-200 rounded-[2rem] p-8 text-center text-gray-500 font-bold text-sm">

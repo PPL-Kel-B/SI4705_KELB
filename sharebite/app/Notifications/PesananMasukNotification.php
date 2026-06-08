@@ -37,7 +37,7 @@ class PesananMasukNotification extends Notification
         return [
             'title' => 'Pesanan Baru Masuk!',
             'message' => "{$namaPemesan} memesan {$jumlahPorsi} porsi '{$namaMakanan}'. Silakan periksa detail pesanan.",
-            'action_url' => route('unit.pesanan'),
+            'action_url' => route('unit.pesanan.index'),
             'icon' => 'order',
             'type' => 'order',
             'pesanan_id' => $this->pesanan->id,
