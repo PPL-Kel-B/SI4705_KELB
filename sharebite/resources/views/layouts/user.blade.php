@@ -237,7 +237,7 @@
 
                                         <!-- Content -->
                                         <div class="flex-1 min-w-0">
-                                            <a href="{{ $notification->data['action_url'] ?? '#' }}" class="block">
+                                            <a href="{{ route('notifications.click', $notification->id) }}" class="block">
                                                 <p class="text-xs font-bold text-gray-800 truncate">{{ $notification->data['title'] ?? 'Notifikasi Baru' }}</p>
                                                 <p class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">{{ $notification->data['message'] ?? '' }}</p>
                                             </a>
@@ -347,6 +347,42 @@
                     timer: 2000,
                     customClass: {
                         popup: 'rounded-3xl'
+                    }
+                });
+            @endif
+
+            @if(session('error_popup') === 'makanan_tutup')
+                Swal.fire({
+                    title: 'Yah, Makanan Habis! 😢',
+                    html: `
+                        <style>
+                            @keyframes float-bounce {
+                                0%, 100% {
+                                    transform: translateY(0) scale(1);
+                                }
+                                50% {
+                                    transform: translateY(-15px) scale(1.1);
+                                }
+                            }
+                            .emoji-animated {
+                                display: inline-block;
+                                animation: float-bounce 1.5s ease-in-out infinite;
+                                font-size: 5rem;
+                            }
+                        </style>
+                        <div class="flex flex-col items-center justify-center py-4">
+                            <span class="emoji-animated mb-4">😢</span>
+                            <p class="text-gray-600 font-semibold text-center text-sm leading-relaxed">
+                                Makanan sudah ditutup / habis, coba di lain kesempatan
+                            </p>
+                        </div>
+                    `,
+                    showConfirmButton: true,
+                    confirmButtonText: 'Cari Makanan Lain',
+                    confirmButtonColor: '#1cb764',
+                    customClass: {
+                        popup: 'rounded-3xl p-6',
+                        confirmButton: 'rounded-xl px-6 py-3 font-bold text-sm transition-all hover:bg-[#148f4c]'
                     }
                 });
             @endif

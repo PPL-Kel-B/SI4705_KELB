@@ -83,6 +83,38 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
     // Notifications
+    Route::get('/notifications/{id}/click', function ($id) {
+        $notification = auth()->user()->notifications()->findOrFail($id);
+        if (is_null($notification->read_at)) {
+            $notification->markAsRead();
+        }
+        
+        $data = $notification->data;
+        $type = $data['type'] ?? '';
+        
+        if ($type === 'menu') {
+            $menuAktifId = $data['menu_aktif_id'] ?? null;
+            if ($menuAktifId) {
+                $menu = \App\Models\MenuAktif::withTrashed()->find($menuAktifId);
+                if ($menu && $menu->isTersedia()) {
+                    return redirect($data['action_url'] ?? route('user.makanan.detail', $menuAktifId));
+                }
+            }
+            
+            $role = auth()->user()->role;
+            if (in_array($role, ['individu', 'komunitas'])) {
+                return redirect()->route('user.dashboard')->with('error_popup', 'makanan_tutup');
+            } elseif ($role === 'unit_bisnis') {
+                return redirect()->route('unit.dashboard')->with('error_popup', 'makanan_tutup');
+            } elseif ($role === 'admin') {
+                return redirect()->route('admin.dashboard')->with('error_popup', 'makanan_tutup');
+            }
+            return redirect()->route('dashboard')->with('error_popup', 'makanan_tutup');
+        }
+        
+        return redirect($data['action_url'] ?? '/dashboard');
+    })->name('notifications.click');
+
     Route::post('/notifications/{id}/read', function ($id) {
         $notification = auth()->user()->notifications()->findOrFail($id);
         $notification->markAsRead();

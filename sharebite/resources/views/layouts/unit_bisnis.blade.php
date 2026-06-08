@@ -261,7 +261,7 @@
 
                                         <!-- Content -->
                                         <div class="flex-1 min-w-0">
-                                            <a href="{{ $notification->data['action_url'] ?? '#' }}" class="block">
+                                            <a href="{{ route('notifications.click', $notification->id) }}" class="block">
                                                 <p class="text-xs font-bold text-gray-800 truncate">{{ $notification->data['title'] ?? 'Notifikasi Baru' }}</p>
                                                 <p class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">{{ $notification->data['message'] ?? '' }}</p>
                                             </a>
