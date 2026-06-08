@@ -152,6 +152,12 @@ class ProfileController extends Controller
         $backUrl = session('profile_edit_back_url', route('user.profile'));
 
         if ($changed) {
+            \App\Models\UserActivity::log(
+                $user->id,
+                'profil',
+                'Profil Diperbarui',
+                'Berhasil memperbarui informasi profil akun.'
+            );
             return Redirect::to($backUrl)->with('success', 'Profil berhasil diperbarui!');
         }
 

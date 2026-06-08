@@ -34,7 +34,7 @@ class ProfilUnitBisnisController extends Controller
                 'deskripsi' => $profile->deskripsi ?? 'Unit bisnis ini berdedikasi meminimalisir food waste dengan membagikan makanan berkualitas.',
                 'total_donasi' => ($profile->total_makanan_terjual ?? 0) . ' Porsi',
                 'rating' => $ratingString,
-                'foto_profile' => $profile->foto_bisnis ? asset($profile->foto_bisnis) : null,
+                'foto_profile' => ($profile->foto_bisnis && $profile->foto_bisnis !== 'images/placeholder-bisnis.jpg') ? (str_starts_with($profile->foto_bisnis, 'images/') || str_starts_with($profile->foto_bisnis, 'http') ? asset($profile->foto_bisnis) : asset('storage/' . $profile->foto_bisnis)) : null,
                 'header_image' => $profile->header_image ? asset($profile->header_image) : null,
                 'jam_buka' => $profile->jam_buka ? date('H:i', strtotime($profile->jam_buka)) : '08:00',
                 'jam_tutup' => $profile->jam_tutup ? date('H:i', strtotime($profile->jam_tutup)) : '20:00',
@@ -246,98 +246,5 @@ class ProfilUnitBisnisController extends Controller
 
         $hideSearch = true;
         return view('user.profile_unit_bisnis', compact('unitBisnis', 'makananAktif', 'buktiDonasis', 'hideSearch', 'ulasans'));
-    }
-
-    /**
-     * Menampilkan halaman simulasi detail makanan dari database (POV Unit Bisnis)
-     * atau fallback mock data jika database kosong.
-     */
-    public function simulasiDetail($menu_aktif_id = null)
-    {
-        // Ambil semua menu aktif dari DB beserta relasi yang belum kadaluarsa
-        $allActiveMenus = MenuAktif::with('masterMakanan', 'unitBisnis.user')
-            ->where('status', 'aktif')
-            ->where('batas_pengambilan', '>=', now())
-            ->latest()
-            ->get();
-
-        $activeMenu = null;
-
-        if ($menu_aktif_id) {
-            $activeMenu = MenuAktif::with('masterMakanan', 'unitBisnis.user')->find($menu_aktif_id);
-        }
-
-        // Jika tidak ada ID spesifik tapi ada menu aktif di DB, ambil yang paling baru
-        if (!$activeMenu && $allActiveMenus->isNotEmpty()) {
-            $activeMenu = $allActiveMenus->first();
-        }
-
-        if ($activeMenu && $activeMenu->masterMakanan && $activeMenu->unitBisnis) {
-            // Gunakan data REAL dari database (POV Unit Bisnis)
-            $distanceStr = '0.8 km';
-            $user = auth()->user();
-            if ($user && !is_null($user->latitude) && !is_null($user->longitude)) {
-                $latBisnis = $activeMenu->unitBisnis->lokasi_lat ?? $activeMenu->unitBisnis->user->latitude ?? null;
-                $lngBisnis = $activeMenu->unitBisnis->lokasi_lng ?? $activeMenu->unitBisnis->user->longitude ?? null;
-                if (!is_null($latBisnis) && !is_null($lngBisnis)) {
-                    $distance = \App\Models\User::calculateDistance(
-                        $user->latitude,
-                        $user->longitude,
-                        $latBisnis,
-                        $lngBisnis
-                    );
-                    $distanceStr = number_format($distance, 1, ',', '.') . ' km';
-                }
-            }
-
-            $makanan = (object) [
-                'id' => $activeMenu->id,
-                'nama' => $activeMenu->masterMakanan->nama_makanan,
-                'kategori' => $activeMenu->masterMakanan->kategori ?? 'Umum',
-                'deskripsi' => $activeMenu->masterMakanan->deskripsi ?? 'Tidak ada deskripsi makanan.',
-                'harga' => $activeMenu->is_gratis ? 0 : (float) $activeMenu->harga_jual,
-                'is_gratis' => $activeMenu->is_gratis,
-                'stok_porsi' => $activeMenu->stok_porsi,
-                'jarak' => $distanceStr,
-                'batas_pengambilan' => $activeMenu->batas_pengambilan ? $activeMenu->batas_pengambilan->format('H:i') . ' WIB' : 'Hari Ini',
-                'foto' => $activeMenu->masterMakanan->foto ? asset('storage/' . $activeMenu->masterMakanan->foto) : 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&q=80',
-                'unit_bisnis_id' => $activeMenu->unit_bisnis_id,
-                'nama_usaha' => $activeMenu->unitBisnis->nama_usaha,
-                'alamat' => $activeMenu->unitBisnis->user->alamat ?? 'Alamat belum diatur',
-                'foto_profile' => $activeMenu->unitBisnis->foto_bisnis ? asset($activeMenu->unitBisnis->foto_bisnis) : null,
-            ];
-        } else {
-            // FALLBACK: Gunakan data mockup buah salad jika kosong
-            $distanceStrFallback = '0.8 km';
-            $user = auth()->user();
-            if ($user && !is_null($user->latitude) && !is_null($user->longitude)) {
-                $distance = \App\Models\User::calculateDistance(
-                    $user->latitude,
-                    $user->longitude,
-                    -6.9271,
-                    107.6411
-                );
-                $distanceStrFallback = number_format($distance, 1, ',', '.') . ' km';
-            }
-
-            $makanan = (object) [
-                'id' => null,
-                'nama' => 'Paket Salad Buah Segar',
-                'kategori' => 'Sayur & Buah',
-                'deskripsi' => 'Paket salad buah premium yang terdiri dari potongan melon, anggur, semangka, dan stroberi segar. Disiapkan pagi ini untuk buffet makan siang dan tidak habis terjual.',
-                'harga' => 7500,
-                'is_gratis' => false,
-                'stok_porsi' => 12,
-                'jarak' => $distanceStrFallback,
-                'batas_pengambilan' => '2 Jam Lagi',
-                'foto' => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80',
-                'unit_bisnis_id' => 1,
-                'nama_usaha' => 'Healthy Garden Bistro',
-                'alamat' => 'Jl. Kebon Jeruk No. 45, Jakarta Barat',
-                'foto_profile' => null,
-            ];
-        }
-
-        return view('user.simulasi_detail_makanan', compact('makanan', 'allActiveMenus'));
     }
 }
