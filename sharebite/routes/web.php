@@ -15,6 +15,9 @@ use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\RiwayatController;
 use App\Http\Controllers\DashboardUnitBisnisController;
 use App\Http\Controllers\UnitBisnisController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\RiwayatUnitBisnisController;
+use App\Http\Controllers\LokasiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -129,15 +132,18 @@ Route::middleware('auth')->group(function () {
 
     // User Dashboard Routes
     Route::prefix('user')->name('user.')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('user.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [\App\Http\Controllers\UserDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/aktivitas', [\App\Http\Controllers\UserDashboardController::class, 'activities'])->name('activities');
+        Route::get('/donasi-terdekat', [\App\Http\Controllers\UserDashboardController::class, 'nearby'])->name('nearby');
         Route::get('/riwayat', [\App\Http\Controllers\RiwayatController::class, 'index'])->name('riwayat');
         Route::get('/riwayat/{id}', [App\Http\Controllers\RiwayatController::class, 'show'])->name('riwayat.show');
         Route::post('/riwayat/{id}/rate', [App\Http\Controllers\RiwayatController::class, 'storeRating'])->name('riwayat.storeRating');
         Route::get('/profile/edit', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
         Route::put('/profile/update', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
         Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
+
+        Route::get('/lokasi', [LokasiController::class, 'index'])->name('lokasi');
+        Route::get('/api/lokasi/terdekat', [LokasiController::class, 'getTerdekat'])->name('api.lokasi.terdekat');
 
         Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');
         Route::get('/pengaturan/kebijakan/{type}', [\App\Http\Controllers\SettingsController::class, 'policy'])->name('pengaturan.policy');
@@ -146,8 +152,7 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/unit-bisnis/{id}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'show'])->name('unit-bisnis.show');
 
-        // ROUTE SEMENTARA UNTUK TES TOMBOL (Nanti dihapus saat digabung)
-        Route::get('/tes-tombol-profil/{menu_aktif_id?}', [\App\Http\Controllers\ProfilUnitBisnisController::class, 'simulasiDetail'])->name('tes-tombol-profil');
+        Route::get('/makanan/{id}', [\App\Http\Controllers\UserDashboardController::class, 'makananDetail'])->name('makanan.detail');
 
         // Route Pembayaran Utama
         Route::get('/dashboard/{id}/pembayaran', [PembayaranController::class, 'show'])->name('makanan.pembayaran');
@@ -158,6 +163,13 @@ Route::middleware('auth')->group(function () {
         // Proses Pembayaran & Halaman Berhasil
         Route::post('/dashboard/{id}/pembayaran/proses', [PembayaranController::class, 'store'])->name('pembayaran.proses');
         Route::get('/dashboard/{id}/pembayaran/berhasil', [PembayaranController::class, 'berhasil'])->name('pembayaran.berhasil');
+        
+        // Menu Chat dengan Admin
+        Route::get('/chat', [ChatController::class, 'chatWithAdmin'])
+        ->name('chat');
+
+        Route::post('/chat/send', [ChatController::class, 'sendToAdmin'])
+            ->name('chat.send');
     });
 
     // Unit Bisnis Dashboard Routes
@@ -177,6 +189,7 @@ Route::middleware('auth')->group(function () {
             'index' => 'master_data.index',
             'create' => 'master_data.create',
             'store' => 'master_data.store',
+            'show'    => 'master_data.show',
             'edit' => 'master_data.edit',
             'update' => 'master_data.update',
             'destroy' => 'master_data.destroy',
@@ -194,6 +207,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/riwayat', function () {
             return view('unit_bisnis.riwayat');
         })->name('riwayat');
+        Route::get('/pesanan', function () {
+            return view('unit_bisnis.pesanan');
+        })->name('pesanan');
+        Route::get('/riwayat', [RiwayatUnitBisnisController::class, 'index'])->name('riwayat');
+        Route::get('/riwayat/export', [RiwayatUnitBisnisController::class, 'export'])->name('riwayat.export');
+        Route::get('/riwayat/{id}', [RiwayatUnitBisnisController::class, 'show'])->name('riwayat.show');
 
         // Profil Unit Bisnis
         Route::get('/profil', [UnitBisnisController::class, 'showProfile'])->name('profil');
@@ -209,6 +228,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengaturan', [UnitBisnisController::class, 'showSettings'])->name('pengaturan');
         Route::post('/pengaturan/update', [UnitBisnisController::class, 'updateSettings'])->name('pengaturan.update');
         Route::post('/pengaturan/update-password', [UnitBisnisController::class, 'updatePassword'])->name('pengaturan.update-password');
+
+        // Menu Chat dengan Admin
+        Route::get('/chat', [ChatController::class, 'chatWithAdmin'])
+            ->name('chat');
+
+        Route::post('/chat/send', [ChatController::class, 'sendToAdmin'])
+            ->name('chat.send');
     });
 
     // Admin Dashboard Routes
@@ -221,9 +247,12 @@ Route::middleware('auth')->group(function () {
         Route::post('/manajemen-pengguna/verifikasi/{id}', [ManajemenUserController::class, 'processNib'])->name('manajemen_pengguna.process_nib');
         Route::put('/manajemen-pengguna/{id}', [ManajemenUserController::class, 'update'])->name('manajemen_pengguna.update');
         Route::delete('/manajemen-pengguna/{id}', [ManajemenUserController::class, 'destroy'])->name('manajemen_pengguna.destroy');
-        Route::get('/chat', function () {
-            return view('admin.chat');
-        })->name('chat');
+        Route::get('/chat', [ChatController::class, 'index'])
+            ->name('chat');
+        Route::get('/chat/{userId}', [ChatController::class, 'index'])
+            ->name('chat.show');
+        Route::post('/chat/send', [ChatController::class, 'store'])
+            ->name('chat.store');
     });
 });
 

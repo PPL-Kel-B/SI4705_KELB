@@ -421,7 +421,7 @@
                             <p class="text-[#1cb764] font-bold text-sm">Rp {{ number_format((int)$makanan->harga, 0, ',', '.') }}</p>
                         </div>
                         {{-- Tombol Ambil Makanan --}}
-                        <a href="{{ route('user.tes-tombol-profil', $makanan->id) }}" class="bg-[#1cb764] hover:bg-[#158f4e] text-white text-xs font-semibold px-4 py-2 rounded-xl transition text-center">
+                        <a href="{{ route('user.makanan.detail', $makanan->id) }}" class="bg-[#1cb764] hover:bg-[#158f4e] text-white text-xs font-semibold px-4 py-2 rounded-xl transition text-center">
                             Ambil
                         </a>
                     </div>

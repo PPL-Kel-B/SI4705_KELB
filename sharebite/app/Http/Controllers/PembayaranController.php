@@ -15,7 +15,6 @@ class PembayaranController extends Controller
 {
     public function show(Request $request, string $id)
     {
-        $qty = $request->input('qty', 1);
         $user = auth()->user();
 
         // 1. Deteksi Cerdas (Ide Tim): Apakah ini ID Pesanan atau ID Menu?
@@ -36,6 +35,13 @@ class PembayaranController extends Controller
 
         // 2. Ambil data makanan berdasarkan ID yang sudah divalidasi
         $makanan = MenuAktif::with(['masterMakanan', 'unitBisnis.user'])->findOrFail($menuAktifId);
+
+        // Tentukan jumlah porsi (qty)
+        if ($pesanan) {
+            $qty = $request->has('qty') ? (int) $request->input('qty') : $pesanan->jumlah_porsi;
+        } else {
+            $qty = (int) $request->input('qty', 1);
+        }
 
         // Jika makanan diset gratis, subtotal 0
         if ($makanan->is_gratis == 1) { 
@@ -128,6 +134,14 @@ class PembayaranController extends Controller
                     'status' => 'berhasil', 
                     'waktu_bayar' => now(),
                 ]);
+
+                // Log activity
+                \App\Models\UserActivity::log(
+                    $user->id,
+                    'pemesanan',
+                    'Pesanan Dibuat',
+                    'Berhasil memesan ' . $pesanan->jumlah_porsi . ' porsi ' . ($makanan->masterMakanan->nama_makanan ?? 'makanan') . ' di ' . ($makanan->unitBisnis->nama_usaha ?? 'Mitra ShareBite') . '.'
+                );
 
                 // Stok TIDAK dikurangi lagi di sini karena sudah dikurangi di fungsi show()
 
