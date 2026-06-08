@@ -104,19 +104,17 @@
 
             <!-- Grid Kartu Donasi (Baris 1) -->
             @if(is_null(Auth::user()->latitude) || is_null(Auth::user()->longitude))
-                <div class="bg-amber-50 border border-amber-200 rounded-[2rem] p-10 text-center space-y-4 shadow-sm flex flex-col justify-center items-center min-h-[290px]">
-                    <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-2">
-                        <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <div class="bg-gradient-to-br from-[#eefcf4]/60 to-white border border-[#d2f4e1] rounded-[2rem] p-10 text-center space-y-4 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-center items-center min-h-[290px] hover:-translate-y-1.5 hover:shadow-[0_20px_40px_rgba(0,0,0,0.04)] transition-all duration-300 group">
+                    <div class="w-16 h-16 bg-[#eefcf4] text-[#1cb764] rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform duration-300 relative">
+                        <span class="absolute inset-0 rounded-full bg-[#1cb764]/10 animate-ping"></span>
+                        <svg class="w-7 h-7 text-[#1cb764] relative z-10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1115 0z" />
                         </svg>
                     </div>
-                    <p class="text-amber-800 font-bold text-sm max-w-md mx-auto leading-relaxed mb-2">
-                        Tidak bisa menampilkan lokasi terdekat, harap tentukan lokasi terlebih dahulu
+                    <p class="text-[#0b472e] font-extrabold text-sm sm:text-base max-w-md mx-auto leading-relaxed mb-2">
+                        Tentukan lokasi untuk melihat makanan terdekat anda.
                     </p>
-                    <a href="{{ route('user.profile.edit') }}" class="inline-block bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-6 py-2.5 rounded-full transition shadow-sm">
-                        Atur Lokasi
-                    </a>
                 </div>
             @elseif($limited_nearby_donations->isEmpty())
                 <div class="bg-white rounded-[2rem] p-10 text-center border border-gray-100 shadow-sm flex flex-col justify-center items-center min-h-[290px]">
@@ -413,17 +411,17 @@
 
         <!-- Kolom Kanan: Radius Anda -->
         @if(is_null(Auth::user()->latitude) || is_null(Auth::user()->longitude))
-            <div class="bg-amber-50 border border-amber-200 rounded-3xl p-6 text-gray-800 space-y-4 h-[290px] flex flex-col justify-center">
-                <span class="inline-block bg-amber-500 text-white text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full self-start">
+            <div class="bg-gradient-to-br from-[#eefcf4]/60 to-white border border-[#d2f4e1] rounded-3xl p-6 text-gray-800 space-y-4 h-[290px] flex flex-col justify-center hover:-translate-y-1.5 hover:shadow-lg transition-all duration-300 group">
+                <span class="inline-block bg-[#1cb764] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full self-start shadow-sm group-hover:scale-105 transition-transform">
                     LOKASI BELUM SET
                 </span>
-                <h3 class="text-base font-extrabold text-amber-800 leading-tight">
+                <h3 class="text-base font-black text-[#0b472e] leading-tight">
                     Titik Lokasi Belum Ditentukan
                 </h3>
-                <p class="text-xs text-amber-700 leading-relaxed font-medium">
+                <p class="text-xs text-[#0a2e1f]/75 leading-relaxed font-semibold">
                     Harap tentukan koordinat lokasi Anda terlebih dahulu agar sistem dapat mendeteksi donatur di sekitar Anda.
                 </p>
-                <a href="{{ route('user.profile.edit') }}" class="inline-block w-full bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold py-3 text-center rounded-2xl transition shadow-sm">
+                <a href="{{ route('user.lokasi') }}" class="inline-block w-full bg-gradient-to-r from-[#0b472e] to-[#1cb764] hover:from-[#093522] hover:to-[#159a54] text-white text-xs font-bold py-3.5 text-center rounded-2xl transition shadow-sm transform active:scale-95 cursor-pointer">
                     Atur Lokasi Sekarang
                 </a>
             </div>

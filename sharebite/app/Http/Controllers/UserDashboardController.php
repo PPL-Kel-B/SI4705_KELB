@@ -39,56 +39,61 @@ class UserDashboardController extends Controller
             ->take(3)
             ->get();
 
-        // 5. Donasi Terdekat: makanan aktif dengan filter radius unit bisnis dan diurutkan terdekat
-        $allMenuAktifs = MenuAktif::where('status', 'aktif')
-            ->where('stok_porsi', '>', 0)
-            ->where('batas_pengambilan', '>', now())
-            ->with(['masterMakanan', 'unitBisnis.user'])
-            ->get();
+        if (is_null($user->latitude) || is_null($user->longitude)) {
+            $limited_nearby_donations = collect();
+            $active_donors_count = 0;
+        } else {
+            // 5. Donasi Terdekat: makanan aktif dengan filter radius unit bisnis dan diurutkan terdekat
+            $allMenuAktifs = MenuAktif::where('status', 'aktif')
+                ->where('stok_porsi', '>', 0)
+                ->where('batas_pengambilan', '>', now())
+                ->with(['masterMakanan', 'unitBisnis.user'])
+                ->get();
 
-        $nearby_donations = $allMenuAktifs->map(function ($menu) use ($user) {
-            $latBisnis = $menu->unitBisnis->lokasi_lat ?? $menu->unitBisnis->user->latitude ?? null;
-            $lngBisnis = $menu->unitBisnis->lokasi_lng ?? $menu->unitBisnis->user->longitude ?? null;
+            $nearby_donations = $allMenuAktifs->map(function ($menu) use ($user) {
+                $latBisnis = $menu->unitBisnis->lokasi_lat ?? $menu->unitBisnis->user->latitude ?? null;
+                $lngBisnis = $menu->unitBisnis->lokasi_lng ?? $menu->unitBisnis->user->longitude ?? null;
 
-            $distance = 0.8; // fallback
-            if ($user && !is_null($user->latitude) && !is_null($user->longitude) && !is_null($latBisnis) && !is_null($lngBisnis)) {
-                $distance = User::calculateDistance(
-                    $user->latitude,
-                    $user->longitude,
-                    $latBisnis,
-                    $lngBisnis
-                );
-            }
-            $menu->computed_distance = $distance;
-            return $menu;
-        })->filter(function ($menu) {
-            // Hanya tampilkan jika jarak user berada di dalam radius_penjemputan milik toko
-            $radius = (float) ($menu->unitBisnis->radius_penjemputan ?? 5);
-            return $menu->computed_distance <= $radius;
-        })->sortBy('computed_distance')->values();
-
-        // Ambil 4 donasi terdekat untuk ditampilkan di dashboard utama
-        $limited_nearby_donations = $nearby_donations->take(4);
-
-        // 6. Hitung jumlah donatur aktif sekitar (dalam radius unit bisnis masing-masing)
-        $active_donors_count = User::where('role', 'unit_bisnis')
-            ->whereNotNull('latitude')
-            ->whereNotNull('longitude')
-            ->get()
-            ->filter(function ($donor) use ($user) {
-                if (!$user || is_null($user->latitude) || is_null($user->longitude)) {
-                    return false;
+                $distance = 0.8; // fallback
+                if ($user && !is_null($user->latitude) && !is_null($user->longitude) && !is_null($latBisnis) && !is_null($lngBisnis)) {
+                    $distance = User::calculateDistance(
+                        $user->latitude,
+                        $user->longitude,
+                        $latBisnis,
+                        $lngBisnis
+                    );
                 }
-                $distance = User::calculateDistance(
-                    $user->latitude,
-                    $user->longitude,
-                    $donor->latitude,
-                    $donor->longitude
-                );
-                $profile = $donor->unitBisnisProfile;
-                $radius = (float) ($profile->radius_penjemputan ?? 5);
-                return $distance <= $radius;
-            })->count();
+                $menu->computed_distance = $distance;
+                return $menu;
+            })->filter(function ($menu) {
+                // Hanya tampilkan jika jarak user berada di dalam radius_penjemputan milik toko
+                $radius = (float) ($menu->unitBisnis->radius_penjemputan ?? 5);
+                return $menu->computed_distance <= $radius;
+            })->sortBy('computed_distance')->values();
+
+            // Ambil 4 donasi terdekat untuk ditampilkan di dashboard utama
+            $limited_nearby_donations = $nearby_donations->take(4);
+
+            // 6. Hitung jumlah donatur aktif sekitar (dalam radius unit bisnis masing-masing)
+            $active_donors_count = User::where('role', 'unit_bisnis')
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->get()
+                ->filter(function ($donor) use ($user) {
+                    if (!$user || is_null($user->latitude) || is_null($user->longitude)) {
+                        return false;
+                    }
+                    $distance = User::calculateDistance(
+                        $user->latitude,
+                        $user->longitude,
+                        $donor->latitude,
+                        $donor->longitude
+                    );
+                    $profile = $donor->unitBisnisProfile;
+                    $radius = (float) ($profile->radius_penjemputan ?? 5);
+                    return $distance <= $radius;
+                })->count();
+        }
 
         // 7. Gamifikasi Level & Badges (Below the fold)
         // Level 1: < 5kg, Level 2: 5-10kg, Level 3: 10-20kg, Level 4: 20-50kg, Level 5: 50kg+
@@ -195,6 +200,11 @@ class UserDashboardController extends Controller
     {
         $user = auth()->user();
         $search = $request->input('search');
+
+        if (is_null($user->latitude) || is_null($user->longitude)) {
+            $nearby_donations = collect();
+            return view('user.nearby', compact('nearby_donations'));
+        }
 
         $allMenuAktifs = MenuAktif::where('status', 'aktif')
             ->where('stok_porsi', '>', 0)

@@ -41,6 +41,8 @@ class NotificationClickTest extends TestCase
             'nama_usaha' => 'Toko Roti Wangi',
             'jenis_usaha' => 'Kuliner',
             'radius_penjemputan' => 5,
+            'jam_buka' => '00:00',
+            'jam_tutup' => '23:59',
         ]);
 
         $master = MasterMakanan::create([
