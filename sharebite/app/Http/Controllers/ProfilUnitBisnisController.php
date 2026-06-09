@@ -25,6 +25,11 @@ class ProfilUnitBisnisController extends Controller
             $averageRating = $totalRatings > 0 ? ($ratingsQuery->avg('skor_rating') ?? 5.0) : 5.0;
             $ratingString = number_format($averageRating, 1) . ' (' . $totalRatings . ' Ulasan)';
 
+            // Hitung total donasi dari pesanan yang selesai
+            $totalDonasi = \App\Models\Pesanan::where('unit_bisnis_id', $profile->id)
+                ->where('status', 'selesai')
+                ->sum('jumlah_porsi');
+
             // Jika ada di database, gunakan data real
             $unitBisnis = (object) [
                 'id' => $profile->id,
@@ -32,7 +37,7 @@ class ProfilUnitBisnisController extends Controller
                 'kategori' => $profile->jenis_usaha ? $profile->jenis_usaha . ' Verified' : 'Partner Verified',
                 'alamat' => $profile->user->alamat ?? 'Alamat belum diisi',
                 'deskripsi' => $profile->deskripsi ?? 'Unit bisnis ini berdedikasi meminimalisir food waste dengan membagikan makanan berkualitas.',
-                'total_donasi' => ($profile->total_makanan_terjual ?? 0) . ' Porsi',
+                'total_donasi' => $totalDonasi . ' Porsi',
                 'rating' => $ratingString,
                 'foto_profile' => ($profile->foto_bisnis && $profile->foto_bisnis !== 'images/placeholder-bisnis.jpg') ? (str_starts_with($profile->foto_bisnis, 'images/') || str_starts_with($profile->foto_bisnis, 'http') ? asset($profile->foto_bisnis) : asset('storage/' . $profile->foto_bisnis)) : null,
                 'header_image' => $profile->header_image ? asset($profile->header_image) : null,

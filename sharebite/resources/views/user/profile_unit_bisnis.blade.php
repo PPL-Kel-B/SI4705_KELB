@@ -418,7 +418,11 @@
                     <div class="flex items-center justify-between mt-4 pt-3 border-t border-gray-50">
                         <div>
                             <p class="text-[10px] text-gray-400 font-medium">Harga / Porsi</p>
-                            <p class="text-[#1cb764] font-bold text-sm">Rp {{ number_format((int)$makanan->harga, 0, ',', '.') }}</p>
+                            @if($makanan->harga === '0 (Donasi)')
+                                <p class="text-[#1cb764] font-bold text-sm">Gratis (Donasi)</p>
+                            @else
+                                <p class="text-[#1cb764] font-bold text-sm">Rp {{ $makanan->harga }}</p>
+                            @endif
                         </div>
                         {{-- Tombol Ambil Makanan --}}
                         <a href="{{ route('user.makanan.detail', $makanan->id) }}" class="bg-[#1cb764] hover:bg-[#158f4e] text-white text-xs font-semibold px-4 py-2 rounded-xl transition text-center">
