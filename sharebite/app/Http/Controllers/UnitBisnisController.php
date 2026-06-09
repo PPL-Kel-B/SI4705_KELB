@@ -198,11 +198,17 @@ class UnitBisnisController extends Controller
         }
 
         unset($profileData['nama_bisnis']);
-        unset($profileData['email_bisnis']);
-        unset($profileData['no_telepon']);
         unset($profileData['alamat']);
         unset($profileData['delete_photo']);
         unset($profileData['delete_header']);
+
+        // Simpan email_bisnis dan no_telepon ke unit_bisnis_profiles
+        if (!empty($validated['email_bisnis'])) {
+            $profileData['email_bisnis'] = $validated['email_bisnis'];
+        }
+        if (!empty($validated['no_telepon'])) {
+            $profileData['no_telepon'] = $validated['no_telepon'];
+        }
 
         $unitBisnis->update($profileData);
 

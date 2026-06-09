@@ -12,7 +12,10 @@ class UnitBisnisProfile extends Model
     protected $fillable = [
         'user_id',
         'nama_usaha',
+        'nama_bisnis',
         'jenis_usaha',
+        'email_bisnis',
+        'no_telepon',
         'nib_file',
         'foto_bisnis',
         'header_image',
