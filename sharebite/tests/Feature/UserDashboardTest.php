@@ -160,7 +160,7 @@ class UserDashboardTest extends TestCase
             ->get(route('user.dashboard'));
 
         $response->assertOk();
-        $response->assertSee('Tidak bisa menampilkan lokasi terdekat, harap tentukan lokasi terlebih dahulu');
+        $response->assertSee('Tentukan lokasi untuk melihat makanan terdekat anda.');
         $response->assertSee('Titik Lokasi Belum Ditentukan');
     }
 

@@ -6,7 +6,7 @@
 
 <div class="max-w-screen-2xl mx-auto px-6 py-8">
     {{-- AREA CHAT --}}
-    <div class="col-span-8">
+    <div class="w-full">
     <div class="bg-white rounded-3xl shadow-sm overflow-hidden flex flex-col h-[calc(100vh-180px)]">
             {{-- Header --}}
             <div class="p-6 border-b bg-gray-50">
@@ -32,7 +32,7 @@
             {{-- Messages --}}
             <div
                 id="messagesContainer"
-                class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 min-h-[500px]"
+                class="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50"
             >
                 @forelse($messages as $message)
                     @if($message->sender_id == auth()->id())
