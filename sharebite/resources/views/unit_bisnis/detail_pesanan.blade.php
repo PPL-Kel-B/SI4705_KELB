@@ -14,18 +14,25 @@
     @endphp
 
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pt-2 gap-4">
-        <div class="flex flex-col gap-1">
-            <h1 class="text-3xl font-extrabold text-gray-800">Order <span class="text-[#189347]">{{ $formattedOrderId }}</span></h1>
-            <div class="flex items-center gap-2 text-xs font-bold text-gray-400 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <div class="flex items-center gap-4">
+            <a href="{{ route('unit.pesanan.index') }}" class="w-10 h-10 rounded-full bg-[#E4F2E8] hover:bg-[#d4edd9] text-[#10703B] transition flex items-center justify-center shadow-none shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3.2" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                <span>{{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->translatedFormat('d M Y') }}</span>
-                <span class="mx-1">•</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>{{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->format('H:i') }} WIB</span>
+            </a>
+            <div class="flex flex-col gap-1">
+                <h1 class="text-3xl font-extrabold text-gray-800">Order <span class="text-[#189347]">{{ $formattedOrderId }}</span></h1>
+                <div class="flex items-center gap-2 text-xs font-bold text-gray-400 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>{{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->translatedFormat('d M Y') }}</span>
+                    <span class="mx-1">•</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{{ \Carbon\Carbon::parse($pesanan->waktu_pesan)->format('H:i') }} WIB</span>
+                </div>
             </div>
         </div>
         <div class="flex items-center gap-3">
@@ -136,17 +143,10 @@
                 <h3 class="text-2xl font-extrabold text-gray-800 mb-2">{{ $pesanan->user->name ?? 'Relawan' }}</h3>
                 <span class="bg-[#E4F2E8] text-[#189347] text-[11px] font-extrabold px-4 py-1.5 rounded-full tracking-widest uppercase mb-8">Verified Volunteer</span>
 
-                <div class="grid grid-cols-3 gap-2 w-full">
+                <div class="grid grid-cols-2 gap-3 w-full">
                     <div class="bg-[#F8FAFC] p-3 rounded-2xl text-center">
                         <p class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">ID Relawan</p>
                         <p class="text-[13px] font-black text-gray-800 truncate" title="{{ $volId }}">{{ $volId }}</p>
-                    </div>
-                    <div class="bg-[#F8FAFC] p-3 rounded-2xl text-center">
-                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">RATING</p>
-                        <p class="text-[13px] font-black text-gray-800 flex items-center justify-center gap-0.5">
-                            {{ number_format($averageRating, 1) }}
-                            <span class="text-amber-500 text-xs">★</span>
-                        </p>
                     </div>
                     <div class="bg-[#F8FAFC] p-3 rounded-2xl text-center">
                         <p class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">TOTAL DONASI</p>

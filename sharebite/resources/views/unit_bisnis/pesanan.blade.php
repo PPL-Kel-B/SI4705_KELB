@@ -45,7 +45,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#189347]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                 </div>
             </div>
-            <h2 class="text-4xl font-black text-[#189347] mb-2">{{ str_pad($pesanans->count(), 2, '0', STR_PAD_LEFT) }}</h2>
+            <h2 class="text-4xl font-black text-[#189347] mb-2">{{ $pesanans->count() }}</h2>
             <p class="text-[11px] font-bold text-[#189347]/60">{{ $percentChangeText }}</p>
         </div>
 
@@ -62,7 +62,7 @@
                     </svg>
                 </div>
             </div>
-            <h2 class="text-4xl font-black text-[#78350F] mb-2">{{ str_pad($menunggu->count(), 2, '0', STR_PAD_LEFT) }}</h2>
+            <h2 class="text-4xl font-black text-[#78350F] mb-2">{{ $menunggu->count() }}</h2>
             <p class="text-[11px] font-bold text-[#B45309]/60">Prioritas utama hari ini</p>
         </div>
 
@@ -74,7 +74,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#7E22CE]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
                 </div>
             </div>
-            <h2 class="text-4xl font-black text-[#5B21B6] mb-2">{{ str_pad($selesai->count(), 2, '0', STR_PAD_LEFT) }}</h2>
+            <h2 class="text-4xl font-black text-[#5B21B6] mb-2">{{ $selesai->count() }}</h2>
             <p class="text-[11px] font-bold text-[#7E22CE]/60">Telah diverifikasi sistem</p>
         </div>
     </div>
@@ -281,7 +281,7 @@
             <p class="text-gray-600 text-[14px] leading-relaxed mb-8 max-w-md">Tim dukungan ShareBite siap 24/7 membantu Anda.</p>
             
             <div class="flex flex-wrap gap-4">
-                <a href="#" class="bg-white hover:bg-gray-50 text-gray-800 font-extrabold px-6 py-3.5 rounded-[14px] shadow-sm text-[13px] tracking-wide transition">
+                <a href="{{ route('unit.chat') }}" class="bg-white hover:bg-gray-50 text-gray-800 font-extrabold px-6 py-3.5 rounded-[14px] shadow-sm text-[13px] tracking-wide transition">
                     Hubungi CS
                 </a>
             </div>

@@ -6,6 +6,8 @@ use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 use App\Models\User;
 use App\Models\MenuAktif;
+use App\Models\Pesanan;
+use App\Models\Pembayaran;
 use Illuminate\Support\Facades\DB;
 
 class PembayaranTest extends DuskTestCase
@@ -23,15 +25,30 @@ class PembayaranTest extends DuskTestCase
     {
         parent::setUp();
 
-        $dbName = env('DB_DATABASE', 'sharebite');
+        $dbName = 'sharebite';
+        if (file_exists(base_path('.env'))) {
+            $envContent = file_get_contents(base_path('.env'));
+            if (preg_match('/^DB_DATABASE\s*=\s*(.+)$/m', $envContent, $matches)) {
+                $dbName = trim($matches[1], " \t\n\r\0\x0B\"'");
+            }
+        }
+
         config(["database.connections.mysql.database" => $dbName]);
         DB::purge('mysql');
         DB::reconnect('mysql');
+
+        // Clean up conflicting unique codes
+        Pesanan::where('kode_unik', 'SB-111-AAA')->delete();
 
         // Ambil ID MenuAktif berdasarkan nama makanan
         $this->menuId = MenuAktif::whereHas('masterMakanan', function ($q) {
             $q->where('nama_makanan', $this->namaMenu);
         })->firstOrFail()->id;
+
+        // Pastikan batas pengambilan selalu di masa depan agar tidak dianggap kadaluarsa oleh database
+        MenuAktif::find($this->menuId)->update([
+            'batas_pengambilan' => now()->addHours(5)
+        ]);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -53,6 +70,35 @@ class PembayaranTest extends DuskTestCase
 
     private function visitBerhasil(Browser $browser): void
     {
+        $user = User::where('email', $this->userEmail)->firstOrFail();
+        $menu = MenuAktif::findOrFail($this->menuId);
+
+        // Pastikan ada pesanan dengan status 'dibayar' agar halaman berhasil bisa dibuka
+        $pesanan = Pesanan::where('user_id', $user->id)
+            ->where('menu_aktif_id', $menu->id)
+            ->whereIn('status', ['proses', 'siap_diambil', 'dibayar', 'diambil'])
+            ->first();
+
+        if (!$pesanan) {
+            $pesanan = Pesanan::create([
+                'user_id' => $user->id,
+                'menu_aktif_id' => $menu->id,
+                'status' => 'dibayar',
+                'unit_bisnis_id' => $menu->unit_bisnis_id,
+                'jumlah_porsi' => 1,
+                'total_harga' => $menu->harga_jual,
+                'kode_unik' => 'SB-111-AAA',
+                'waktu_pesan' => now(),
+            ]);
+
+            Pembayaran::create([
+                'pesanan_id' => $pesanan->id,
+                'status' => 'berhasil',
+                'qrcode' => 'SB-QR-SUCCESS',
+                'waktu_bayar' => now(),
+            ]);
+        }
+
         $this->loginUser($browser);
         $browser->visit("/user/dashboard/{$this->menuId}/pembayaran/berhasil?qty=1")
                 ->waitForLocation("/user/dashboard/{$this->menuId}/pembayaran/berhasil", 10);
@@ -68,7 +114,8 @@ class PembayaranTest extends DuskTestCase
             $this->visitPembayaran($browser);
 
             $browser->click('a[href*="riwayat"]')
-                    ->assertPathIs('/user/riwayat');
+                    ->assertPathIs('/user/riwayat')
+                    ->assertSee('MENUNGGU PEMBAYARAN');
         });
     }
 
@@ -137,26 +184,46 @@ class PembayaranTest extends DuskTestCase
         });
     }
 
-   // ═════════════════════════════════════════════════════════════
+    // ═════════════════════════════════════════════════════════════
     // TEST 5 — Ketika timer habis -> arahkan ke halaman riwayat
     // ═════════════════════════════════════════════════════════════
 
     public function testTimerExpiredRedirectsToRiwayat(): void
     {
         $this->browse(function (Browser $browser) {
-            $this->visitPembayaran($browser);
+            $user = User::where('email', $this->userEmail)->firstOrFail();
+            $menu = MenuAktif::findOrFail($this->menuId);
 
-            // Ambil refCode dinamis dari atribut data-ref di HTML
-            $refCode = $browser->attribute('#qr-meta', 'data-ref');
-            $storageKey = 'timer_bayar_' . $refCode;
+            // Hapus pesanan lama milik user untuk menu ini jika ada
+            Pesanan::where('user_id', $user->id)
+                   ->where('menu_aktif_id', $menu->id)
+                   ->delete();
 
-            $browser->script("
-                localStorage.setItem('{$storageKey}', (Date.now() + 2000).toString());
-            ");
+            // Buat pesanan baru yang akan habis dalam 2 detik (14 menit 58 detik yang lalu)
+            // Jadi belum terhapus oleh cancelExpiredPaymentOrders (karena belum 15 menit),
+            // tetapi begitu halaman dimuat, timer akan bernilai 2 detik dan kemudian mati.
+            $pesanan = Pesanan::create([
+                'user_id' => $user->id,
+                'menu_aktif_id' => $menu->id,
+                'status' => 'menunggu_pembayaran',
+                'unit_bisnis_id' => $menu->unit_bisnis_id,
+                'jumlah_porsi' => 1,
+                'total_harga' => $menu->harga_jual,
+                'kode_unik' => 'SB-777-XYZ',
+                'waktu_pesan' => now()->subMinutes(14)->subSeconds(58),
+            ]);
 
-            $browser->refresh()
-                    ->pause(5000)
-                    ->assertPathIs('/user/riwayat');
+            Pembayaran::create([
+                'pesanan_id' => $pesanan->id,
+                'status' => 'menunggu',
+                'qrcode' => 'SB-QR-EXPIRED',
+            ]);
+
+            $this->loginUser($browser);
+            $browser->visit("/user/dashboard/{$this->menuId}/pembayaran?qty=1")
+                    ->waitForLocation("/user/riwayat", 10)
+                    ->assertPathIs('/user/riwayat')
+                    ->assertSee('BATAL');
         });
     }
 
@@ -167,28 +234,33 @@ class PembayaranTest extends DuskTestCase
     public function testTimerContinuesAfterRefresh(): void
     {
         $this->browse(function (Browser $browser) {
+            // Bersihkan pesanan lama agar dimulai dari 15 menit penuh
+            $user = User::where('email', $this->userEmail)->firstOrFail();
+            Pesanan::where('user_id', $user->id)
+                   ->where('menu_aktif_id', $this->menuId)
+                   ->delete();
+
             $this->visitPembayaran($browser);
 
-            $browser->waitFor('#payment-timer', 5);
-
-            // Ambil refCode dinamis dari atribut data-ref di HTML
-            $refCode = $browser->attribute('#qr-meta', 'data-ref');
-            $storageKey = 'timer_bayar_' . $refCode;
-
-            $expireBefore = $browser->script(
-                "return localStorage.getItem('{$storageKey}');"
-            )[0];
-
-            $this->assertNotNull($expireBefore);
+            $browser->waitFor('#payment-timer', 10)
+                    ->pause(1500);
+            $timeBefore = $browser->text('#payment-timer');
 
             $browser->pause(2000)->refresh();
-            $browser->waitFor('#payment-timer', 5);
+            $browser->waitFor('#payment-timer', 10)
+                    ->pause(1500);
+            $timeAfter = $browser->text('#payment-timer');
 
-            $expireAfter = $browser->script(
-                "return localStorage.getItem('{$storageKey}');"
-            )[0];
+            $parseSeconds = function ($timeStr) {
+                $parts = explode(':', $timeStr);
+                return (int)$parts[0] * 60 + (int)$parts[1];
+            };
 
-            $this->assertEquals($expireBefore, $expireAfter);
+            $secsBefore = $parseSeconds($timeBefore);
+            $secsAfter = $parseSeconds($timeAfter);
+
+            $this->assertLessThan($secsBefore, $secsAfter, "Timer should decrease after refresh.");
+            $this->assertLessThanOrEqual(900, $secsAfter);
         });
     }
 
@@ -309,6 +381,22 @@ class PembayaranTest extends DuskTestCase
     }
 
     // ═════════════════════════════════════════════════════════════
+    // TEST 2d — Klik area map BERHASIL → onclick ke Google Maps
+    // ═════════════════════════════════════════════════════════════
+
+    public function testClickMapBerhasilHasGoogleMapsUrl(): void
+    {
+        $this->browse(function (Browser $browser) {
+            $this->visitBerhasil($browser);
+
+            $browser->waitFor('#map-berhasil', 10);
+
+            $onclick = $browser->attribute('[onclick*="google.com/maps"]', 'onclick');
+            $this->assertStringContainsString('google.com/maps', $onclick);
+        });
+    }
+
+    // ═════════════════════════════════════════════════════════════
     // TEST 12 — Tombol "Lihat Riwayat Pesanan" → halaman riwayat
     // ═════════════════════════════════════════════════════════════
 
@@ -318,7 +406,8 @@ class PembayaranTest extends DuskTestCase
             $this->visitBerhasil($browser);
 
             $browser->clickLink('Lihat Riwayat Pesanan')
-                    ->assertPathIs('/user/riwayat');
+                    ->assertPathIs('/user/riwayat')
+                    ->assertSee('PROSES');
         });
     }
 }
