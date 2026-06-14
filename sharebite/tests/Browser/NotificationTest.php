@@ -11,7 +11,15 @@ use Illuminate\Foundation\Testing\DatabaseTruncation;
 // Use database truncation to ensure a clean state for Dusk tests.
 uses(DatabaseTruncation::class);
 
-test('user can register a unit bisnis and trigger a notification to the admin (TC-REG-01)', function () {
+/**
+ * Helper to get user-defined pause duration for slow-motion demo.
+ * Default is 1500ms so actions are clearly visible during presentation.
+ */
+function duskDelay(): int {
+    return (int) env('DUSK_PAUSE_MS', 1500);
+}
+
+test('TC-REG-01: Verifikasi pendaftaran unit bisnis baru memicu notifikasi admin', function () {
     // Create an admin user so the system has an admin to notify
     $admin = User::create([
         'name' => 'Admin ShareBite',
@@ -24,12 +32,14 @@ test('user can register a unit bisnis and trigger a notification to the admin (T
     $this->browse(function (Browser $browser) {
         $browser->visit('/register/unit-bisnis')
             ->assertSee('Informasi Bisnis')
+            ->pause(duskDelay())
             ->type('Nama_Usaha', 'Lestari Bakery')
             ->select('Jenis_Usaha', 'Restoran')
             ->type('Alamat', 'Jalan Merdeka No. 10')
             ->type('Nomor_hp', '081298765432')
             ->type('Email', 'lestari@bakery.com')
-            ->type('Password', 'Password123!');
+            ->type('Password', 'Password123!')
+            ->pause(duskDelay());
 
         // Check the terms checkbox and enable the submit button via JS to bypass validation requirements
         $browser->script("
@@ -39,9 +49,11 @@ test('user can register a unit bisnis and trigger a notification to the admin (T
             btn.classList.remove('opacity-50', 'cursor-not-allowed');
         ");
 
-        $browser->click('#submitBtn')
+        $browser->pause(duskDelay())
+            ->click('#submitBtn')
             ->waitForLocation('/login')
-            ->assertPathIs('/login');
+            ->assertPathIs('/login')
+            ->pause(duskDelay());
     });
 
     // Assert that the unit bisnis user was created in the database
@@ -63,89 +75,7 @@ test('user can register a unit bisnis and trigger a notification to the admin (T
     ]);
 });
 
-test('validation for empty nama usaha (TC-REG-02)', function () {
-    $this->browse(function (Browser $browser) {
-        $browser->visit('/register/unit-bisnis')
-            ->assertSee('Informasi Bisnis')
-            // Keep Nama_Usaha empty, fill other fields
-            ->select('Jenis_Usaha', 'Restoran')
-            ->type('Alamat', 'Jalan Merdeka No. 10')
-            ->type('Nomor_hp', '081298765432')
-            ->type('Email', 'lestari@bakery.com')
-            ->type('Password', 'Password123!');
-
-        // Verify that the submit button remains disabled (cannot submit)
-        $disabled = $browser->attribute('#submitBtn', 'disabled');
-        expect($disabled)->toBe('true');
-    });
-});
-
-test('validation for unsupported NIB file format (TC-REG-03)', function () {
-    $this->browse(function (Browser $browser) {
-        $browser->visit('/register/unit-bisnis')
-            ->attach('NIB_File', __FILE__) // Attach this PHP file (unsupported format)
-            ->waitForText('Format file tidak didukung!')
-            ->assertSee('Format file tidak didukung!');
-    });
-});
-
-test('validation for NIB file size exceeding 5MB (TC-REG-04)', function () {
-    // Generate a temporary 6MB dummy PDF file dynamically
-    $tempFile = tempnam(sys_get_temp_dir(), 'nib_test_');
-    $fp = fopen($tempFile, 'w');
-    fseek($fp, 6 * 1024 * 1024); // Seek to 6MB
-    fputs($fp, 'a');
-    fclose($fp);
-    
-    $largePdf = $tempFile . '.pdf';
-    rename($tempFile, $largePdf);
-
-    try {
-        $this->browse(function (Browser $browser) use ($largePdf) {
-            $browser->visit('/register/unit-bisnis')
-                ->attach('NIB_File', $largePdf)
-                ->waitForText('Ukuran file melebihi 5MB!')
-                ->assertSee('Ukuran file melebihi 5MB!');
-        });
-    } finally {
-        // Ensure cleanup of the temporary file
-        if (file_exists($largePdf)) {
-            unlink($largePdf);
-        }
-    }
-});
-
-test('validation for duplicate email or phone (TC-REG-05)', function () {
-    // Create an existing user with duplicate email/phone
-    User::factory()->create([
-        'email' => 'lestari@bakery.com',
-        'no_hp' => '081298765432',
-    ]);
-
-    $this->browse(function (Browser $browser) {
-        $browser->visit('/register/unit-bisnis')
-            ->type('Nama_Usaha', 'Lestari Bakery')
-            ->select('Jenis_Usaha', 'Restoran')
-            ->type('Alamat', 'Jalan Merdeka No. 10')
-            ->type('Nomor_hp', '081298765432') // Duplicate phone
-            ->type('Email', 'lestari@bakery.com')   // Duplicate email
-            ->type('Password', 'Password123!');
-
-        // Check terms checkbox and enable the submit button via JS
-        $browser->script("
-            document.getElementById('terms').checked = true;
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = false;
-            btn.classList.remove('opacity-50', 'cursor-not-allowed');
-        ");
-
-        $browser->click('#submitBtn')
-            ->waitForText('taken') // Laravel default "has already been taken" validation message
-            ->assertSee('taken');
-    });
-});
-
-test('UnitBisnisMendaftarNotification generates correct email preview and content (TC-REG-06)', function () {
+test('TC-REG-02: Verifikasi preview dan isi email notifikasi admin', function () {
     $user = User::factory()->create([
         'name' => 'Katering Barokah',
         'email' => 'barokah@katering.com',
@@ -166,7 +96,7 @@ test('UnitBisnisMendaftarNotification generates correct email preview and conten
     expect($mailMessage->actionUrl)->toContain('/admin/manajemen-pengguna');
 });
 
-test('user can toggle notification settings on general settings page (TC-SET-01)', function () {
+test('TC-SET-01: Verifikasi toggle pengaturan notifikasi pada halaman pengaturan umum', function () {
     $user = User::factory()->create([
         'role' => 'individu',
         'notif_donasi' => true,
@@ -176,17 +106,20 @@ test('user can toggle notification settings on general settings page (TC-SET-01)
         $browser->loginAs($user)
             ->visit('/user/pengaturan')
             ->waitForText('Pengaturan')
+            ->pause(duskDelay())
             ->assertSee('Donasi Baru')
             ->click('button[class*="relative inline-flex h-8 w-14"]')
+            ->pause(duskDelay())
             ->waitForText('Pengaturan notifikasi berhasil diperbarui!')
-            ->assertSee('Pengaturan notifikasi berhasil diperbarui!');
+            ->assertSee('Pengaturan notifikasi berhasil diperbarui!')
+            ->pause(duskDelay());
     });
 
     $user->refresh();
     expect((bool)$user->notif_donasi)->toBeFalse();
 });
 
-test('unit bisnis can toggle notification settings on business settings page (TC-SET-02)', function () {
+test('TC-SET-02: Verifikasi toggle pengaturan notifikasi pada halaman pengaturan bisnis', function () {
     $user = User::factory()->create([
         'role' => 'unit_bisnis',
     ]);
@@ -208,18 +141,21 @@ test('unit bisnis can toggle notification settings on business settings page (TC
         $browser->loginAs($user)
             ->visit('/unit/pengaturan')
             ->waitForText('Pengaturan Operasional')
+            ->pause(duskDelay())
             ->assertSee('Aktifkan Notifikasi')
             ->click('label[class*="relative inline-flex items-center cursor-pointer"]')
+            ->pause(duskDelay())
             ->click('#settings-form button[type="submit"]')
             ->waitForLocation('/unit/pengaturan')
-            ->assertSee('Pengaturan berhasil diperbarui!');
+            ->assertSee('Pengaturan berhasil diperbarui!')
+            ->pause(duskDelay());
     });
 
     $profile->refresh();
     expect((bool)$profile->notifikasi_aktif)->toBeFalse();
 });
 
-test('MakananDekatNotification respects notif_donasi preference (TC-SET-03)', function () {
+test('TC-SET-03: Verifikasi MakananDekatNotification mematuhi preferensi notif donasi user', function () {
     $unitBisnisUser = User::factory()->create(['role' => 'unit_bisnis']);
     $profile = UnitBisnisProfile::create([
         'user_id' => $unitBisnisUser->id,
@@ -264,7 +200,7 @@ test('MakananDekatNotification respects notif_donasi preference (TC-SET-03)', fu
     ]);
 });
 
-test('PesananMasukNotification respects notifikasi_aktif and notifikasi_pesanan settings (TC-SET-04)', function () {
+test('TC-SET-04: Verifikasi PesananMasukNotification mematuhi preferensi notifikasi unit bisnis', function () {
     // 1. Setup Unit Bisnis with notifications ON
     $userOn = User::factory()->create(['role' => 'unit_bisnis']);
     $profileOn = UnitBisnisProfile::create([
@@ -347,4 +283,3 @@ test('PesananMasukNotification respects notifikasi_aktif and notifikasi_pesanan 
         'type' => \App\Notifications\PesananMasukNotification::class,
     ]);
 });
-

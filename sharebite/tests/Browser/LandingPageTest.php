@@ -8,7 +8,15 @@ use Illuminate\Foundation\Testing\DatabaseTruncation;
 // Use database truncation to ensure a clean state for Dusk tests.
 uses(DatabaseTruncation::class);
 
-test('user can visit landing page and navigate to Mitra Kami (TC-LP-01)', function () {
+/**
+ * Helper to get user-defined pause duration for slow-motion demo.
+ * Default is 1500ms so actions are clearly visible during presentation.
+ */
+function duskDelay(): int {
+    return (int) env('DUSK_PAUSE_MS', 1500);
+}
+
+test('TC-LP-01: Verifikasi navigasi dari Landing Page ke halaman Mitra Kami', function () {
     $this->browse(function (Browser $browser) {
         $browser->visit('/')
             ->waitForText('SELAMATKAN')
@@ -16,36 +24,39 @@ test('user can visit landing page and navigate to Mitra Kami (TC-LP-01)', functi
 
         $browser->assertSee('SELAMATKAN')
             ->assertSee('MAKANAN')
+            ->pause(duskDelay())
             ->clickLink('Mitra Kami')
             ->waitForLocation('/mitra')
             ->assertPathIs('/mitra')
-            ->assertSee('MITRA PENYELAMAT MAKANAN');
+            ->assertSee('MITRA PENYELAMAT MAKANAN')
+            ->pause(duskDelay());
     });
 });
 
-test('user can visit landing page and navigate to Tentang Kami (TC-LP-02)', function () {
+test('TC-LP-02: Verifikasi navigasi dari Landing Page ke halaman Tentang Kami', function () {
     $this->browse(function (Browser $browser) {
         $browser->visit('/')
-            ->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));");
-
-        $browser->clickLink('Tentang Kami')
+            ->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));")
+            ->pause(duskDelay())
+            ->clickLink('Tentang Kami')
             ->waitForLocation('/tentang-kami')
             ->assertPathIs('/tentang-kami')
-            ->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));");
-
-        $browser->assertSee('Ubah Sisa Pangan')
-            ->assertSee('Jadi Senyuman');
+            ->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));")
+            ->assertSee('Ubah Sisa Pangan')
+            ->assertSee('Jadi Senyuman')
+            ->pause(duskDelay());
     });
 });
 
-test('scroll reveal animation on landing page (TC-LP-03)', function () {
+test('TC-LP-03: Verifikasi keberadaan animasi scroll reveal (.fade-up) di Landing Page', function () {
     $this->browse(function (Browser $browser) {
         $browser->visit('/')
-            ->assertPresent('.fade-up');
+            ->assertPresent('.fade-up')
+            ->pause(duskDelay());
     });
 });
 
-test('user can see all verified mitras on initial load (TC-MIT-01)', function () {
+test('TC-MIT-01: Verifikasi menampilkan semua mitra terverifikasi pada load awal halaman Mitra', function () {
     // Seed test data in the database
     $user1 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Lestari Bakery']);
     UnitBisnisProfile::create([
@@ -76,11 +87,12 @@ test('user can see all verified mitras on initial load (TC-MIT-01)', function ()
         $browser->visit('/mitra')
             ->assertSee('Lestari Bakery')
             ->assertSee('Sari Cafe')
-            ->assertDontSee('Katering Rahasia');
+            ->assertDontSee('Katering Rahasia')
+            ->pause(duskDelay());
     });
 });
 
-test('user can search mitras by keyword (TC-MIT-02)', function () {
+test('TC-MIT-02: Verifikasi pencarian mitra menggunakan kata kunci nama mitra', function () {
     $user1 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Lestari Bakery']);
     UnitBisnisProfile::create([
         'user_id' => $user1->id,
@@ -100,15 +112,17 @@ test('user can search mitras by keyword (TC-MIT-02)', function () {
     $this->browse(function (Browser $browser) {
         $browser->visit('/mitra')
             ->type('search', 'Lestari')
+            ->pause(duskDelay())
             ->click('@search-submit-btn')
             ->waitForLocation('/mitra')
             ->assertQueryStringHas('search', 'Lestari')
             ->assertSee('Lestari Bakery')
-            ->assertDontSee('Sari Cafe');
+            ->assertDontSee('Sari Cafe')
+            ->pause(duskDelay());
     });
 });
 
-test('user gets no results when searching for non-existent mitras (TC-MIT-03)', function () {
+test('TC-MIT-03: Verifikasi pencarian mitra yang tidak terdaftar menghasilkan hasil kosong', function () {
     $user1 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Lestari Bakery']);
     UnitBisnisProfile::create([
         'user_id' => $user1->id,
@@ -120,14 +134,16 @@ test('user gets no results when searching for non-existent mitras (TC-MIT-03)', 
     $this->browse(function (Browser $browser) {
         $browser->visit('/mitra')
             ->type('search', 'Xyz Bakery')
+            ->pause(duskDelay())
             ->click('@search-submit-btn')
             ->waitForLocation('/mitra')
             ->assertQueryStringHas('search', 'Xyz Bakery')
-            ->assertDontSee('Lestari Bakery');
+            ->assertDontSee('Lestari Bakery')
+            ->pause(duskDelay());
     });
 });
 
-test('user can filter mitras by category (TC-MIT-04)', function () {
+test('TC-MIT-04: Verifikasi penyaringan daftar mitra berdasarkan kategori jenis usaha', function () {
     $user1 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Lestari Bakery']);
     UnitBisnisProfile::create([
         'user_id' => $user1->id,
@@ -148,15 +164,17 @@ test('user can filter mitras by category (TC-MIT-04)', function () {
         $browser->visit('/mitra')
             ->click('#category-dropdown-btn')
             ->waitForText('Restoran')
+            ->pause(duskDelay())
             ->click('@category-option-restoran')
             ->waitForLocation('/mitra')
             ->assertQueryStringHas('jenis_usaha', 'Restoran')
             ->assertDontSee('Lestari Bakery')
-            ->assertSee('Sari Cafe');
+            ->assertSee('Sari Cafe')
+            ->pause(duskDelay());
     });
 });
 
-test('user can reset category filter to Semua Kategori (TC-MIT-05)', function () {
+test('TC-MIT-05: Verifikasi reset filter kategori kembali ke Semua Kategori', function () {
     $user1 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Lestari Bakery']);
     UnitBisnisProfile::create([
         'user_id' => $user1->id,
@@ -178,21 +196,25 @@ test('user can reset category filter to Semua Kategori (TC-MIT-05)', function ()
         $browser->visit('/mitra?jenis_usaha=Restoran')
             ->assertDontSee('Lestari Bakery')
             ->assertSee('Sari Cafe')
+            ->pause(duskDelay())
             ->click('#category-dropdown-btn')
             ->waitForText('Semua Kategori')
             ->click('@category-option-all')
             ->waitForLocation('/mitra')
             ->assertSee('Lestari Bakery')
-            ->assertSee('Sari Cafe');
+            ->assertSee('Sari Cafe')
+            ->pause(duskDelay());
     });
 });
 
-test('user can visit landing page and navigate to Login page (TC-LP-04)', function () {
+test('TC-LP-04: Verifikasi navigasi dari Landing Page ke halaman Login', function () {
     $this->browse(function (Browser $browser) {
         $browser->visit('/')
+            ->pause(duskDelay())
             ->clickLink('Masuk')
             ->waitForLocation('/login')
             ->assertPathIs('/login')
-            ->assertSee('Selamat Datang');
+            ->assertSee('Selamat Datang')
+            ->pause(duskDelay());
     });
 });
