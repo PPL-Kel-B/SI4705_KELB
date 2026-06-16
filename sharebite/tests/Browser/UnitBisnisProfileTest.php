@@ -27,21 +27,19 @@ class UnitBisnisProfileTest extends DuskTestCase
         UnitBisnisProfile::firstOrCreate(
             ['user_id' => $user->id],
             [
-                'nama_usaha'           => 'Lestari Food',
-                'jenis_usaha'          => 'Restoran',
-                'email_bisnis'         => 'lestari@gmail.com',
-                'no_telepon'           => '+6282178830750',
-                'foto_bisnis'          => 'images/placeholder-bisnis.jpg',
-                'lokasi_lat'           => '-6.9271',
-                'lokasi_lng'           => '107.6411',
-                'radius_penjemputan'   => 15,
-                'jam_buka'             => '08:00',
-                'jam_tutup'            => '21:00',
-                'verified'             => true,
-                'status_verifikasi'    => 'terverifikasi',
-                'tahun_bergabung'      => 2023,
-                'notifikasi_aktif'     => true,
-                'notifikasi_pesanan'   => true,
+                'nama_usaha'             => 'Lestari Food',
+                'jenis_usaha'            => 'Restoran',
+                'foto_bisnis'            => 'images/placeholder-bisnis.jpg',
+                'lokasi_lat'             => '-6.9271',
+                'lokasi_lng'             => '107.6411',
+                'radius_penjemputan'     => 15,
+                'jam_buka'               => '08:00',
+                'jam_tutup'              => '21:00',
+                'verified'               => true,
+                'status_verifikasi'      => 'terverifikasi',
+                'tahun_bergabung'        => 2023,
+                'notifikasi_aktif'       => true,
+                'notifikasi_pesanan'     => true,
                 'notifikasi_penjemputan' => true,
             ]
         );
@@ -54,7 +52,7 @@ class UnitBisnisProfileTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/profil')
-                ->pause(1500)
+                ->pause(3500)
                 ->assertSee('Profil')
                 ->assertSee('Informasi Bisnis')
                 ->assertSee('DAMPAK SOSIAL')
@@ -69,7 +67,7 @@ class UnitBisnisProfileTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/profil')
-                ->pause(1500);
+                ->pause(3500);
 
             // Klik tombol Ubah → form masuk mode edit
             $browser->script("
@@ -80,7 +78,7 @@ class UnitBisnisProfileTest extends DuskTestCase
                 btn?.click();
             ");
 
-            $browser->pause(800);
+            $browser->pause(2500);
 
             // Verifikasi field bisa diisi (input tidak disabled)
             $browser->script("
@@ -97,7 +95,7 @@ class UnitBisnisProfileTest extends DuskTestCase
                 setInput('#no_telepon_input', '081234567890');
             ");
 
-            $browser->pause(500);
+            $browser->pause(2000);
 
             // Klik Batal — data TIDAK disimpan ke database
             $browser->script("
@@ -108,7 +106,7 @@ class UnitBisnisProfileTest extends DuskTestCase
                 btn?.click();
             ");
 
-            $browser->pause(500)
+            $browser->pause(2000)
                 // Verifikasi nama bisnis kembali ke nilai asli (tidak berubah)
                 ->assertSee('Lestari Food');
         });
@@ -131,7 +129,7 @@ class UnitBisnisProfileTest extends DuskTestCase
             $this->browse(function (Browser $browser) use ($user) {
                 $browser->loginAs($user)
                     ->visit('/unit/profil')
-                    ->pause(1000)
+                    ->pause(3000)
                     ->assertPresent('.rounded-full');
             });
         } finally {
@@ -151,7 +149,7 @@ class UnitBisnisProfileTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/profil')
-                ->pause(1500)
+                ->pause(3500)
                 ->assertSee('DAMPAK SOSIAL')
                 ->assertSee('Porsi Makanan')
                 ->assertSee('DAMPAK LINGKUNGAN')
@@ -166,7 +164,7 @@ class UnitBisnisProfileTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/profil')
-                ->pause(1000)
+                ->pause(3000)
                 ->assertSee('Lokasi & Alamat')
                 ->assertPresent('#main-map');
         });
@@ -179,7 +177,7 @@ class UnitBisnisProfileTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/profil')
-                ->pause(1500)
+                ->pause(3500)
                 ->assertSee('Keamanan')
                 ->assertSee('Manajemen Kata Sandi');
 
@@ -188,7 +186,7 @@ class UnitBisnisProfileTest extends DuskTestCase
                 document.getElementById('change-password-modal').showModal();
             ");
 
-            $browser->pause(800)
+            $browser->pause(2500)
                 ->assertSee('Ganti Kata Sandi')
                 ->assertPresent('#change-password-modal');
         });
@@ -201,12 +199,12 @@ class UnitBisnisProfileTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/profil?changePassword=true')
-                ->pause(2000)
+                ->pause(4000)
                 ->type('current_password', 'password')
                 ->type('password', 'abc123')
                 ->type('password_confirmation', 'abc123')
                 ->press('Ganti Kata Sandi')
-                ->pause(1500)
+                ->pause(3500)
                 ->assertSee('minimal 8 karakter');
         });
     }
@@ -218,12 +216,12 @@ class UnitBisnisProfileTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/profil?changePassword=true')
-                ->pause(2000)
+                ->pause(4000)
                 ->type('current_password', 'password')
                 ->type('password', 'passwordbaru123')
                 ->type('password_confirmation', 'passwordbeda456')
                 ->press('Ganti Kata Sandi')
-                ->pause(1500)
+                ->pause(3500)
                 ->assertSee('tidak cocok');
         });
     }
@@ -235,7 +233,7 @@ class UnitBisnisProfileTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/profil?changePassword=true')
-                ->pause(2000)
+                ->pause(4000)
                 ->assertSee('Ganti Kata Sandi');
 
             // Klik tombol Batal
@@ -243,7 +241,7 @@ class UnitBisnisProfileTest extends DuskTestCase
                 document.getElementById('change-password-modal').close();
             ");
 
-            $browser->pause(500)
+            $browser->pause(2000)
                 // Modal tertutup, tetap di halaman profil
                 ->assertPathIs('/unit/profil')
                 ->assertSee('Informasi Bisnis');
