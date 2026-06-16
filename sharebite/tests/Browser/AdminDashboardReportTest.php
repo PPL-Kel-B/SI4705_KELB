@@ -7,6 +7,16 @@ use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Helper to get user-defined pause duration for slow-motion demo.
+ * Default is 1500ms so actions are clearly visible during presentation.
+ */
+if (! function_exists('duskDelay')) {
+    function duskDelay(): int {
+        return (int) env('DUSK_PAUSE_MS', 1500);
+    }
+}
+
 class AdminDashboardReportTest extends DuskTestCase
 {
     // Menggunakan DatabaseMigrations agar setiap kali test dijalankan,
@@ -22,7 +32,7 @@ class AdminDashboardReportTest extends DuskTestCase
         // 2. Insert dummy profile & pesanans untuk menguji Paginasi dan Filter (TC-DT-03 & TC-DT-02)
         // Kita matikan sementara FOREIGN_KEY_CHECKS agar insert data pesanan lebih mudah
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        
+
         // Buat dummy unit bisnis profile untuk user ID 2 (Lestari Food)
         DB::table('unit_bisnis_profiles')->insertOrIgnore([
             'id' => 999,
@@ -64,7 +74,7 @@ class AdminDashboardReportTest extends DuskTestCase
                 'updated_at' => now(),
             ]);
         }
-        
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 
@@ -73,12 +83,21 @@ class AdminDashboardReportTest extends DuskTestCase
      */
     protected function loginAdmin(Browser $browser): void
     {
-        $browser->visit('/login')
-            ->type('email', 'admin@sharebite.com')
+        $browser->visit('/login');
+
+        // Jika setelah visit /login malah diredirect ke dashboard (berarti masih login dari test sebelumnya)
+        if (str_contains($browser->driver->getCurrentURL(), '/admin/dashboard')) {
+            return;
+        }
+
+        $browser->type('email', 'admin@sharebite.com')
+            ->pause(duskDelay())
             ->type('password', 'Admin@2024!')
+            ->pause(duskDelay())
             ->waitUntilEnabled('#loginBtn')
             ->press('#loginBtn')
-            ->waitForLocation('/admin/dashboard');
+            ->waitForLocation('/admin/dashboard')
+            ->pause(duskDelay());
     }
 
     /* -------------------------------------------------------------------------
@@ -94,10 +113,13 @@ class AdminDashboardReportTest extends DuskTestCase
             $this->loginAdmin($browser);
 
             $browser->type('search', 'Lestari')
+                ->pause(duskDelay())
                 ->waitForReload(function (Browser $browser) {
                     $browser->press('Filter Data');
                 })
-                ->assertQueryStringHas('search', 'Lestari');
+                ->pause(duskDelay())
+                ->assertQueryStringHas('search', 'Lestari')
+                ->pause(duskDelay());
         });
     }
 
@@ -110,12 +132,16 @@ class AdminDashboardReportTest extends DuskTestCase
             $this->loginAdmin($browser);
 
             $browser->select('rentang_waktu', 'bulan_ini')
+                ->pause(duskDelay())
                 ->select('kategori_entitas', 'komunitas')
+                ->pause(duskDelay())
                 ->waitForReload(function (Browser $browser) {
                     $browser->press('Filter Data');
                 })
+                ->pause(duskDelay())
                 ->assertSelected('rentang_waktu', 'bulan_ini')
-                ->assertSelected('kategori_entitas', 'komunitas');
+                ->assertSelected('kategori_entitas', 'komunitas')
+                ->pause(duskDelay());
         });
     }
 
