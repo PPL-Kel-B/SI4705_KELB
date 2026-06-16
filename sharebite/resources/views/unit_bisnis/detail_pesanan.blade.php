@@ -68,7 +68,7 @@
                     </div>
                     <div>
                         <p class="text-[9px] font-bold text-white/70 uppercase tracking-wider leading-none mb-1">Batas Waktu Pengambilan</p>
-                        <p class="text-[14px] font-black leading-none">{{ \Carbon\Carbon::parse($pesanan->menuAktif->batas_pengambilan)->format('H:i') }} WIB (Kadaluarsa)</p>
+                        <p class="text-[14px] font-black leading-none">{{ \Carbon\Carbon::parse($pesanan->menuAktif->batas_pengambilan)->translatedFormat('d M Y, H:i') }} WIB (Kadaluarsa)</p>
                     </div>
                 </div>
             @else
@@ -91,7 +91,7 @@
                     </div>
                     <div>
                         <p class="text-[9px] font-bold text-white/70 uppercase tracking-wider leading-none mb-1">Batas Waktu Pengambilan</p>
-                        <p class="text-[14px] font-black leading-none">{{ \Carbon\Carbon::parse($pesanan->menuAktif->batas_pengambilan)->format('H:i') }} WIB</p>
+                        <p class="text-[14px] font-black leading-none">{{ \Carbon\Carbon::parse($pesanan->menuAktif->batas_pengambilan)->translatedFormat('d M Y, H:i') }} WIB</p>
                     </div>
                 </div>
             @endif

@@ -73,7 +73,7 @@
                         <h3 class="text-[17px] font-extrabold text-gray-900">Lokasi Pengambilan Pesanan</h3>
                     </div>
                     
-                    <a href="https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}" target="_blank" class="text-[#189347] text-[13px] font-bold flex items-center gap-1.5 hover:underline">
+                    <a href="https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}" target="_blank" class="text-[#189347] text-[13px] font-bold flex items-center gap-1.5 hover:underline hover:scale-105 hover:bg-[#E4F2E8] hover:px-2.5 hover:py-1 hover:-mx-2.5 hover:-my-1 hover:rounded-lg transition-all duration-200">
                         Petunjuk Arah
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -87,7 +87,7 @@
                 </p>
                 
                 {{-- MAP WRAPPER --}}
-                <div onclick="window.open('https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}', '_blank')" class="relative w-full flex-1 min-h-[120px] bg-gray-100 rounded-[20px] overflow-hidden border border-gray-100 shadow-inner z-0 cursor-pointer group">
+                <div id="map-berhasil-wrapper" onclick="window.open('https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}', '_blank')" class="relative w-full flex-1 min-h-[120px] bg-gray-100 rounded-[20px] overflow-hidden border border-gray-100 shadow-inner z-0 cursor-pointer group hover:border-[#189347] hover:ring-4 hover:ring-[#189347]/20 transition-all duration-300">
                     <div id="map-berhasil" class="absolute inset-0 z-0"></div>
                     <div class="absolute inset-0 z-10 bg-black/5 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
                         <div class="bg-white/90 backdrop-blur-sm px-5 py-2.5 rounded-full text-[13px] font-extrabold text-[#189347] shadow-md flex items-center gap-2 transform scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all">

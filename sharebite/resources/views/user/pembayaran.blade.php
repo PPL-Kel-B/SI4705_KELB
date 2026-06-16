@@ -128,7 +128,7 @@
                 </div>
                 
                 <div class="flex flex-col md:flex-row gap-6 flex-1 items-stretch">
-                    <div onclick="window.open('https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}', '_blank')" class="relative w-full md:w-[280px] min-h-[160px] h-full bg-gray-100 rounded-[24px] overflow-hidden border border-gray-100 flex-shrink-0 cursor-pointer group shadow-sm z-0">
+                    <div id="map-pembayaran-wrapper" onclick="window.open('https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}', '_blank')" class="relative w-full md:w-[280px] min-h-[160px] h-full bg-gray-100 rounded-[24px] overflow-hidden border border-gray-100 flex-shrink-0 cursor-pointer group shadow-sm z-0 hover:border-[#189347] hover:ring-4 hover:ring-[#189347]/20 transition-all duration-300">
                         <div id="map-pembayaran" class="absolute inset-0 z-0"></div>
                         <div class="absolute inset-0 z-10 bg-black/5 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                             <div class="bg-white/90 backdrop-blur-sm px-5 py-2.5 rounded-full text-[13px] font-extrabold text-[#189347] shadow-md flex items-center gap-2 transform scale-95 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all">
@@ -141,9 +141,9 @@
                     <div class="flex-1 text-left flex flex-col justify-center">
                         <h4 class="text-[20px] font-extrabold text-gray-800 mb-2">{{ $makanan->unitBisnis->user->name ?? 'Gerai ShareBite' }}</h4>
                         <p class="text-gray-500 font-medium text-[15px] mb-5 leading-relaxed">{{ $makanan->unitBisnis->user->alamat ?? 'Alamat gerai belum diatur' }}</p>
-                        <a href="https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}" target="_blank" class="text-[#189347] text-[14px] font-bold flex items-center gap-1.5 hover:underline w-fit">
+                        <a href="https://www.google.com/maps?q={{ $makanan->unitBisnis->user->latitude ?? -6.193125 }},{{ $makanan->unitBisnis->user->longitude ?? 106.76483 }}" target="_blank" class="text-[#189347] text-[14px] font-bold flex items-center gap-1.5 hover:underline hover:scale-105 hover:bg-[#E4F2E8] hover:px-2.5 hover:py-1 hover:-mx-2.5 hover:-my-1 hover:rounded-lg transition-all duration-200 w-fit">
                             Buka di Google Maps
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                         </a>
                     </div>
                 </div>
