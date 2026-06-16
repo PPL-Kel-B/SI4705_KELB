@@ -27,21 +27,19 @@ class UnitBisnisPengaturanTest extends DuskTestCase
         UnitBisnisProfile::firstOrCreate(
             ['user_id' => $user->id],
             [
-                'nama_usaha'           => 'Lestari Food',
-                'jenis_usaha'          => 'Restoran',
-                'email_bisnis'         => 'lestari@gmail.com',
-                'no_telepon'           => '+6282178830750',
-                'foto_bisnis'          => 'images/placeholder-bisnis.jpg',
-                'lokasi_lat'           => '-6.9271',
-                'lokasi_lng'           => '107.6411',
-                'radius_penjemputan'   => 15,
-                'jam_buka'             => '08:00',
-                'jam_tutup'            => '21:00',
-                'verified'             => true,
-                'status_verifikasi'    => 'terverifikasi',
-                'tahun_bergabung'      => 2023,
-                'notifikasi_aktif'     => true,
-                'notifikasi_pesanan'   => true,
+                'nama_usaha'             => 'Lestari Food',
+                'jenis_usaha'            => 'Restoran',
+                'foto_bisnis'            => 'images/placeholder-bisnis.jpg',
+                'lokasi_lat'             => '-6.9271',
+                'lokasi_lng'             => '107.6411',
+                'radius_penjemputan'     => 15,
+                'jam_buka'               => '08:00',
+                'jam_tutup'              => '21:00',
+                'verified'               => true,
+                'status_verifikasi'      => 'terverifikasi',
+                'tahun_bergabung'        => 2023,
+                'notifikasi_aktif'       => true,
+                'notifikasi_pesanan'     => true,
                 'notifikasi_penjemputan' => true,
             ]
         );
@@ -54,11 +52,11 @@ class UnitBisnisPengaturanTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/pengaturan')
-                ->pause(1500)
+                ->pause(3500)
                 ->assertSee('Pengaturan Operasional')
-                ->assertSee('JAM OPERASIONAL')
-                ->assertSee('RADIUS PENJEMPUTAN')
-                ->assertSee('Notifikasi');
+                ->assertSee('JAM OPERASIONAL PENJEMPUTAN')
+                ->assertSee('RADIUS PENJEMPUTAN MAKSIMAL')
+                ->assertSee('Kontrol Notifikasi');
         });
     }
 
@@ -69,7 +67,7 @@ class UnitBisnisPengaturanTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/pengaturan')
-                ->pause(800);
+                ->pause(2500);
 
             // Gunakan JS untuk set nilai time input agar tidak bergantung pada keyboard Chrome
             $browser->script("
@@ -78,7 +76,7 @@ class UnitBisnisPengaturanTest extends DuskTestCase
             ");
 
             $browser->press('Simpan Pengaturan Operasional')
-                ->pause(2000)
+                ->pause(4000)
                 ->assertSourceHas('berhasil');
         });
     }
@@ -92,7 +90,7 @@ class UnitBisnisPengaturanTest extends DuskTestCase
 
             $browser->loginAs($user)
                 ->visit('/unit/pengaturan')
-                ->pause(800);
+                ->pause(2500);
 
             // Set jam tutup lebih awal dari jam buka → validasi harus gagal
             $browser->script("
@@ -101,7 +99,7 @@ class UnitBisnisPengaturanTest extends DuskTestCase
             ");
 
             $browser->press('Simpan Pengaturan Operasional')
-                ->pause(2000)
+                ->pause(4000)
                 ->assertSee('setelah jam buka');
         });
     }
@@ -115,13 +113,13 @@ class UnitBisnisPengaturanTest extends DuskTestCase
 
             $browser->loginAs($user)
                 ->visit('/unit/pengaturan')
-                ->pause(800);
+                ->pause(2500);
 
             // Hanya ubah radius — jam terisi dari database
             $browser->script("document.querySelector('[name=radius_penjemputan]').value = 25");
 
             $browser->press('Simpan Pengaturan Operasional')
-                ->pause(2000)
+                ->pause(4000)
                 ->assertSourceHas('berhasil');
         });
     }
@@ -135,13 +133,13 @@ class UnitBisnisPengaturanTest extends DuskTestCase
 
             $browser->loginAs($user)
                 ->visit('/unit/pengaturan')
-                ->pause(800);
+                ->pause(2500);
 
             // Hanya ubah toggle notifikasi — jam & radius terisi dari database
             $browser->script("document.querySelector('input[type=checkbox]').click()");
 
             $browser->press('Simpan Pengaturan Operasional')
-                ->pause(2000)
+                ->pause(4000)
                 ->assertSourceHas('berhasil');
         });
     }
@@ -153,7 +151,7 @@ class UnitBisnisPengaturanTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/pengaturan')
-                ->pause(1000)
+                ->pause(3000)
                 ->assertSee('Informasi Identitas Bisnis')
                 ->assertSee('Perbarui Profil Bisnis');
         });
@@ -166,10 +164,10 @@ class UnitBisnisPengaturanTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/pengaturan')
-                ->pause(1000)
+                ->pause(3000)
                 ->assertSee('Keamanan Akun')
                 ->clickLink('Ganti Kata Sandi')
-                ->pause(1500)
+                ->pause(3500)
                 // Setelah klik, diarahkan ke halaman profil
                 ->assertPathIs('/unit/profil')
                 ->assertSee('Profil');
@@ -184,7 +182,7 @@ class UnitBisnisPengaturanTest extends DuskTestCase
             // Kunjungi profil langsung dengan parameter changePassword=true
             $browser->loginAs($user)
                 ->visit('/unit/profil?changePassword=true')
-                ->pause(2000)
+                ->pause(4000)
                 // Modal harus terbuka otomatis
                 ->assertSee('Ganti Kata Sandi')
                 ->assertPresent('#change-password-modal');
@@ -198,14 +196,14 @@ class UnitBisnisPengaturanTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user)
                 ->visit('/unit/profil?changePassword=true')
-                ->pause(2000);
+                ->pause(4000);
 
             // Isi form dengan password lama yang salah
             $browser->type('current_password', 'passwordsalah123')
                 ->type('password', 'passwordbaru123')
                 ->type('password_confirmation', 'passwordbaru123')
                 ->press('Ganti Kata Sandi')
-                ->pause(1500)
+                ->pause(3500)
                 // Harus muncul pesan error password salah
                 ->assertSee('tidak sesuai');
         });
