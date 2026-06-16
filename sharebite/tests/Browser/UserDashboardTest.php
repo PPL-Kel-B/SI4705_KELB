@@ -16,10 +16,11 @@ uses(DatabaseTruncation::class);
  * Helper to get user-defined pause duration for slow-motion demo.
  * Default is 1500ms so actions are clearly visible during presentation.
  */
-function duskDelay(): int {
-    return (int) env('DUSK_PAUSE_MS', 1500);
+if (! function_exists('duskDelay')) {
+    function duskDelay(): int {
+        return (int) env('DUSK_PAUSE_MS', 1500);
+    }
 }
-
 beforeEach(function () {
     // 1. Setup User Individu dengan Lokasi
     $this->user = User::factory()->create([
