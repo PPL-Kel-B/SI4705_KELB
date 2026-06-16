@@ -129,12 +129,12 @@
 
                 <!-- Category Pills (Horizontal Scroll) -->
                 <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar pt-2 border-t border-gray-50">
-                    <template x-for="cat in ['Semua', 'Makanan Berat', 'Cemilan / Makanan Ringan', 'Minuman', 'Dessert']">
+                    <template x-for="cat in ['Semua', 'Makanan Berat', 'Makanan Ringan', 'Minuman', 'Dessert']">
                         <button type="button" 
                                 @click="selectedCategory = cat" 
                                 :class="selectedCategory === cat ? 'bg-[#1cb764] text-white shadow-sm shadow-green-100' : 'bg-gray-50 hover:bg-gray-100 text-gray-600'" 
                                 class="text-xs font-bold px-4 py-2 rounded-full transition shrink-0"
-                                x-text="cat === 'Cemilan / Makanan Ringan' ? 'Cemilan' : cat">
+                                x-text="cat">
                         </button>
                     </template>
                 </div>

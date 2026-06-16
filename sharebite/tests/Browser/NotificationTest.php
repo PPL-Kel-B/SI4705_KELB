@@ -17,7 +17,7 @@ uses(DatabaseTruncation::class);
  */
 if (! function_exists('duskDelay')) {
     function duskDelay(): int {
-        return (int) env('DUSK_PAUSE_MS', 1500);
+        return (int) env('DUSK_PAUSE_MS', 3500);
     }
 }
 
@@ -35,12 +35,12 @@ test('TC-REG-01: Verifikasi pendaftaran unit bisnis baru memicu notifikasi admin
         $browser->visit('/register/unit-bisnis')
             ->assertSee('Informasi Bisnis')
             ->pause(duskDelay())
-            ->type('Nama_Usaha', 'Lestari Bakery')
+            ->typeSlowly('Nama_Usaha', 'Lestari Bakery', 100)
             ->select('Jenis_Usaha', 'Restoran')
-            ->type('Alamat', 'Jalan Merdeka No. 10')
-            ->type('Nomor_hp', '081298765432')
-            ->type('Email', 'lestari@bakery.com')
-            ->type('Password', 'Password123!')
+            ->typeSlowly('Alamat', 'Jalan Merdeka No. 10', 100)
+            ->typeSlowly('Nomor_hp', '081298765432', 100)
+            ->typeSlowly('Email', 'lestari@bakery.com', 100)
+            ->typeSlowly('Password', 'Password123!', 100)
             ->pause(duskDelay());
 
         // Check the terms checkbox and enable the submit button via JS to bypass validation requirements
@@ -106,7 +106,11 @@ test('TC-SET-01: Verifikasi toggle pengaturan notifikasi pada halaman pengaturan
 
     $this->browse(function (Browser $browser) use ($user) {
         $browser->loginAs($user)
-            ->visit('/user/pengaturan')
+            ->visit('/user/dashboard')
+            ->waitForText('Halo,')
+            ->pause(duskDelay())
+            ->clickLink('Pengaturan')
+            ->waitForLocation('/user/pengaturan')
             ->waitForText('Pengaturan')
             ->pause(duskDelay())
             ->assertSee('Donasi Baru')
@@ -141,7 +145,11 @@ test('TC-SET-02: Verifikasi toggle pengaturan notifikasi pada halaman pengaturan
 
     $this->browse(function (Browser $browser) use ($user) {
         $browser->loginAs($user)
-            ->visit('/unit/pengaturan')
+            ->visit('/unit/dashboard')
+            ->waitForText('Dashboard')
+            ->pause(duskDelay())
+            ->clickLink('Pengaturan')
+            ->waitForLocation('/unit/pengaturan')
             ->waitForText('Pengaturan Operasional')
             ->pause(duskDelay())
             ->assertSee('Aktifkan Notifikasi')

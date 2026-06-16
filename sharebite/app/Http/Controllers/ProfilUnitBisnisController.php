@@ -134,7 +134,7 @@ class ProfilUnitBisnisController extends Controller
                         'porsi' => 5,
                         'jarak' => $distanceStrFallback,
                         'foto' => 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80',
-                        'kategori' => 'Cemilan / Makanan Ringan',
+                        'kategori' => 'Makanan Ringan',
                     ]
                 ];
             }
@@ -194,7 +194,7 @@ class ProfilUnitBisnisController extends Controller
                     'porsi' => 12, 
                     'jarak' => $distanceStr1,
                     'foto' => 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80',
-                    'kategori' => 'Cemilan / Makanan Ringan',
+                    'kategori' => 'Makanan Ringan',
                 ],
                 (object) [
                     'id' => 2, 

@@ -75,7 +75,7 @@ class PesananMasukTest extends DuskTestCase
                 'nama_makanan'   => 'eskrim',
             ],
             [
-                'kategori'  => 'Cemilan / Makanan Ringan',
+                'kategori'  => 'Makanan Ringan',
                 'harga'     => 15000,
                 'berat'     => 0.2,
                 'deskripsi' => 'Eskrim lezat rasa vanilla.',

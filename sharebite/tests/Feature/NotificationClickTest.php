@@ -48,7 +48,7 @@ class NotificationClickTest extends TestCase
         $master = MasterMakanan::create([
             'unit_bisnis_id' => $this->unitProfile->id,
             'nama_makanan' => 'Roti Manis',
-            'kategori' => 'Cemilan / Makanan Ringan',
+            'kategori' => 'Makanan Ringan',
             'harga' => 12000,
             'berat' => 0.25,
         ]);

@@ -33,7 +33,7 @@
                     <select id="Kategori" name="Kategori"
                             class="form-input w-full bg-[#f4f8f6] border-none rounded-xl px-4 py-3.5 text-sm text-gray-800 focus:ring-2 focus:ring-[#1cb764] appearance-none cursor-pointer">
                         <option value="" disabled selected class="text-gray-400">Pilih kategori...</option>
-                        @foreach(['Makanan Berat', 'Cemilan / Makanan Ringan', 'Minuman', 'Dessert'] as $kategori)
+                        @foreach(['Makanan Berat', 'Makanan Ringan', 'Minuman', 'Dessert'] as $kategori)
                             <option value="{{ $kategori }}">{{ $kategori }}</option>
                         @endforeach
                     </select>
