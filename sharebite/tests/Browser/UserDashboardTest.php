@@ -18,7 +18,7 @@ uses(DatabaseTruncation::class);
  */
 if (! function_exists('duskDelay')) {
     function duskDelay(): int {
-        return (int) env('DUSK_PAUSE_MS', 1500);
+        return (int) env('DUSK_PAUSE_MS', 3500);
     }
 }
 beforeEach(function () {
@@ -93,11 +93,11 @@ beforeEach(function () {
         'status' => 'aktif',
     ]);
 
-    // Setup Makanan B (Roti Coklat - Cemilan / Makanan Ringan, Gratis)
+    // Setup Makanan B (Roti Coklat - Makanan Ringan, Gratis)
     $this->masterB = MasterMakanan::create([
         'unit_bisnis_id' => $this->unitProfileB->id,
         'nama_makanan' => 'Roti Coklat Keju',
-        'kategori' => 'Cemilan / Makanan Ringan',
+        'kategori' => 'Makanan Ringan',
         'harga' => 10000,
         'berat' => 0.15,
     ]);
@@ -179,7 +179,7 @@ test('TC-DASH-03: Verifikasi Kalkulasi Statistik Personal Makanan Terselamatkan 
     });
 });
 
-test('TC-DASH-04: Verifikasi Tampilan List Donasi Terdekat dengan Lokasi GPS Aktif', function () {
+test('TC-DASH-04: Verifikasi Tampilan List Donasi Terdekat dengan Lokasi', function () {
     $this->browse(function (Browser $browser) {
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
@@ -221,25 +221,28 @@ test('TC-DASH-06: Verifikasi Halaman Riwayat Aktivitas Lengkap', function () {
     });
 });
 
-test('TC-DASH-07: Eksplorasi Donasi Terdekat - Pencarian Real-time berdasarkan Nama Makanan', function () {
+test('TC-DASH-07: Eksplorasi Donasi Terdekat - Pencarian Real-time berdasarkan Nama Makanan dan Nama Unit Bisnis', function () {
     $this->browse(function (Browser $browser) {
         $browser->loginAs($this->user)
-            ->visit('/user/donasi-terdekat')
+            ->visit('/user/dashboard')
+            ->waitForText('Halo, Individu!')
+            ->pause(duskDelay())
+            ->clickLink('Lihat Semua')
+            ->waitForLocation('/user/donasi-terdekat')
             ->waitForText('Semua Donasi Terdekat')
-            ->type('input[placeholder="Cari makanan atau toko..."]', 'Spaghetti')
+            // Search by Food Name
+            ->typeSlowly('input[placeholder="Cari makanan atau toko..."]', 'Spaghetti', 100)
             ->pause(duskDelay())
             ->assertSee('Spaghetti Carbonara')
             ->assertDontSee('Roti Coklat Keju')
-            ->pause(duskDelay());
-    });
-});
-
-test('TC-DASH-08: Eksplorasi Donasi Terdekat - Pencarian Real-time berdasarkan Nama Unit Bisnis', function () {
-    $this->browse(function (Browser $browser) {
-        $browser->loginAs($this->user)
-            ->visit('/user/donasi-terdekat')
-            ->waitForText('Semua Donasi Terdekat')
-            ->type('input[placeholder="Cari makanan atau toko..."]', 'Bakery')
+            // Search by Business Name (Clear search input first via Javascript)
+            ->script("
+                const input = document.querySelector('input[placeholder=\"Cari makanan atau toko...\"]');
+                input.value = '';
+                input.dispatchEvent(new Event('input'));
+            ");
+        $browser->pause(500)
+            ->typeSlowly('input[placeholder="Cari makanan atau toko..."]', 'Bakery', 100)
             ->pause(duskDelay())
             ->assertSee('Roti Coklat Keju')
             ->assertDontSee('Spaghetti Carbonara')
@@ -247,12 +250,16 @@ test('TC-DASH-08: Eksplorasi Donasi Terdekat - Pencarian Real-time berdasarkan N
     });
 });
 
-test('TC-DASH-09: Eksplorasi Donasi Terdekat - Penanganan Pencarian Tidak Ditemukan dan Reset Filter', function () {
+test('TC-DASH-08: Eksplorasi Donasi Terdekat - Penanganan Pencarian Tidak Ditemukan dan Reset Filter', function () {
     $this->browse(function (Browser $browser) {
         $browser->loginAs($this->user)
-            ->visit('/user/donasi-terdekat')
+            ->visit('/user/dashboard')
+            ->waitForText('Halo, Individu!')
+            ->pause(duskDelay())
+            ->clickLink('Lihat Semua')
+            ->waitForLocation('/user/donasi-terdekat')
             ->waitForText('Semua Donasi Terdekat')
-            ->type('input[placeholder="Cari makanan atau toko..."]', 'Soto Ayam Betawi')
+            ->typeSlowly('input[placeholder="Cari makanan atau toko..."]', 'Soto Ayam Betawi', 100)
             ->pause(duskDelay())
             ->assertDontSee('Spaghetti Carbonara')
             ->assertDontSee('Roti Coklat Keju')
@@ -269,14 +276,18 @@ test('TC-DASH-09: Eksplorasi Donasi Terdekat - Penanganan Pencarian Tidak Ditemu
     });
 });
 
-test('TC-DASH-10: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Kategori (Category Pills)', function () {
+test('TC-DASH-09: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Kategori (Category Pills)', function () {
     $this->browse(function (Browser $browser) {
         $browser->loginAs($this->user)
-            ->visit('/user/donasi-terdekat')
+            ->visit('/user/dashboard')
+            ->waitForText('Halo, Individu!')
+            ->pause(duskDelay())
+            ->clickLink('Lihat Semua')
+            ->waitForLocation('/user/donasi-terdekat')
             ->waitForText('Semua Donasi Terdekat')
             ->script("
                 const btn = Array.from(document.querySelectorAll('button'))
-                    .find(el => el.textContent.trim() === 'Cemilan');
+                    .find(el => el.textContent.trim() === 'Makanan Ringan');
                 btn?.click();
             ");
         $browser->pause(duskDelay())
@@ -286,12 +297,34 @@ test('TC-DASH-10: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Ka
     });
 });
 
-test('TC-DASH-11: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Radius Jarak (Distance Dropdown)', function () {
+test('TC-DASH-10: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Radius Jarak (Distance Dropdown)', function () {
     $this->browse(function (Browser $browser) {
         $browser->loginAs($this->user)
-            ->visit('/user/donasi-terdekat')
+            ->visit('/user/dashboard')
+            ->waitForText('Halo, Individu!')
+            ->pause(duskDelay())
+            ->clickLink('Lihat Semua')
+            ->waitForLocation('/user/donasi-terdekat')
             ->waitForText('Semua Donasi Terdekat')
+            ->pause(1000)
+            // Highlight the distance dropdown to show where the test is focusing
+            ->script("
+                const el = document.querySelector('select[x-model=\"selectedDistance\"]');
+                el.style.border = '3px solid #1cb764';
+                el.style.backgroundColor = '#eefcf4';
+            ");
+        $browser->pause(1500)
+            ->click('select[x-model="selectedDistance"]')
+            ->pause(1500)
             ->select('select[x-model="selectedDistance"]', '1')
+            ->script("
+                const el = document.querySelector('select[x-model=\"selectedDistance\"]');
+                el.style.border = '';
+                el.style.backgroundColor = '';
+                el.blur();
+            ");
+        $browser->pause(500)
+            ->click('h1') // Click page title to dismiss native dropdown popup
             ->pause(duskDelay())
             ->assertSee('Spaghetti Carbonara')
             ->assertDontSee('Roti Coklat Keju')
@@ -299,26 +332,107 @@ test('TC-DASH-11: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Ra
     });
 });
 
-test('TC-DASH-12: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Status Harga', function () {
+test('TC-DASH-11: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Status Harga dan Range Harga', function () {
     $this->browse(function (Browser $browser) {
         $browser->loginAs($this->user)
-            ->visit('/user/donasi-terdekat')
+            ->visit('/user/dashboard')
+            ->waitForText('Halo, Individu!')
+            ->pause(duskDelay())
+            ->clickLink('Lihat Semua')
+            ->waitForLocation('/user/donasi-terdekat')
             ->waitForText('Semua Donasi Terdekat')
-            // Gratis
+            ->pause(1000)
+
+            // 1. Highlight Price Type Dropdown
+            ->script("
+                const el = document.querySelector('select[x-model=\"selectedPrice\"]');
+                el.style.border = '3px solid #1cb764';
+                el.style.backgroundColor = '#eefcf4';
+            ");
+        $browser->pause(1500)
+            ->click('select[x-model="selectedPrice"]')
+            ->pause(1500)
+            // Filter: Gratis
             ->select('select[x-model="selectedPrice"]', 'gratis')
+            ->script("
+                document.querySelector('select[x-model=\"selectedPrice\"]').blur();
+            ");
+        $browser->pause(500)
+            ->click('h1') // Click outside
             ->pause(duskDelay())
             ->assertSee('Roti Coklat Keju')
             ->assertDontSee('Spaghetti Carbonara')
-            // Berbayar
+
+            // 2. Highlight Price Type Dropdown for "Berbayar"
+            ->script("
+                const el = document.querySelector('select[x-model=\"selectedPrice\"]');
+                el.style.border = '3px solid #1cb764';
+                el.style.backgroundColor = '#eefcf4';
+            ");
+        $browser->pause(1500)
+            ->click('select[x-model="selectedPrice"]')
+            ->pause(1500)
+            // Filter: Berbayar
             ->select('select[x-model="selectedPrice"]', 'berbayar')
+            ->script("
+                document.querySelector('select[x-model=\"selectedPrice\"]').blur();
+            ");
+        $browser->pause(500)
+            ->click('h1') // Click outside
             ->pause(duskDelay())
             ->assertSee('Spaghetti Carbonara')
             ->assertDontSee('Roti Coklat Keju')
+
+            // 3. Reset to "Semua Harga"
+            ->script("
+                const el = document.querySelector('select[x-model=\"selectedPrice\"]');
+                el.style.border = '3px solid #1cb764';
+                el.style.backgroundColor = '#eefcf4';
+            ");
+        $browser->pause(1500)
+            ->click('select[x-model="selectedPrice"]')
+            ->pause(1500)
+            ->select('select[x-model="selectedPrice"]', 'all')
+            ->script("
+                const el = document.querySelector('select[x-model=\"selectedPrice\"]');
+                el.style.border = '';
+                el.style.backgroundColor = '';
+                el.blur();
+            ");
+        $browser->pause(500)
+            ->click('h1') // Click outside
+            ->pause(duskDelay())
+            ->assertSee('Roti Coklat Keju')
+            ->assertSee('Spaghetti Carbonara')
+
+            // 4. Highlight & Test Price Range Slider
+            ->script("
+                const slider = document.querySelector('input[type=\"range\"]');
+                slider.style.outline = '3px solid #1cb764';
+                slider.style.outlineOffset = '2px';
+            ");
+        $browser->pause(1500)
+            ->script("
+                const slider = document.querySelector('input[type=\"range\"]');
+                slider.value = 10000;
+                slider.dispatchEvent(new Event('input'));
+            ");
+        $browser->pause(duskDelay())
+            ->script("
+                const slider = document.querySelector('input[type=\"range\"]');
+                slider.style.outline = '';
+                slider.style.outlineOffset = '';
+            ");
+        $browser->pause(500)
+            // Roti Coklat Keju is free (Rp 0 <= 10000) -> should see it
+            ->assertSee('Roti Coklat Keju')
+            // Spaghetti Carbonara is Rp 15000 (> 10000) -> should not see it
+            ->assertDontSee('Spaghetti Carbonara')
             ->pause(duskDelay());
     });
 });
 
-test('TC-DASH-13: Dashboard menyembunyikan makanan dan menampilkan warning jika lokasi null', function () {
+test('TC-DASH-12: Dashboard menyembunyikan makanan dan menampilkan warning jika lokasi null', function () {
     $this->browse(function (Browser $browser) {
         $browser->loginAs($this->userNoLoc)
             ->visit('/user/dashboard')
@@ -329,7 +443,7 @@ test('TC-DASH-13: Dashboard menyembunyikan makanan dan menampilkan warning jika 
     });
 });
 
-test('TC-DASH-14: Dashboard Radius Anda menampilkan tombol Atur Lokasi jika lokasi null', function () {
+test('TC-DASH-13: Dashboard Radius Anda menampilkan tombol Atur Lokasi jika lokasi null', function () {
     $this->browse(function (Browser $browser) {
         $browser->loginAs($this->userNoLoc)
             ->visit('/user/dashboard')
@@ -343,10 +457,14 @@ test('TC-DASH-14: Dashboard Radius Anda menampilkan tombol Atur Lokasi jika loka
     });
 });
 
-test('TC-DASH-15: Eksplorasi terdekat menampilkan warning dan tombol Atur Lokasi jika lokasi null', function () {
+test('TC-DASH-14: Eksplorasi terdekat menampilkan warning dan tombol Atur Lokasi jika lokasi null', function () {
     $this->browse(function (Browser $browser) {
         $browser->loginAs($this->userNoLoc)
-            ->visit('/user/donasi-terdekat')
+            ->visit('/user/dashboard')
+            ->waitForText('Halo, Individu!')
+            ->pause(duskDelay())
+            ->clickLink('Lihat Semua')
+            ->waitForLocation('/user/donasi-terdekat')
             ->waitForText('Semua Donasi Terdekat')
             ->assertSee('Lokasi Belum Ditentukan')
             ->assertSee('Tidak bisa menampilkan lokasi terdekat, harap tentukan lokasi terlebih dahulu')
@@ -357,3 +475,112 @@ test('TC-DASH-15: Eksplorasi terdekat menampilkan warning dan tombol Atur Lokasi
             ->pause(duskDelay());
     });
 });
+
+test('TC-DASH-15: Detail Makanan - Verifikasi Informasi Lengkap, Lokasi, Konten Jaminan Kualitas, dan Breadcrumbs', function () {
+    $this->browse(function (Browser $browser) {
+        $browser->loginAs($this->user)
+            ->visit('/user/dashboard')
+            ->waitForText('Halo, Individu!')
+            ->pause(duskDelay())
+            ->clickLink('Spaghetti Carbonara')
+            ->waitForLocation('/user/makanan/' . $this->menuA->id)
+            ->assertPathIs('/user/makanan/' . $this->menuA->id)
+            ->waitForText('Spaghetti Carbonara')
+            // 1. Assert Breadcrumbs
+            ->assertSeeIn('nav.text-sm', 'Dashboard')
+            ->assertSeeIn('nav.text-sm', 'Makanan')
+            ->assertSeeIn('nav.text-sm', 'Spaghetti Carbonara')
+            // 2. Assert Dynamic Remaining Time
+            ->assertSee('jam lagi')
+            // 3. Assert Distance tag
+            ->assertSee('0,4 km')
+            // 4. Assert portion and price
+            ->assertSee('8 Porsi')
+            ->assertSee('Rp 15.000')
+            // 5. Assert vendor info
+            ->assertSee('Toko Wangi')
+            ->assertSee('Alamat belum diatur')
+            ->assertSee('Kunjungi Profil')
+            // 6. Assert maps link
+            ->assertSourceHas('google.com/maps/search/?api=1')
+            // 7. Assert quality assurance card
+            ->assertSee('JAMINAN KUALITAS')
+            ->assertSee('Mitra kami telah melewati verifikasi standar keamanan pangan')
+            ->pause(duskDelay());
+    });
+});
+
+test('TC-DASH-16: Detail Makanan - Verifikasi Counter Portion Adjuster, Limit Batas Stok (Min/Max), dan Redirect ke Pembayaran', function () {
+    $this->browse(function (Browser $browser) {
+        $browser->loginAs($this->user)
+            ->visit('/user/dashboard')
+            ->waitForText('Halo, Individu!')
+            ->pause(duskDelay())
+            ->clickLink('Spaghetti Carbonara')
+            ->waitForLocation('/user/makanan/' . $this->menuA->id)
+            ->waitForText('Spaghetti Carbonara')
+            // Initial qty is 1, price Rp 15.000
+            ->assertSee('Rp 15.000')
+            // Try to click '-' when qty is 1 (min limit check)
+            ->click('button[class*="bg-gray-100"]')
+            ->pause(500)
+            ->assertSee('Rp 15.000')
+            // Click '+' button 7 times to reach max stock (8 porsi)
+            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
+            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
+            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
+            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
+            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
+            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
+            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
+            ->pause(duskDelay())
+            ->assertSee('Rp 120.000') // 8 * 15.000
+            // Try to click '+' again when qty is 8 (max limit check)
+            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
+            ->pause(500)
+            ->assertSee('Rp 120.000')
+            // Click 'Ambil Makanan' to redirect to payments page
+            ->press('Ambil Makanan')
+            ->waitForLocation('/user/dashboard/' . $this->menuA->id . '/pembayaran')
+            ->assertPathIs('/user/dashboard/' . $this->menuA->id . '/pembayaran')
+            ->assertQueryStringHas('qty', '8')
+            ->pause(duskDelay());
+    });
+});
+
+test('TC-DASH-17: Detail Makanan - Verifikasi Rekomendasi Daftar Makanan Serupa (Similar Items)', function () {
+    // Setup another food item in the same category ("Makanan Berat")
+    $masterC = MasterMakanan::create([
+        'unit_bisnis_id' => $this->unitProfileA->id,
+        'nama_makanan' => 'Nasi Goreng Spesial',
+        'kategori' => 'Makanan Berat',
+        'harga' => 20000,
+        'berat' => 0.4,
+    ]);
+    $menuC = MenuAktif::create([
+        'master_makanan_id' => $masterC->id,
+        'unit_bisnis_id' => $this->unitProfileA->id,
+        'is_gratis' => false,
+        'harga_jual' => 12000,
+        'stok_porsi' => 10,
+        'batas_pengambilan' => now()->addHours(5),
+        'status' => 'aktif',
+    ]);
+
+    $this->browse(function (Browser $browser) use ($menuC) {
+        $browser->loginAs($this->user)
+            ->visit('/user/dashboard')
+            ->waitForText('Halo, Individu!')
+            ->pause(duskDelay())
+            ->clickLink('Spaghetti Carbonara')
+            ->waitForLocation('/user/makanan/' . $this->menuA->id)
+            ->waitForText('Spaghetti Carbonara')
+            // Assert "Makanan Berat Serupa" section header is shown
+            ->assertSee('Makanan Berat Serupa')
+            // Assert that Nasi Goreng Spesial is listed as a similar food card
+            ->assertSee('Nasi Goreng Spesial')
+            ->assertSee('Rp 12.000')
+            ->pause(duskDelay());
+    });
+});
+

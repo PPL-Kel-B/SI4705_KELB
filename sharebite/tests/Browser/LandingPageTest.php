@@ -14,7 +14,7 @@ uses(DatabaseTruncation::class);
  */
 if (! function_exists('duskDelay')) {
     function duskDelay(): int {
-        return (int) env('DUSK_PAUSE_MS', 1500);
+        return (int) env('DUSK_PAUSE_MS', 3500);
     }
 }
 
@@ -38,13 +38,16 @@ test('TC-LP-01: Verifikasi navigasi dari Landing Page ke halaman Mitra Kami', fu
 test('TC-LP-02: Verifikasi navigasi dari Landing Page ke halaman Tentang Kami', function () {
     $this->browse(function (Browser $browser) {
         $browser->visit('/')
-            ->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));")
-            ->pause(duskDelay())
+            ->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));");
+
+        $browser->pause(duskDelay())
             ->clickLink('Tentang Kami')
             ->waitForLocation('/tentang-kami')
-            ->assertPathIs('/tentang-kami')
-            ->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));")
-            ->assertSee('Ubah Sisa Pangan')
+            ->assertPathIs('/tentang-kami');
+
+        $browser->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));");
+
+        $browser->assertSee('Ubah Sisa Pangan')
             ->assertSee('Jadi Senyuman')
             ->pause(duskDelay());
     });
@@ -113,7 +116,7 @@ test('TC-MIT-02: Verifikasi pencarian mitra menggunakan kata kunci nama mitra', 
 
     $this->browse(function (Browser $browser) {
         $browser->visit('/mitra')
-            ->type('search', 'Lestari')
+            ->typeSlowly('search', 'Lestari', 100)
             ->pause(duskDelay())
             ->click('@search-submit-btn')
             ->waitForLocation('/mitra')
@@ -135,7 +138,7 @@ test('TC-MIT-03: Verifikasi pencarian mitra yang tidak terdaftar menghasilkan ha
 
     $this->browse(function (Browser $browser) {
         $browser->visit('/mitra')
-            ->type('search', 'Xyz Bakery')
+            ->typeSlowly('search', 'Xyz Bakery', 100)
             ->pause(duskDelay())
             ->click('@search-submit-btn')
             ->waitForLocation('/mitra')

@@ -181,7 +181,7 @@
 
                         @php
                             if (strpos($kategori, 'berat') !== false) { $label = 'Makanan Berat'; }
-                            elseif (strpos($kategori, 'ringan') !== false || strpos($kategori, 'cemilan') !== false) { $label = 'Cemilan'; }
+                            elseif (strpos($kategori, 'ringan') !== false || strpos($kategori, 'cemilan') !== false) { $label = 'Makanan Ringan'; }
                             elseif (strpos($kategori, 'dessert') !== false) { $label = 'Dessert'; }
                             elseif (strpos($kategori, 'minuman') !== false) { $label = 'Minuman'; }
                             else { $label = 'Lainnya'; }
