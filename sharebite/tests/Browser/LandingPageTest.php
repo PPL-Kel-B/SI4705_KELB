@@ -3,10 +3,11 @@
 use Laravel\Dusk\Browser;
 use App\Models\User;
 use App\Models\UnitBisnisProfile;
-use Illuminate\Foundation\Testing\DatabaseTruncation;
 
-// Use database truncation to ensure a clean state for Dusk tests.
-uses(DatabaseTruncation::class);
+beforeEach(function () {
+    // Clear old test records before running to prevent duplicates, but keep them after the test run finishes.
+    User::whereIn('name', ['Lestari Bakery', 'Sari Cafe', 'Katering Rahasia'])->delete();
+});
 
 /**
  * Helper to get user-defined pause duration for slow-motion demo.
@@ -18,42 +19,118 @@ if (! function_exists('duskDelay')) {
     }
 }
 
-test('TC-LP-01: Verifikasi navigasi dari Landing Page ke halaman Mitra Kami', function () {
+test('TC-LP-01: Verifikasi Tampilan Utama dan Elemen Penting Halaman Landing Page (Home)', function () {
     $this->browse(function (Browser $browser) {
         $browser->visit('/')
             ->waitForText('SELAMATKAN')
+            // Force animations to render
             ->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));");
 
-        $browser->assertSee('SELAMATKAN')
+        $browser->assertTitle('ShareBite - Selamatkan Makanan, Selamatkan Bumi')
+            // Assert Navbar
+            ->assertSee('Home')
+            ->assertSee('Mitra Kami')
+            ->assertSee('Tentang Kami')
+            ->assertSee('Masuk')
+            // Assert Hero Section
+            ->assertSee('SELAMATKAN')
             ->assertSee('MAKANAN')
-            ->pause(duskDelay())
+            ->assertSee('BUMI.')
+            ->assertSee('Donasi Makanan')
+            ->assertSee('Cari Makanan')
+            // Assert Stats Section
+            ->assertSee('Dampak Nyata Dari Langkah Kecil Kita.')
+            ->assertSee('Makanan terselamatkan')
+            ->assertSee('Beban Makanan Terselamatkan')
+            ->assertSee('Pahlawan Bergabung')
+            // Assert How It Works Section
+            ->assertSee('Bagaimana ShareBite Bekerja?')
+            ->assertSee('Lacak & Kumpul')
+            ->assertSee('Verifikasi & Klaim')
+            ->assertSee('Distribusi & Senyuman')
+            // Assert Role Section
+            ->assertSee('Untuk Bisnis Pangan')
+            ->assertSee('Pahlawan ShareBite')
+            ->assertSee('Gabung Sebagai Mitra')
+            ->assertSee('Daftar Relawan')
+            // Assert Available Donations
+            ->assertSee('Donasi Tersedia Hari Ini')
+            // Assert Footer
+            ->assertSee('Platform')
+            ->assertSee('Hubungi Kami')
+            ->assertSee('hello@sharebite.id')
+            ->pause(duskDelay());
+    });
+});
+
+test('TC-LP-02: Verifikasi Fungsionalitas Tombol CTA (Call-to-Action) Navigasi Internal di Halaman Landing Page', function () {
+    $this->browse(function (Browser $browser) {
+        $browser->visit('/')
+            ->waitForText('SELAMATKAN')
+            ->clickLink('Donasi Makanan')
+            ->waitForLocation('/register/unit-bisnis')
+            ->assertPathIs('/register/unit-bisnis')
+            ->assertTitle('Pendaftaran Unit Bisnis - ShareBite')
+            ->assertSee('Informasi Bisnis')
+            ->pause(duskDelay());
+
+        $browser->visit('/')
+            ->waitForText('SELAMATKAN')
+            ->clickLink('Cari Makanan')
+            ->waitForLocation('/login')
+            ->assertPathIs('/login')
+            ->assertSee('Selamat Datang')
+            ->pause(duskDelay());
+
+        $browser->visit('/')
+            ->waitForText('SELAMATKAN')
+            ->clickLink('Gabung Sebagai Mitra')
+            ->waitForLocation('/register/unit-bisnis')
+            ->assertPathIs('/register/unit-bisnis')
+            ->assertTitle('Pendaftaran Unit Bisnis - ShareBite')
+            ->pause(duskDelay());
+
+        $browser->visit('/')
+            ->waitForText('SELAMATKAN')
+            ->clickLink('Daftar Relawan')
+            ->waitForLocation('/register/individu')
+            ->assertPathIs('/register/individu')
+            ->assertTitle('Pendaftaran Relawan (Individu) - ShareBite')
+            ->assertSee('Identitas Individu')
+            ->pause(duskDelay());
+    });
+});
+
+test('TC-LP-03: Verifikasi Navigasi Menu Utama di Navbar Landing Page (ke Mitra, Tentang Kami, dan Login)', function () {
+    $this->browse(function (Browser $browser) {
+        // 1. Navigate to Mitra Kami page via Navbar
+        $browser->visit('/')
             ->clickLink('Mitra Kami')
             ->waitForLocation('/mitra')
             ->assertPathIs('/mitra')
             ->assertSee('MITRA PENYELAMAT MAKANAN')
             ->pause(duskDelay());
-    });
-});
 
-test('TC-LP-02: Verifikasi navigasi dari Landing Page ke halaman Tentang Kami', function () {
-    $this->browse(function (Browser $browser) {
+        // 2. Navigate to Tentang Kami page via Navbar
         $browser->visit('/')
-            ->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));");
-
-        $browser->pause(duskDelay())
             ->clickLink('Tentang Kami')
             ->waitForLocation('/tentang-kami')
-            ->assertPathIs('/tentang-kami');
-
-        $browser->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));");
-
-        $browser->assertSee('Ubah Sisa Pangan')
+            ->assertPathIs('/tentang-kami')
+            ->assertSee('Ubah Sisa Pangan')
             ->assertSee('Jadi Senyuman')
+            ->pause(duskDelay());
+
+        // 3. Navigate to Login page via Navbar button "Masuk"
+        $browser->visit('/')
+            ->clickLink('Masuk')
+            ->waitForLocation('/login')
+            ->assertPathIs('/login')
+            ->assertSee('Selamat Datang')
             ->pause(duskDelay());
     });
 });
 
-test('TC-LP-03: Verifikasi keberadaan animasi scroll reveal (.fade-up) di Landing Page', function () {
+test('TC-LP-04: Verifikasi Keberadaan Animasi Scroll Reveal (.fade-up) di Halaman Landing Page', function () {
     $this->browse(function (Browser $browser) {
         $browser->visit('/')
             ->assertPresent('.fade-up')
@@ -208,18 +285,6 @@ test('TC-MIT-05: Verifikasi reset filter kategori kembali ke Semua Kategori', fu
             ->waitForLocation('/mitra')
             ->assertSee('Lestari Bakery')
             ->assertSee('Sari Cafe')
-            ->pause(duskDelay());
-    });
-});
-
-test('TC-LP-04: Verifikasi navigasi dari Landing Page ke halaman Login', function () {
-    $this->browse(function (Browser $browser) {
-        $browser->visit('/')
-            ->pause(duskDelay())
-            ->clickLink('Masuk')
-            ->waitForLocation('/login')
-            ->assertPathIs('/login')
-            ->assertSee('Selamat Datang')
             ->pause(duskDelay());
     });
 });

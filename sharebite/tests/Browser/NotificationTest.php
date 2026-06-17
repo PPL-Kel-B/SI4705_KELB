@@ -6,10 +6,15 @@ use App\Models\UnitBisnisProfile;
 use App\Models\MasterMakanan;
 use App\Models\MenuAktif;
 use App\Models\Pesanan;
-use Illuminate\Foundation\Testing\DatabaseTruncation;
 
-// Use database truncation to ensure a clean state for Dusk tests.
-uses(DatabaseTruncation::class);
+beforeEach(function () {
+    // Clear old test records before running to prevent duplicates, but keep them after the test run finishes.
+    User::whereIn('email', [
+        'faridmunadhil12@gmail.com',
+        'lestari@bakery.com',
+        'barokah@katering.com'
+    ])->delete();
+});
 
 /**
  * Helper to get user-defined pause duration for slow-motion demo.

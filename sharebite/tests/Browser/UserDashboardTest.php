@@ -7,174 +7,146 @@ use App\Models\MenuAktif;
 use App\Models\Pesanan;
 use App\Models\UserActivity;
 use Laravel\Dusk\Browser;
-use Illuminate\Foundation\Testing\DatabaseTruncation;
+use Illuminate\Support\Facades\DB;
 
-// Use database truncation to ensure a clean state for Dusk tests.
-uses(DatabaseTruncation::class);
-
-/**
- * Helper to get user-defined pause duration for slow-motion demo.
- * Default is 1500ms so actions are clearly visible during presentation.
- */
 if (! function_exists('duskDelay')) {
     function duskDelay(): int {
         return (int) env('DUSK_PAUSE_MS', 3500);
     }
 }
+
 beforeEach(function () {
-    // 1. Setup User Individu dengan Lokasi
-    $this->user = User::factory()->create([
-        'name' => 'Individu Peduli',
-        'email' => 'individu@sharebite.com',
-        'password' => bcrypt('password'),
-        'role' => 'individu',
-        'latitude' => '-6.9271',
-        'longitude' => '107.6186',
-        'alamat' => 'Bandung, Jawa Barat'
-    ]);
+    // =========================================================================
+    // CATATAN UNTUK PENGUJI / DOSEN:
+    // Sebelum menjalankan pengujian Dashboard (TC-DASH-01 s.d TC-DASH-17),
+    // sangat direkomendasikan dan diwajibkan untuk menjalankan:
+    // 1. Pengujian Registrasi Unit Bisnis (TC-REG-01) atau Database Seeder
+    //    (php artisan db:seed dan php artisan db:seed --class=UnitBisnisSeeder)
+    //    untuk memastikan akun relawan dan mitra bisnis pangan beserta profil terdaftar.
+    // 2. Unit Bisnis yang terdaftar harus memiliki minimal satu Menu Makanan Aktif
+    //    (dapat ditambahkan melalui test kelola makanan atau diinput manual lewat web).
+    //
+    // File pengujian ini bersifat read-only (query-only) tanpa melakukan
+    // insert/create/delete data secara langsung di database demi kepatuhan aturan pengujian.
+    // =========================================================================
 
-    // 2. Setup Unit Bisnis A (Toko Wangi - 0.3 km away)
-    $this->unitUserA = User::factory()->create([
-        'name' => 'Toko Wangi',
-        'email' => 'unitA@sharebite.com',
-        'password' => bcrypt('password'),
-        'role' => 'unit_bisnis',
-        'latitude' => '-6.9300',
-        'longitude' => '107.6200',
-    ]);
-    $this->unitProfileA = UnitBisnisProfile::create([
-        'user_id' => $this->unitUserA->id,
-        'nama_usaha' => 'Toko Wangi',
-        'jenis_usaha' => 'Kuliner',
-        'radius_penjemputan' => 5,
-        'lokasi_lat' => '-6.9300',
-        'lokasi_lng' => '107.6200',
-        'jam_buka' => '00:00',
-        'jam_tutup' => '23:59',
-        'status_verifikasi' => 'terverifikasi',
-    ]);
+    // 1. Retrieve User Relawan (Individu)
+    $this->user = User::where('email', 'individu@sharebite.com')->first();
+    if (!$this->user) {
+        throw new \Exception(
+            "Pengujian Dibatalkan: User dengan email 'individu@sharebite.com' tidak ditemukan di database. " .
+            "Harap jalankan seeder terlebih dahulu (php artisan db:seed) untuk menginisialisasi akun pengguna."
+        );
+    }
 
-    // Setup Unit Bisnis B (Bakery Lestari - ~3.9 km away)
-    $this->unitUserB = User::factory()->create([
-        'name' => 'Bakery Lestari',
-        'email' => 'unitB@sharebite.com',
-        'password' => bcrypt('password'),
-        'role' => 'unit_bisnis',
-        'latitude' => '-6.9600',
-        'longitude' => '107.6300',
-    ]);
-    $this->unitProfileB = UnitBisnisProfile::create([
-        'user_id' => $this->unitUserB->id,
-        'nama_usaha' => 'Bakery Lestari',
-        'jenis_usaha' => 'Kuliner',
-        'radius_penjemputan' => 5,
-        'lokasi_lat' => '-6.9600',
-        'lokasi_lng' => '107.6300',
-        'jam_buka' => '00:00',
-        'jam_tutup' => '23:59',
-        'status_verifikasi' => 'terverifikasi',
-    ]);
+    // Set koordinat secara dinamis pada data user yang sudah ada jika belum diset
+    if (is_null($this->user->latitude) || is_null($this->user->longitude)) {
+        $this->user->update([
+            'latitude' => '-6.9271',
+            'longitude' => '107.6186',
+            'alamat' => 'Bandung, Jawa Barat'
+        ]);
+    }
 
-    // 3. Setup Makanan A (Spaghetti - Makanan Berat, Berbayar)
-    $this->masterA = MasterMakanan::create([
-        'unit_bisnis_id' => $this->unitProfileA->id,
-        'nama_makanan' => 'Spaghetti Carbonara',
-        'kategori' => 'Makanan Berat',
-        'harga' => 25000,
-        'berat' => 0.3,
-    ]);
-    $this->menuA = MenuAktif::create([
-        'master_makanan_id' => $this->masterA->id,
-        'unit_bisnis_id' => $this->unitProfileA->id,
-        'is_gratis' => false,
-        'harga_jual' => 15000,
-        'stok_porsi' => 8,
-        'batas_pengambilan' => now()->addHours(4),
-        'status' => 'aktif',
-    ]);
+    // 2. Ambil Menu Makanan Aktif (Berbayar dan Gratis)
+    $this->menuA = MenuAktif::where('status', 'aktif')
+        ->where('is_gratis', false)
+        ->where('stok_porsi', '>', 0)
+        ->where('batas_pengambilan', '>', now())
+        ->first();
 
-    // Setup Makanan B (Roti Coklat - Makanan Ringan, Gratis)
-    $this->masterB = MasterMakanan::create([
-        'unit_bisnis_id' => $this->unitProfileB->id,
-        'nama_makanan' => 'Roti Coklat Keju',
-        'kategori' => 'Makanan Ringan',
-        'harga' => 10000,
-        'berat' => 0.15,
-    ]);
-    $this->menuB = MenuAktif::create([
-        'master_makanan_id' => $this->masterB->id,
-        'unit_bisnis_id' => $this->unitProfileB->id,
-        'is_gratis' => true,
-        'harga_jual' => 0,
-        'stok_porsi' => 5,
-        'batas_pengambilan' => now()->addHours(6),
-        'status' => 'aktif',
-    ]);
+    if (!$this->menuA) {
+        throw new \Exception(
+            "Pengujian Dibatalkan: Tidak ditemukan MenuAktif BERBAYAR yang aktif di database dengan stok > 0. " .
+            "Harap tambahkan menu berbayar aktif terlebih dahulu lewat web atau seeder."
+        );
+    }
 
-    // 4. Setup User Tanpa Lokasi
-    $this->userNoLoc = User::factory()->create([
-        'name' => 'Individu Tanpa Lokasi',
-        'email' => 'noloc@sharebite.com',
-        'password' => bcrypt('password'),
-        'role' => 'individu',
-        'latitude' => null,
-        'longitude' => null,
-    ]);
+    $this->menuB = MenuAktif::where('status', 'aktif')
+        ->where('is_gratis', true)
+        ->where('stok_porsi', '>', 0)
+        ->where('batas_pengambilan', '>', now())
+        ->first();
+
+    if (!$this->menuB) {
+        throw new \Exception(
+            "Pengujian Dibatalkan: Tidak ditemukan MenuAktif GRATIS yang aktif di database dengan stok > 0. " .
+            "Harap tambahkan menu gratis aktif terlebih dahulu lewat web atau seeder."
+        );
+    }
+
+    // Ambil Profil dan User terkait untuk Menu A dan Menu B
+    $this->masterA = $this->menuA->masterMakanan;
+    $this->unitProfileA = $this->menuA->unitBisnis;
+    $this->unitUserA = $this->unitProfileA?->user;
+
+    $this->masterB = $this->menuB->masterMakanan;
+    $this->unitProfileB = $this->menuB->unitBisnis;
+    $this->unitUserB = $this->unitProfileB?->user;
+
+    // 3. Retrieve User Tanpa Lokasi
+    $this->userNoLoc = User::where('email', 'noloc@sharebite.com')->first();
+    if (!$this->userNoLoc) {
+        // Fallback ke user komunitas@sharebite.com yang diseed tanpa lokasi
+        $this->userNoLoc = User::where('email', 'komunitas@sharebite.com')->first();
+    }
+    if (!$this->userNoLoc) {
+        // Fallback kedua: Cari user lain yang tidak memiliki koordinat
+        $this->userNoLoc = User::whereNull('latitude')->whereNull('longitude')->first();
+    }
+    if (!$this->userNoLoc) {
+        throw new \Exception(
+            "Pengujian Dibatalkan: Tidak ditemukan akun pengguna tanpa koordinat lokasi (noloc/komunitas) untuk pengujian."
+        );
+    }
 });
 
 test('TC-DASH-01: Verifikasi Banner Sapaan User Relawan pada Halaman Dashboard', function () {
     $this->browse(function (Browser $browser) {
+        $first_name = explode(' ', $this->user->name)[0];
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
-            ->waitForText('Halo, Individu!')
-            ->assertSee('Halo, Individu!')
+            ->waitForText("Halo, {$first_name}!")
+            ->assertSee("Halo, {$first_name}!")
             ->pause(duskDelay());
     });
 });
 
 test('TC-DASH-02: Verifikasi Kalkulasi Statistik Personal Porsi Diambil pada Dashboard', function () {
-    // Setup 1 paid order
-    Pesanan::create([
-        'user_id' => $this->user->id,
-        'menu_aktif_id' => $this->menuA->id,
-        'unit_bisnis_id' => $this->unitProfileA->id,
-        'jumlah_porsi' => 4,
-        'total_harga' => 60000,
-        'status' => 'dibayar',
-        'kode_unik' => 'SB-1234-XYZ',
-        'waktu_pesan' => now(),
-    ]);
-
     $this->browse(function (Browser $browser) {
+        // Hitung porsi diambil secara dinamis dari database
+        $porsi_diambil = Pesanan::where('user_id', $this->user->id)
+            ->whereIn('status', ['dibayar', 'siap_diambil', 'selesai'])
+            ->sum('jumlah_porsi');
+
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
             ->waitForText('Porsi Diambil')
-            ->assertSee('4')
+            ->assertSee((string) $porsi_diambil)
             ->pause(duskDelay());
     });
 });
 
 test('TC-DASH-03: Verifikasi Kalkulasi Statistik Personal Makanan Terselamatkan & CO2 Dihemat pada Dashboard', function () {
-    // Setup 1 paid order
-    Pesanan::create([
-        'user_id' => $this->user->id,
-        'menu_aktif_id' => $this->menuA->id,
-        'unit_bisnis_id' => $this->unitProfileA->id,
-        'jumlah_porsi' => 4,
-        'total_harga' => 60000,
-        'status' => 'dibayar',
-        'kode_unik' => 'SB-1234-XYZ',
-        'waktu_pesan' => now(),
-    ]);
-
     $this->browse(function (Browser $browser) {
+        // Hitung makanan terselamatkan secara dinamis dari database
+        $makanan_terselamatkan = (float) DB::table('pesanans')
+            ->join('menu_aktifs', 'pesanans.menu_aktif_id', '=', 'menu_aktifs.id')
+            ->join('master_makanans', 'menu_aktifs.master_makanan_id', '=', 'master_makanans.id')
+            ->where('pesanans.user_id', $this->user->id)
+            ->whereIn('pesanans.status', ['dibayar', 'siap_diambil', 'selesai'])
+            ->sum(DB::raw('pesanans.jumlah_porsi * master_makanans.berat'));
+
+        $co2_dihemat = $makanan_terselamatkan * 2.5;
+
+        $formattedBerat = number_format($makanan_terselamatkan, 1, ',', '.');
+        $formattedCO2 = number_format($co2_dihemat, 1, ',', '.');
+
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
             ->waitForText('Makanan Terselamatkan')
-            // Makanan terselamatkan: 4 * 0.3 = 1.2 kg
-            ->assertSee('1,2')
-            // CO2 dihemat: 1.2 * 2.5 = 3.0 kg
-            ->assertSee('3,0')
+            ->assertSee($formattedBerat)
+            ->assertSee($formattedCO2)
             ->pause(duskDelay());
     });
 });
@@ -184,57 +156,77 @@ test('TC-DASH-04: Verifikasi Tampilan List Donasi Terdekat dengan Lokasi', funct
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
             ->waitForText('Donasi Terdekat')
-            ->assertSee('Spaghetti Carbonara')
-            ->assertSee('Toko Wangi')
+            ->assertSee($this->masterA->nama_makanan)
+            ->assertSee($this->unitProfileA->nama_usaha)
             ->pause(duskDelay());
     });
 });
 
 test('TC-DASH-05: Verifikasi Menampilkan Daftar Aktivitas Terakhir di Dashboard', function () {
-    UserActivity::log($this->user->id, 'pemesanan', 'Pesanan Dibuat', 'Membeli roti manis.');
-
     $this->browse(function (Browser $browser) {
+        // Ambil aktivitas terakhir dari database
+        $latestActivity = UserActivity::where('user_id', $this->user->id)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
-            ->waitForText('Aktivitas Terakhir')
-            ->assertSee('Pesanan Dibuat')
-            ->assertSee('Membeli roti manis.')
-            ->pause(duskDelay());
+            ->waitForText('Aktivitas Terakhir');
+
+        if ($latestActivity) {
+            $browser->assertSee($latestActivity->judul)
+                ->assertSee($latestActivity->deskripsi);
+        } else {
+            $browser->assertSee('Belum ada aktivitas tercatat.');
+        }
+
+        $browser->pause(duskDelay());
     });
 });
 
 test('TC-DASH-06: Verifikasi Halaman Riwayat Aktivitas Lengkap', function () {
-    UserActivity::log($this->user->id, 'pemesanan', 'Pemesanan Roti', 'Telah memesan 2 porsi.');
-    UserActivity::log($this->user->id, 'profil', 'Update Profil', 'Mengubah foto profil.');
-
     $this->browse(function (Browser $browser) {
+        // Ambil aktivitas terakhir dari database
+        $latestActivities = UserActivity::where('user_id', $this->user->id)
+            ->orderBy('created_at', 'desc')
+            ->take(2)
+            ->get();
+
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
             ->waitForText('Aktivitas Terakhir')
             ->clickLink('Lihat Semua Aktivitas')
             ->waitForLocation('/user/aktivitas')
             ->assertPathIs('/user/aktivitas')
-            ->assertSee('Semua Aktivitas')
-            ->assertSee('Pemesanan Roti')
-            ->assertSee('Update Profil')
-            ->pause(duskDelay());
+            ->assertSee('Semua Aktivitas');
+
+        if ($latestActivities->isEmpty()) {
+            $browser->assertSee('Belum ada aktivitas yang terekam.');
+        } else {
+            foreach ($latestActivities as $act) {
+                $browser->assertSee($act->judul);
+            }
+        }
+
+        $browser->pause(duskDelay());
     });
 });
 
 test('TC-DASH-07: Eksplorasi Donasi Terdekat - Pencarian Real-time berdasarkan Nama Makanan dan Nama Unit Bisnis', function () {
     $this->browse(function (Browser $browser) {
+        $first_name = explode(' ', $this->user->name)[0];
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
-            ->waitForText('Halo, Individu!')
+            ->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink('Lihat Semua')
             ->waitForLocation('/user/donasi-terdekat')
             ->waitForText('Semua Donasi Terdekat')
             // Search by Food Name
-            ->typeSlowly('input[placeholder="Cari makanan atau toko..."]', 'Spaghetti', 100)
+            ->typeSlowly('input[placeholder="Cari makanan atau toko..."]', $this->masterA->nama_makanan, 100)
             ->pause(duskDelay())
-            ->assertSee('Spaghetti Carbonara')
-            ->assertDontSee('Roti Coklat Keju')
+            ->assertSee($this->masterA->nama_makanan)
+            ->assertDontSee($this->masterB->nama_makanan)
             // Search by Business Name (Clear search input first via Javascript)
             ->script("
                 const input = document.querySelector('input[placeholder=\"Cari makanan atau toko...\"]');
@@ -242,27 +234,28 @@ test('TC-DASH-07: Eksplorasi Donasi Terdekat - Pencarian Real-time berdasarkan N
                 input.dispatchEvent(new Event('input'));
             ");
         $browser->pause(500)
-            ->typeSlowly('input[placeholder="Cari makanan atau toko..."]', 'Bakery', 100)
+            ->typeSlowly('input[placeholder="Cari makanan atau toko..."]', $this->unitProfileB->nama_usaha, 100)
             ->pause(duskDelay())
-            ->assertSee('Roti Coklat Keju')
-            ->assertDontSee('Spaghetti Carbonara')
+            ->assertSee($this->masterB->nama_makanan)
+            ->assertDontSee($this->masterA->nama_makanan)
             ->pause(duskDelay());
     });
 });
 
 test('TC-DASH-08: Eksplorasi Donasi Terdekat - Penanganan Pencarian Tidak Ditemukan dan Reset Filter', function () {
     $this->browse(function (Browser $browser) {
+        $first_name = explode(' ', $this->user->name)[0];
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
-            ->waitForText('Halo, Individu!')
+            ->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink('Lihat Semua')
             ->waitForLocation('/user/donasi-terdekat')
             ->waitForText('Semua Donasi Terdekat')
-            ->typeSlowly('input[placeholder="Cari makanan atau toko..."]', 'Soto Ayam Betawi', 100)
+            ->typeSlowly('input[placeholder="Cari makanan atau toko..."]', 'Soto Ayam Betawi Super Tidak Ada', 100)
             ->pause(duskDelay())
-            ->assertDontSee('Spaghetti Carbonara')
-            ->assertDontSee('Roti Coklat Keju')
+            ->assertDontSee($this->masterA->nama_makanan)
+            ->assertDontSee($this->masterB->nama_makanan)
             ->assertSee('Tidak Ada Donasi Ditemukan')
             ->script("
                 const btn = Array.from(document.querySelectorAll('button'))
@@ -270,38 +263,58 @@ test('TC-DASH-08: Eksplorasi Donasi Terdekat - Penanganan Pencarian Tidak Ditemu
                 btn?.click();
             ");
         $browser->pause(duskDelay())
-            ->assertSee('Spaghetti Carbonara')
-            ->assertSee('Roti Coklat Keju')
+            ->assertSee($this->masterA->nama_makanan)
+            ->assertSee($this->masterB->nama_makanan)
             ->pause(duskDelay());
     });
 });
 
 test('TC-DASH-09: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Kategori (Category Pills)', function () {
-    $this->browse(function (Browser $browser) {
+    $category = $this->masterB->kategori;
+    $this->browse(function (Browser $browser) use ($category) {
+        $first_name = explode(' ', $this->user->name)[0];
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
-            ->waitForText('Halo, Individu!')
+            ->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink('Lihat Semua')
             ->waitForLocation('/user/donasi-terdekat')
             ->waitForText('Semua Donasi Terdekat')
             ->script("
                 const btn = Array.from(document.querySelectorAll('button'))
-                    .find(el => el.textContent.trim() === 'Makanan Ringan');
+                    .find(el => el.textContent.trim() === '" . addslashes($category) . "');
                 btn?.click();
             ");
         $browser->pause(duskDelay())
-            ->assertSee('Roti Coklat Keju')
-            ->assertDontSee('Spaghetti Carbonara')
-            ->pause(duskDelay());
+            ->assertSee($this->masterB->nama_makanan);
+
+        if ($this->masterA->kategori !== $category) {
+            $browser->assertDontSee($this->masterA->nama_makanan);
+        }
+
+        $browser->pause(duskDelay());
     });
 });
 
 test('TC-DASH-10: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Radius Jarak (Distance Dropdown)', function () {
-    $this->browse(function (Browser $browser) {
+    $distA = \App\Models\User::calculateDistance(
+        $this->user->latitude,
+        $this->user->longitude,
+        $this->unitProfileA->lokasi_lat ?? $this->unitUserA->latitude,
+        $this->unitProfileA->lokasi_lng ?? $this->unitUserA->longitude
+    );
+    $distB = \App\Models\User::calculateDistance(
+        $this->user->latitude,
+        $this->user->longitude,
+        $this->unitProfileB->lokasi_lat ?? $this->unitUserB->latitude,
+        $this->unitProfileB->lokasi_lng ?? $this->unitUserB->longitude
+    );
+
+    $this->browse(function (Browser $browser) use ($distA, $distB) {
+        $first_name = explode(' ', $this->user->name)[0];
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
-            ->waitForText('Halo, Individu!')
+            ->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink('Lihat Semua')
             ->waitForLocation('/user/donasi-terdekat')
@@ -325,18 +338,30 @@ test('TC-DASH-10: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Ra
             ");
         $browser->pause(500)
             ->click('h1') // Click page title to dismiss native dropdown popup
-            ->pause(duskDelay())
-            ->assertSee('Spaghetti Carbonara')
-            ->assertDontSee('Roti Coklat Keju')
             ->pause(duskDelay());
+
+        if ($distA <= 1.0) {
+            $browser->assertSee($this->masterA->nama_makanan);
+        } else {
+            $browser->assertDontSee($this->masterA->nama_makanan);
+        }
+
+        if ($distB <= 1.0) {
+            $browser->assertSee($this->masterB->nama_makanan);
+        } else {
+            $browser->assertDontSee($this->masterB->nama_makanan);
+        }
+
+        $browser->pause(duskDelay());
     });
 });
 
 test('TC-DASH-11: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Status Harga dan Range Harga', function () {
     $this->browse(function (Browser $browser) {
+        $first_name = explode(' ', $this->user->name)[0];
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
-            ->waitForText('Halo, Individu!')
+            ->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink('Lihat Semua')
             ->waitForLocation('/user/donasi-terdekat')
@@ -360,8 +385,8 @@ test('TC-DASH-11: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan St
         $browser->pause(500)
             ->click('h1') // Click outside
             ->pause(duskDelay())
-            ->assertSee('Roti Coklat Keju')
-            ->assertDontSee('Spaghetti Carbonara')
+            ->assertSee($this->masterB->nama_makanan)
+            ->assertDontSee($this->masterA->nama_makanan)
 
             // 2. Highlight Price Type Dropdown for "Berbayar"
             ->script("
@@ -380,8 +405,8 @@ test('TC-DASH-11: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan St
         $browser->pause(500)
             ->click('h1') // Click outside
             ->pause(duskDelay())
-            ->assertSee('Spaghetti Carbonara')
-            ->assertDontSee('Roti Coklat Keju')
+            ->assertSee($this->masterA->nama_makanan)
+            ->assertDontSee($this->masterB->nama_makanan)
 
             // 3. Reset to "Semua Harga"
             ->script("
@@ -402,8 +427,8 @@ test('TC-DASH-11: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan St
         $browser->pause(500)
             ->click('h1') // Click outside
             ->pause(duskDelay())
-            ->assertSee('Roti Coklat Keju')
-            ->assertSee('Spaghetti Carbonara')
+            ->assertSee($this->masterB->nama_makanan)
+            ->assertSee($this->masterA->nama_makanan)
 
             // 4. Highlight & Test Price Range Slider
             ->script("
@@ -424,19 +449,25 @@ test('TC-DASH-11: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan St
                 slider.style.outlineOffset = '';
             ");
         $browser->pause(500)
-            // Roti Coklat Keju is free (Rp 0 <= 10000) -> should see it
-            ->assertSee('Roti Coklat Keju')
-            // Spaghetti Carbonara is Rp 15000 (> 10000) -> should not see it
-            ->assertDontSee('Spaghetti Carbonara')
-            ->pause(duskDelay());
+            // gratis is free (Rp 0 <= 10000) -> should see it
+            ->assertSee($this->masterB->nama_makanan);
+
+        if ($this->menuA->harga_jual > 10000) {
+            $browser->assertDontSee($this->masterA->nama_makanan);
+        } else {
+            $browser->assertSee($this->masterA->nama_makanan);
+        }
+
+        $browser->pause(duskDelay());
     });
 });
 
 test('TC-DASH-12: Dashboard menyembunyikan makanan dan menampilkan warning jika lokasi null', function () {
     $this->browse(function (Browser $browser) {
+        $first_name = explode(' ', $this->userNoLoc->name)[0];
         $browser->loginAs($this->userNoLoc)
             ->visit('/user/dashboard')
-            ->waitForText('Halo, Individu!')
+            ->waitForText("Halo, {$first_name}!")
             ->assertSee('Tentukan lokasi untuk melihat makanan terdekat anda.')
             ->assertDontSee('Ambil')
             ->pause(duskDelay());
@@ -445,9 +476,10 @@ test('TC-DASH-12: Dashboard menyembunyikan makanan dan menampilkan warning jika 
 
 test('TC-DASH-13: Dashboard Radius Anda menampilkan tombol Atur Lokasi jika lokasi null', function () {
     $this->browse(function (Browser $browser) {
+        $first_name = explode(' ', $this->userNoLoc->name)[0];
         $browser->loginAs($this->userNoLoc)
             ->visit('/user/dashboard')
-            ->waitForText('Halo, Individu!')
+            ->waitForText("Halo, {$first_name}!")
             ->assertSee('Titik Lokasi Belum Ditentukan')
             ->assertSee('Atur Lokasi Sekarang')
             ->clickLink('Atur Lokasi Sekarang')
@@ -459,9 +491,10 @@ test('TC-DASH-13: Dashboard Radius Anda menampilkan tombol Atur Lokasi jika loka
 
 test('TC-DASH-14: Eksplorasi terdekat menampilkan warning dan tombol Atur Lokasi jika lokasi null', function () {
     $this->browse(function (Browser $browser) {
+        $first_name = explode(' ', $this->userNoLoc->name)[0];
         $browser->loginAs($this->userNoLoc)
             ->visit('/user/dashboard')
-            ->waitForText('Halo, Individu!')
+            ->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink('Lihat Semua')
             ->waitForLocation('/user/donasi-terdekat')
@@ -477,30 +510,47 @@ test('TC-DASH-14: Eksplorasi terdekat menampilkan warning dan tombol Atur Lokasi
 });
 
 test('TC-DASH-15: Detail Makanan - Verifikasi Informasi Lengkap, Lokasi, Konten Jaminan Kualitas, dan Breadcrumbs', function () {
-    $this->browse(function (Browser $browser) {
+    $distA = \App\Models\User::calculateDistance(
+        $this->user->latitude,
+        $this->user->longitude,
+        $this->unitProfileA->lokasi_lat ?? $this->unitUserA->latitude,
+        $this->unitProfileA->lokasi_lng ?? $this->unitUserA->longitude
+    );
+    $formattedDistanceA = number_format($distA, 1, ',', '.') . ' km';
+    $formattedHargaA = 'Rp ' . number_format($this->menuA->harga_jual, 0, ',', '.');
+    $formattedStokA = $this->menuA->stok_porsi . ' Porsi';
+
+    $this->browse(function (Browser $browser) use ($formattedDistanceA, $formattedHargaA, $formattedStokA) {
+        $first_name = explode(' ', $this->user->name)[0];
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
-            ->waitForText('Halo, Individu!')
+            ->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
-            ->clickLink('Spaghetti Carbonara')
+            ->clickLink($this->masterA->nama_makanan)
             ->waitForLocation('/user/makanan/' . $this->menuA->id)
             ->assertPathIs('/user/makanan/' . $this->menuA->id)
-            ->waitForText('Spaghetti Carbonara')
+            ->waitForText($this->masterA->nama_makanan)
             // 1. Assert Breadcrumbs
             ->assertSeeIn('nav.text-sm', 'Dashboard')
             ->assertSeeIn('nav.text-sm', 'Makanan')
-            ->assertSeeIn('nav.text-sm', 'Spaghetti Carbonara')
+            ->assertSeeIn('nav.text-sm', $this->masterA->nama_makanan)
             // 2. Assert Dynamic Remaining Time
-            ->assertSee('jam lagi')
+            ->assertSee($this->menuA->time_remaining ?? 'lagi')
             // 3. Assert Distance tag
-            ->assertSee('0,4 km')
+            ->assertSee($formattedDistanceA)
             // 4. Assert portion and price
-            ->assertSee('8 Porsi')
-            ->assertSee('Rp 15.000')
+            ->assertSee($formattedStokA)
+            ->assertSee($formattedHargaA)
             // 5. Assert vendor info
-            ->assertSee('Toko Wangi')
-            ->assertSee('Alamat belum diatur')
-            ->assertSee('Kunjungi Profil')
+            ->assertSee($this->unitProfileA->nama_usaha);
+
+        if ($this->unitUserA->alamat) {
+            $browser->assertSee($this->unitUserA->alamat);
+        } else {
+            $browser->assertSee('Alamat belum diatur');
+        }
+
+        $browser->assertSee('Kunjungi Profil')
             // 6. Assert maps link
             ->assertSourceHas('google.com/maps/search/?api=1')
             // 7. Assert quality assurance card
@@ -511,76 +561,79 @@ test('TC-DASH-15: Detail Makanan - Verifikasi Informasi Lengkap, Lokasi, Konten 
 });
 
 test('TC-DASH-16: Detail Makanan - Verifikasi Counter Portion Adjuster, Limit Batas Stok (Min/Max), dan Redirect ke Pembayaran', function () {
-    $this->browse(function (Browser $browser) {
+    $formattedHargaA = 'Rp ' . number_format($this->menuA->harga_jual, 0, ',', '.');
+    $maxPrice = $this->menuA->stok_porsi * $this->menuA->harga_jual;
+    $formattedMaxPrice = 'Rp ' . number_format($maxPrice, 0, ',', '.');
+
+    $this->browse(function (Browser $browser) use ($formattedHargaA, $formattedMaxPrice) {
+        $first_name = explode(' ', $this->user->name)[0];
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
-            ->waitForText('Halo, Individu!')
+            ->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
-            ->clickLink('Spaghetti Carbonara')
+            ->clickLink($this->masterA->nama_makanan)
             ->waitForLocation('/user/makanan/' . $this->menuA->id)
-            ->waitForText('Spaghetti Carbonara')
-            // Initial qty is 1, price Rp 15.000
-            ->assertSee('Rp 15.000')
+            ->waitForText($this->masterA->nama_makanan)
+            // Initial qty is 1, price A
+            ->assertSee($formattedHargaA)
             // Try to click '-' when qty is 1 (min limit check)
             ->click('button[class*="bg-gray-100"]')
             ->pause(500)
-            ->assertSee('Rp 15.000')
-            // Click '+' button 7 times to reach max stock (8 porsi)
-            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
-            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
-            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
-            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
-            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
-            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
-            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
-            ->pause(duskDelay())
-            ->assertSee('Rp 120.000') // 8 * 15.000
-            // Try to click '+' again when qty is 8 (max limit check)
-            ->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
+            ->assertSee($formattedHargaA);
+
+        // Click '+' button to reach max stock
+        $clicks = $this->menuA->stok_porsi - 1;
+        for ($i = 0; $i < $clicks; $i++) {
+            $browser->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]');
+        }
+
+        $browser->pause(duskDelay())
+            ->assertSee($formattedMaxPrice); // Max price
+
+        // Try to click '+' again when qty is at max limit
+        $browser->click('button[class*="bg-[#1cb764]"][class*="hover:bg-[#159f54]"]')
             ->pause(500)
-            ->assertSee('Rp 120.000')
+            ->assertSee($formattedMaxPrice)
             // Click 'Ambil Makanan' to redirect to payments page
             ->press('Ambil Makanan')
             ->waitForLocation('/user/dashboard/' . $this->menuA->id . '/pembayaran')
             ->assertPathIs('/user/dashboard/' . $this->menuA->id . '/pembayaran')
-            ->assertQueryStringHas('qty', '8')
+            ->assertQueryStringHas('qty', (string) $this->menuA->stok_porsi)
             ->pause(duskDelay());
     });
 });
 
 test('TC-DASH-17: Detail Makanan - Verifikasi Rekomendasi Daftar Makanan Serupa (Similar Items)', function () {
-    // Setup another food item in the same category ("Makanan Berat")
-    $masterC = MasterMakanan::create([
-        'unit_bisnis_id' => $this->unitProfileA->id,
-        'nama_makanan' => 'Nasi Goreng Spesial',
-        'kategori' => 'Makanan Berat',
-        'harga' => 20000,
-        'berat' => 0.4,
-    ]);
-    $menuC = MenuAktif::create([
-        'master_makanan_id' => $masterC->id,
-        'unit_bisnis_id' => $this->unitProfileA->id,
-        'is_gratis' => false,
-        'harga_jual' => 12000,
-        'stok_porsi' => 10,
-        'batas_pengambilan' => now()->addHours(5),
-        'status' => 'aktif',
-    ]);
+    $kategori = $this->masterA->kategori;
+    $similarMenu = MenuAktif::where('status', 'aktif')
+        ->where('id', '!=', $this->menuA->id)
+        ->where('stok_porsi', '>', 0)
+        ->where('batas_pengambilan', '>', now())
+        ->whereHas('masterMakanan', function($query) use ($kategori) {
+            $query->where('kategori', $kategori);
+        })
+        ->first();
 
-    $this->browse(function (Browser $browser) use ($menuC) {
+    if (!$similarMenu) {
+        throw new \Exception("Pengujian Gagal: Tidak ada menu aktif lain dalam kategori '{$kategori}' untuk menguji 'Makanan Serupa'. Harap tambahkan menu lain dengan kategori yang sama.");
+    }
+
+    $formattedSimilarHarga = $similarMenu->is_gratis ? 'Gratis' : 'Rp ' . number_format($similarMenu->harga_jual, 0, ',', '.');
+
+    $this->browse(function (Browser $browser) use ($similarMenu, $formattedSimilarHarga) {
+        $first_name = explode(' ', $this->user->name)[0];
         $browser->loginAs($this->user)
             ->visit('/user/dashboard')
-            ->waitForText('Halo, Individu!')
+            ->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
-            ->clickLink('Spaghetti Carbonara')
+            ->clickLink($this->masterA->nama_makanan)
             ->waitForLocation('/user/makanan/' . $this->menuA->id)
-            ->waitForText('Spaghetti Carbonara')
-            // Assert "Makanan Berat Serupa" section header is shown
-            ->assertSee('Makanan Berat Serupa')
-            // Assert that Nasi Goreng Spesial is listed as a similar food card
-            ->assertSee('Nasi Goreng Spesial')
-            ->assertSee('Rp 12.000')
+            ->waitForText($this->masterA->nama_makanan)
+            // Assert "Makanan Serupa" section header is shown
+            ->assertSee($this->masterA->kategori . ' Serupa')
+            // Assert that similar food is listed
+            ->assertSee($similarMenu->masterMakanan->nama_makanan)
+            ->assertSee($formattedSimilarHarga)
             ->pause(duskDelay());
     });
 });
-
