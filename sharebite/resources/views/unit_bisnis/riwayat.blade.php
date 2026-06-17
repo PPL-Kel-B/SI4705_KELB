@@ -104,11 +104,9 @@
             </div>
             <div class="relative w-full md:w-auto">
                 <select name="status" form="searchForm" onchange="document.getElementById('searchForm').submit()" class="appearance-none flex items-center justify-center px-4 py-3 pl-10 pr-10 border border-gray-200 shadow-sm text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 w-full md:w-auto cursor-pointer">
-                    <option value="">Filter Status</option>
-                    <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
-                    <option value="dibatalkan" {{ request('status') == 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
-                    <option value="dibayar" {{ request('status') == 'dibayar' ? 'selected' : '' }}>Dibayar</option>
-                    <option value="siap_diambil" {{ request('status') == 'siap_diambil' ? 'selected' : '' }}>Siap Diambil</option>
+                    <option value="">Semua Status</option>
+                    <option value="selesai" {{ request('status') == 'selesai' ? 'selected' : '' }}>Sudah Diambil</option>
+                    <option value="tidak_diambil" {{ request('status') == 'tidak_diambil' ? 'selected' : '' }}>Tidak Diambil</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                     <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
@@ -191,15 +189,11 @@
                             <td class="p-4 pr-6 text-center align-top">
                                 @if($item->status == 'selesai')
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
-                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> Selesai
+                                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span> Sudah Diambil
                                     </span>
-                                @elseif($item->status == 'dibayar')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                                        <span class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1.5"></span> Dibayar
-                                    </span>
-                                @elseif($item->status == 'siap_diambil')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-100">
-                                        <span class="w-1.5 h-1.5 bg-orange-500 rounded-full mr-1.5"></span> Menunggu
+                                @elseif($item->isTidakDiambil())
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-100">
+                                        <span class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></span> Tidak Diambil
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">

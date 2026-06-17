@@ -10,6 +10,7 @@ use Tests\DuskTestCase;
 class MasterMakananTest extends DuskTestCase
 {
     protected User $user;
+    protected \App\Models\UnitBisnisProfile $unitBisnis;
 
     protected function setUp(): void
     {
@@ -19,6 +20,8 @@ class MasterMakananTest extends DuskTestCase
             'email',
             'jaki.munawaroh@bakery.com'
         )->firstOrFail();
+
+        $this->unitBisnis = \App\Models\UnitBisnisProfile::where('user_id', $this->user->id)->firstOrFail();
     }
 
     public function test_tambah_lima_master_makanan()
@@ -57,11 +60,10 @@ class MasterMakananTest extends DuskTestCase
 
             foreach ($makanan as $item) {
 
-                // bersihkan data lama
-                MasterMakanan::where(
-                    'nama_makanan',
-                    $item['nama']
-                )->forceDelete();
+                // bersihkan data lama spesifik untuk unit bisnis ini
+                MasterMakanan::where('nama_makanan', $item['nama'])
+                             ->where('unit_bisnis_id', $this->unitBisnis->id)
+                             ->forceDelete();
 
                 $browser->visit('/unit/kelola-master-data/create')
 
@@ -96,13 +98,14 @@ class MasterMakananTest extends DuskTestCase
             }
         });
 
-        // Verifikasi database
+        // Verifikasi database spesifik untuk unit bisnis ini
         foreach ($makanan as $item) {
 
             $this->assertDatabaseHas(
                 'master_makanans',
                 [
                     'nama_makanan' => $item['nama'],
+                    'unit_bisnis_id' => $this->unitBisnis->id,
                 ]
             );
         }

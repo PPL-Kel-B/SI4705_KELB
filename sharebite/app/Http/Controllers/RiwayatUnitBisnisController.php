@@ -118,8 +118,18 @@ class RiwayatUnitBisnisController extends Controller
         $totalUlasan = (clone $ratingQuery)->count();
 
         // 4. Query Transaksi (with search & filter)
-        $query = Pesanan::with(['menuAktif.masterMakanan', 'user.individuProfile', 'user.komunitasProfile'])
-            ->where('unit_bisnis_id', $unitBisnis->id);
+        $query = Pesanan::with(['menuAktif.masterMakanan', 'user.individuProfile', 'user.komunitasProfile', 'pembayaran'])
+            ->where('unit_bisnis_id', $unitBisnis->id)
+            ->where(function ($q) {
+                // Hanya pesanan yang selesai (sudah diambil) atau dibatalkan tapi sudah dibayar (tidak diambil melewati batas)
+                $q->where('status', 'selesai')
+                  ->orWhere(function ($subQ) {
+                      $subQ->where('status', 'dibatalkan')
+                           ->whereHas('pembayaran', function ($p) {
+                               $p->where('status', 'berhasil');
+                           });
+                  });
+            });
 
         if ($startDate && $endDate) {
             $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
@@ -139,7 +149,14 @@ class RiwayatUnitBisnisController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            if ($request->status === 'selesai') {
+                $query->where('status', 'selesai');
+            } elseif ($request->status === 'tidak_diambil') {
+                $query->where('status', 'dibatalkan')
+                      ->whereHas('pembayaran', function ($p) {
+                          $p->where('status', 'berhasil');
+                      });
+            }
         }
 
         $transaksi = $query->orderBy('created_at', 'desc')->paginate(10);
