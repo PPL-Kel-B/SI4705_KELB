@@ -207,7 +207,7 @@ class PembayaranController extends Controller
         
         return "<div style='font-family:sans-serif; text-align:center; padding-top:20vh; background-color:#F0F7F2; height:100vh;'>
                     <h1 style='color:#189347; font-size:32px; margin-bottom:10px;'>Pembayaran Berhasil! ✅</h1>
-                    <p style='color:#666; font-size:16px;'>Silakan lihat layar laptop Anda, halaman akan otomatis berpindah.</p>
+                    <p style='color:#666; font-size:16px;'>Halaman akan diarahkan ke halaman pembayaran berhasil.</p>
                 </div>";
     }
 

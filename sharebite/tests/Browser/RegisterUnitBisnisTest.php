@@ -13,7 +13,7 @@ if (! function_exists('duskDelay')) {
     }
 }
 
-class RegistrasiVerifikasiTest extends DuskTestCase
+class RegisterUnitBisnisTest extends DuskTestCase
 {
     protected function setUp(): void
     {

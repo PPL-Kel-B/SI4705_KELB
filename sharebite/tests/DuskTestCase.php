@@ -23,6 +23,14 @@ abstract class DuskTestCase extends BaseTestCase
     }
 
     /**
+     * Determine if the browser window should be maximized when started.
+     */
+    protected function shouldStartMaximized(): bool
+    {
+        return true;
+    }
+
+    /**
      * Create the RemoteWebDriver instance.
      */
     protected function driver(): RemoteWebDriver
@@ -31,7 +39,7 @@ abstract class DuskTestCase extends BaseTestCase
             $this->shouldStartMaximized() ? '--start-maximized' : '--window-size=1920,1080',
             '--disable-search-engine-choice-screen',
             '--disable-smooth-scrolling',
-            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 ShareBiteDuskTest',
+            '--force-device-scale-factor=0.95',
         ])->unless($this->hasHeadlessDisabled() || env('DUSK_HEADLESS', true) === false, function (Collection $items) {
             return $items->merge([
                 // '--disable-gpu',

@@ -64,8 +64,10 @@
                 <input type="hidden" name="code" id="hidden-code">
             </div>
 
-            <button type="button" onclick="submitCode()" class="text-[#189347] font-bold text-[15px] flex items-center gap-2 hover:underline">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg> Cari makanan
+            <!-- Tombol Cari Makanan dengan style button premium -->
+            <button type="submit" onclick="submitCode()" class="w-full max-w-xs bg-gradient-to-r from-[#10703B] to-[#1CB764] hover:from-[#0d5c30] hover:to-[#179f57] text-white py-3.5 px-6 rounded-2xl font-bold text-[15px] flex items-center justify-center gap-2.5 transition-all shadow-md hover:shadow-lg active:scale-[0.98] duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                <span>Cari Makanan</span>
             </button>
         </form>
     </div>
@@ -146,6 +148,10 @@
             if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
                 inputs[index - 1].focus();
             }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitCode();
+            }
         });
     });
 
@@ -167,6 +173,11 @@
                 e.preventDefault();
             }
         });
+    });
+
+    document.getElementById('form-verifikasi').addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitCode();
     });
 
     function submitCode() {
