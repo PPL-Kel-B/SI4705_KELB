@@ -223,7 +223,7 @@ class LoginTest extends DuskTestCase
     }
 
     /**
-     * Test Login Admin
+     * Test Login Admin.
      */
     public function testAdminLogin(): void
     {
@@ -247,7 +247,7 @@ class LoginTest extends DuskTestCase
     }
 
     /**
-     * Test Login Unit Bisnis
+     * Test Login Unit Bisnis.
      */
     public function testUnitBisnisLogin(): void
     {
@@ -271,7 +271,7 @@ class LoginTest extends DuskTestCase
     }
 
     /**
-     * Test Login Komunitas
+     * Test Login Komunitas.
      */
     public function testKomunitasLogin(): void
     {
@@ -295,7 +295,7 @@ class LoginTest extends DuskTestCase
     }
 
     /**
-     * Test Login Individu
+     * Test Login Individu.
      */
     public function testIndividuLogin(): void
     {
