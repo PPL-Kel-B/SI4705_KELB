@@ -127,14 +127,14 @@ class LoginTest extends DuskTestCase
             ]
         );
 
-        // 2. Unit Bisnis
+        // 2. Unit Bisnis (dari RegisterUnitBisnisTest)
         $unit = User::updateOrCreate(
-            ['email' => 'unit@sharebite.com'],
+            ['email' => 'jaki.munawaroh@bakery.com'],
             [
-                'name' => 'Lestari Food',
-                'password' => bcrypt('password'),
+                'name' => 'Jaki Munawaroh Bakery',
+                'password' => bcrypt('Jaki123!'),
                 'role' => 'unit_bisnis',
-                'no_hp' => '08123456780',
+                'no_hp' => '081234567899',
             ]
         );
 
@@ -148,11 +148,11 @@ class LoginTest extends DuskTestCase
         } else {
             UnitBisnisProfile::create([
                 'user_id' => $unit->id,
-                'nama_usaha' => 'Lestari Food',
+                'nama_usaha' => 'Jaki Munawaroh Bakery',
                 'jenis_usaha' => 'Restoran',
                 'foto_bisnis' => 'images/placeholder-bisnis.jpg',
                 'lokasi_lat' => '-6.9271',
-                'lokasi_lng' => '107.6411',
+                'lokasi_lng' => '107.6186',
                 'radius_penjemputan' => 15,
                 'jam_buka' => '08:00',
                 'jam_tutup' => '21:00',
@@ -162,25 +162,40 @@ class LoginTest extends DuskTestCase
             ]);
         }
 
-        // 3. Komunitas
-        User::updateOrCreate(
-            ['email' => 'komunitas@sharebite.com'],
+        // 3. Komunitas (dari RegisterKomunitasTest)
+        $komunitas = User::updateOrCreate(
+            ['email' => 'fiyola@gmail.com'],
             [
-                'name' => 'Komunitas Berbagi',
-                'password' => bcrypt('password'),
+                'name' => 'Komunitas Hijau Lestari',
+                'password' => bcrypt('Password123!'),
                 'role' => 'komunitas',
-                'no_hp' => '08123456781',
+                'no_hp' => '085783372898',
+            ]
+        );
+        \App\Models\KomunitasProfile::updateOrCreate(
+            ['user_id' => $komunitas->id],
+            [
+                'nama_komunitas' => 'Komunitas Hijau Lestari',
+                'penanggung_jawab' => 'Fiyola Nur Alamanda',
+                'jumlah_anggota' => 50,
             ]
         );
 
-        // 4. Individu
-        User::updateOrCreate(
-            ['email' => 'individu@sharebite.com'],
+        // 4. Individu (dari RegisterIndividuTest)
+        $individu = User::updateOrCreate(
+            ['email' => 'farid@gmail.com'],
             [
-                'name' => 'Individu Peduli',
-                'password' => bcrypt('password'),
+                'name' => 'Farid Munadhil',
+                'password' => bcrypt('Password123!'),
                 'role' => 'individu',
-                'no_hp' => '08123456783',
+                'no_hp' => '08886284534',
+            ]
+        );
+        \App\Models\IndividuProfile::updateOrCreate(
+            ['user_id' => $individu->id],
+            [
+                'total_berat_diselamatkan' => 0,
+                'total_makanan_dibeli' => 0,
             ]
         );
     }
@@ -219,9 +234,9 @@ class LoginTest extends DuskTestCase
             $browser->visit('/login')
                 ->waitForText('Selamat Datang', 5)
                 ->clear('email')
-                ->type('email', $admin->email)
+                ->typeSlowly('email', $admin->email, 100)
                 ->clear('[name="password"]')
-                ->type('[name="password"]', 'Admin@2024!')
+                ->typeSlowly('[name="password"]', 'Admin@2024!', 100)
                 ->pause(2000)
                 ->click('#loginBtn')
                 ->pause(3000)
@@ -243,9 +258,9 @@ class LoginTest extends DuskTestCase
             $browser->visit('/login')
                 ->waitForText('Selamat Datang', 5)
                 ->clear('email')
-                ->type('email', $unit->email)
+                ->typeSlowly('email', $unit->email, 100)
                 ->clear('[name="password"]')
-                ->type('[name="password"]', 'password')
+                ->typeSlowly('[name="password"]', 'Jaki123!', 100)
                 ->pause(2000)
                 ->click('#loginBtn')
                 ->pause(3000)
@@ -267,9 +282,9 @@ class LoginTest extends DuskTestCase
             $browser->visit('/login')
                 ->waitForText('Selamat Datang', 5)
                 ->clear('email')
-                ->type('email', $komunitas->email)
+                ->typeSlowly('email', $komunitas->email, 100)
                 ->clear('[name="password"]')
-                ->type('[name="password"]', 'password')
+                ->typeSlowly('[name="password"]', 'Password123!', 100)
                 ->pause(2000)
                 ->click('#loginBtn')
                 ->pause(3000)
@@ -291,9 +306,9 @@ class LoginTest extends DuskTestCase
             $browser->visit('/login')
                 ->waitForText('Selamat Datang', 5)
                 ->clear('email')
-                ->type('email', $individu->email)
+                ->typeSlowly('email', $individu->email, 100)
                 ->clear('[name="password"]')
-                ->type('[name="password"]', 'password')
+                ->typeSlowly('[name="password"]', 'Password123!', 100)
                 ->pause(2000)
                 ->click('#loginBtn')
                 ->pause(3000)
