@@ -49,7 +49,20 @@ return [
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'laravel'),
+            'database' => (function() {
+                // If requested by Dusk test browser
+                if (isset($_SERVER['HTTP_USER_AGENT']) && str_contains($_SERVER['HTTP_USER_AGENT'], 'ShareBiteDuskTest')) {
+                    return 'sharebite_dusk';
+                }
+                // If running tests in CLI (Dusk / PHPUnit)
+                if (app()->runningInConsole()) {
+                    $args = implode(' ', $_SERVER['argv'] ?? []);
+                    if (str_contains($args, 'phpunit') || str_contains($args, 'dusk')) {
+                        return 'sharebite_dusk';
+                    }
+                }
+                return env('DB_DATABASE', 'sharebite');
+            })(),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
