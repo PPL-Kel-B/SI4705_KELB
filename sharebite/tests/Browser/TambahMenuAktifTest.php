@@ -52,12 +52,19 @@ class TambahMenuAktifTest extends DuskTestCase
 
                 $browser->visit('/unit/kelola-makanan/tambah')
                         ->waitForText('Tambah Menu Aktif', 10)
-                        // Cari menu di kolom pencarian
-                        ->type('input[x-model="searchQuery"]', $namaMakanan)
-                        ->pause(1500)
+                        ->pause(1000);
+
+                // Cari menu di kolom pencarian dengan mengetik satu persatu agar pelan
+                $chars = str_split($namaMakanan);
+                $browser->clear('input[x-model="searchQuery"]')->pause(500);
+                foreach ($chars as $char) {
+                    $browser->append('input[x-model="searchQuery"]', $char)->pause(150);
+                }
+
+                $browser->pause(1500)
                         // Klik h4 yang muncul setelah proses filter pencarian
                         ->click('h4.line-clamp-1')
-                        ->pause(1000);
+                        ->pause(1500);
 
                 // Atur Gratis khusus untuk SUSHI
                 if ($namaMakanan === 'SUSHI') {
@@ -66,12 +73,14 @@ class TambahMenuAktifTest extends DuskTestCase
                         checkbox.checked = true;
                         checkbox.dispatchEvent(new Event('change'));
                     ");
+                    $browser->pause(1000);
                 } else {
                     $browser->script("
                         let checkbox = document.querySelector('input[name=\"is_gratis\"]');
                         checkbox.checked = false;
                         checkbox.dispatchEvent(new Event('change'));
                     ");
+                    $browser->pause(1000);
                 }
 
                 // Set Jumlah Stok menjadi 50
@@ -80,6 +89,7 @@ class TambahMenuAktifTest extends DuskTestCase
                     stok.value = '50';
                     stok.dispatchEvent(new Event('input'));
                 ");
+                $browser->pause(1000);
 
                 // Set Batas Pengambilan menjadi jam 11.00 PM (23:00)
                 $browser->script("
@@ -87,11 +97,12 @@ class TambahMenuAktifTest extends DuskTestCase
                     batas.value = '23:00';
                     batas.dispatchEvent(new Event('input'));
                 ");
+                $browser->pause(1000);
 
                 $browser->pause(1000)
                         // Klik tombol Publikasikan Menu Aktif
                         ->click('#btn-submit')
-                        ->pause(2500);
+                        ->pause(3000);
             }
         });
 
