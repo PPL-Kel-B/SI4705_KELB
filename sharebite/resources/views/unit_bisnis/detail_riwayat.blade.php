@@ -1,10 +1,20 @@
 @extends('layouts.unit_bisnis')
 
-@section('title', 'Detail Riwayat Pesanan')
+@section('title', 'Detail Pesanan')
 
 @section('content')
-<div class="space-y-6 max-w-5xl mx-auto">
+@php
+    $orderIdPad = str_pad($pesanan->id, 4, '0', STR_PAD_LEFT);
+    $role = optional($pesanan->user)->role;
+    $orderSuffix = ($role === 'individu') ? 'A' : 'B';
+    $formattedOrderId = "SB-{$orderIdPad}-{$orderSuffix}";
+    
+    $makananFoto = $pesanan->menuAktif->masterMakanan->foto ? asset('storage/'.$pesanan->menuAktif->masterMakanan->foto) : 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80';
+    $waktuPesan = \Carbon\Carbon::parse($pesanan->created_at)->translatedFormat('d M Y, H:i') . ' WIB';
+    $waktuDiambil = \Carbon\Carbon::parse($pesanan->updated_at)->translatedFormat('d M Y, H:i') . ' WIB';
+@endphp
 
+<div class="max-w-6xl mx-auto">
     @if(session('success'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded-[16px] relative mb-6 font-bold shadow-sm flex items-center gap-2" role="alert">
             <svg class="w-5 h-5 text-green-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -12,166 +22,175 @@
         </div>
     @endif
 
-    <!-- Header -->
-    <div class="flex items-center gap-4 mb-6">
-        <a href="{{ route('unit.riwayat') }}" class="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center text-green-600 hover:bg-green-100 transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-        </a>
-        <h1 class="text-2xl font-bold text-gray-900">Detail Riwayat Donasi</h1>
-    </div>
+    <h1 class="text-[28px] font-extrabold text-[#189347] mb-6">Detail Pesanan</h1>
 
-    <!-- Main Card -->
-    <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100">
-        <div class="flex flex-col md:flex-row">
-            <!-- Image Section -->
-            <div class="w-full md:w-1/2 h-64 md:h-auto relative">
-                @php
-                    $makananFoto = $pesanan->menuAktif->masterMakanan->foto ? asset('storage/'.$pesanan->menuAktif->masterMakanan->foto) : asset('images/default_food.png');
-                @endphp
-                <img src="{{ $makananFoto }}" alt="Food Image" class="w-full h-full object-cover">
-                <div class="absolute top-4 left-4">
-                    @if($pesanan->status == 'selesai')
-                        <span class="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">SELESAI</span>
-                    @elseif($pesanan->status == 'dibayar')
-                        <span class="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">DIBAYAR</span>
-                    @elseif($pesanan->status == 'siap_diambil')
-                        <span class="px-3 py-1 bg-orange-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">SIAP DIAMBIL</span>
-                    @else
-                        <span class="px-3 py-1 bg-gray-600 text-white text-xs font-bold rounded-full uppercase tracking-wider">{{ strtoupper($pesanan->status) }}</span>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Detail Section -->
-            <div class="w-full md:w-1/2 p-8 flex flex-col justify-center bg-white relative">
-                <div class="absolute top-8 right-8">
-                    <p class="text-xl font-bold text-green-700">Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}</p>
-                </div>
-                
-                <h2 class="text-3xl font-extrabold text-gray-900 mb-2 pr-24">{{ $pesanan->menuAktif->masterMakanan->nama_makanan ?? 'Tidak Diketahui' }}</h2>
-                <div class="flex items-center text-gray-500 mb-8">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                    <span class="font-medium">{{ $unitBisnis->nama_usaha ?? 'Unit Bisnis' }}</span>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 mb-8">
-                    <div class="bg-gray-50 p-4 rounded-2xl">
-                        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Tanggal Pesanan</p>
-                        <p class="font-semibold text-gray-900">{{ $pesanan->created_at->format('d F Y') }}</p>
-                    </div>
-                    <div class="bg-gray-50 p-4 rounded-2xl">
-                        <p class="text-xs text-gray-500 uppercase tracking-wider mb-1">Porsi</p>
-                        <p class="font-semibold text-gray-900">{{ $pesanan->jumlah_porsi }} Porsi</p>
-                    </div>
-                </div>
-
-                <div class="flex items-center justify-between border-t border-gray-100 pt-6">
-                    <div class="flex items-center text-green-600 font-medium">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        @if($pesanan->status == 'selesai')
-                            Transaksi Selesai
-                        @else
-                            {{ ucfirst($pesanan->status) }}
-                        @endif
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs text-gray-500">ID:</p>
-                        <p class="text-sm font-medium text-gray-900">{{ $pesanan->kode_unik ?? 'N/A' }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bottom Sections -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        
-        <!-- Bukti Berbagi Section -->
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h3 class="text-lg font-bold text-gray-900 flex items-center mb-6">
-                <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                Bukti Berbagi
-            </h3>
-
-            @if($pesanan->buktiDonasis && $pesanan->buktiDonasis->count() > 0)
-                <div class="grid grid-cols-1 gap-4">
-                    @foreach($pesanan->buktiDonasis as $bukti)
-                        <div class="rounded-2xl overflow-hidden border border-gray-100 aspect-video relative group">
-                            <img src="{{ asset('storage/' . $bukti->foto) }}" alt="Bukti Donasi" class="w-full h-full object-cover">
-                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <a href="{{ asset('storage/' . $bukti->foto) }}" target="_blank" class="px-4 py-2 bg-white text-gray-900 rounded-lg text-sm font-medium shadow-sm hover:bg-gray-50">
-                                    Lihat Penuh
-                                </a>
+    <!-- Top Row: Main Card & Ulasan -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 items-stretch">
+        <!-- Main Card -->
+        <div class="lg:col-span-2">
+            <div class="bg-[#F8FFF9] rounded-[24px] p-8 shadow-sm border border-[#E6F4EA] h-full flex flex-col justify-between relative">
+                <div>
+                    <div class="flex justify-between items-start mb-8">
+                        <div>
+                            <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">ID PESANAN</p>
+                            <h2 class="text-3xl font-extrabold text-gray-800">Order {{ $formattedOrderId }}</h2>
+                            
+                            <div class="mt-4 flex flex-col gap-1.5">
+                                <div class="flex items-center text-[13px] font-semibold text-gray-500 gap-2">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    Donasi: {{ $waktuPesan }}
+                                </div>
+                                <div class="flex items-center text-[13px] font-bold text-[#189347] gap-2">
+                                    <svg class="w-4 h-4 text-[#189347]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Diambil pada: {{ $waktuDiambil }}
+                                </div>
                             </div>
                         </div>
-                        <p class="text-xs text-center text-gray-500 mt-2">Diunggah pada {{ $bukti->created_at->format('d M Y, H:i') }}</p>
-                    @endforeach
-                </div>
-            @else
-                <div class="border-2 border-dashed border-gray-200 rounded-3xl p-8 flex flex-col items-center justify-center text-center h-48 bg-gray-50/50">
-                    <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                        <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    </div>
-                    <p class="text-sm font-medium text-gray-900 mb-1">Belum Ada Bukti</p>
-                    <p class="text-xs text-gray-500">Penerima/relawan belum mengunggah foto bukti donasi untuk pesanan ini.</p>
-                </div>
-            @endif
-        </div>
-
-        <!-- Rating Section -->
-        <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
-            <h3 class="text-lg font-bold text-gray-900 flex items-center mb-6">
-                <svg class="w-5 h-5 text-yellow-500 mr-2" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                Ulasan & Rating
-            </h3>
-
-            @if($pesanan->rating)
-                <div class="mb-4">
-                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">RATING DARI PENERIMA</p>
-                    <div class="flex text-yellow-400">
-                        @for($i=1; $i<=5; $i++)
-                            @if($i <= $pesanan->rating->nilai)
-                                <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        
+                        <div>
+                            @if($pesanan->status == 'selesai')
+                                <div class="bg-[#E4F2E8] text-[#189347] px-4 py-2 rounded-full flex items-center gap-2 font-extrabold text-[12px] tracking-wide border border-[#189347]/10">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                                    SELESAI
+                                </div>
+                            @elseif(method_exists($pesanan, 'isTidakDiambil') && $pesanan->isTidakDiambil())
+                                <div class="bg-red-100 text-red-700 px-4 py-2 rounded-full flex items-center gap-2 font-extrabold text-[12px] tracking-wide border border-red-200">
+                                    TIDAK DIAMBIL
+                                </div>
                             @else
-                                <svg class="w-6 h-6 text-gray-200 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                <div class="bg-gray-100 text-gray-700 px-4 py-2 rounded-full flex items-center gap-2 font-extrabold text-[12px] tracking-wide uppercase border border-gray-200">
+                                    {{ str_replace('_', ' ', $pesanan->status) }}
+                                </div>
                             @endif
-                        @endfor
+                        </div>
                     </div>
-                </div>
 
-                <div class="mb-4">
-                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">KOMENTAR</p>
-                    <div class="bg-gray-50 rounded-2xl p-4">
-                        <p class="text-gray-700 italic">"{{ $pesanan->rating->catatan_pengalaman ?? $pesanan->rating->komentar ?? 'Tidak ada komentar.' }}"</p>
+                    <div class="flex flex-col md:flex-row gap-6 items-start">
+                        <img src="{{ $makananFoto }}" class="w-48 h-48 object-cover rounded-[20px] shadow-sm">
+                        <div class="flex-1 py-1">
+                            <h3 class="text-[22px] font-extrabold text-gray-800 mb-2">{{ $pesanan->menuAktif->masterMakanan->nama_makanan ?? 'Nama Makanan' }}</h3>
+                            <p class="text-[13px] font-medium text-gray-500 leading-relaxed mb-6">{{ $pesanan->menuAktif->masterMakanan->deskripsi ?? 'Dikemas dengan rapi untuk menjaga kualitas rasa dan kesegarannya. Dibuat dengan bahan-bahan terbaik.' }}</p>
+                            
+                            <div class="flex gap-12">
+                                <div>
+                                    <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">JUMLAH</p>
+                                    <p class="text-lg font-black text-gray-800">{{ $pesanan->jumlah_porsi }} Porsi</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] font-extrabold text-gray-400 uppercase tracking-widest mb-1">HARGA</p>
+                                    <p class="text-lg font-black text-gray-800">
+                                        @if($pesanan->menuAktif->is_gratis) GRATIS @else Rp {{ number_format($pesanan->menuAktif->harga_jual, 0, ',', '.') }}/Porsi @endif
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="mt-4 flex items-center gap-3">
-                    @php
-                        $penerimaName = $pesanan->user->name ?? 'User Tidak Diketahui';
-                        $inisial = strtoupper(substr($penerimaName, 0, 2));
-                        $colors = ['bg-orange-500', 'bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500'];
-                        $colorIndex = crc32($penerimaName) % count($colors);
-                        $avatarColor = $colors[$colorIndex];
-                    @endphp
-                    <div class="w-8 h-8 rounded-full {{ $avatarColor }} text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
-                        {{ $inisial }}
+                <div class="mt-8 pt-6 flex justify-end">
+                    <div class="text-right">
+                        <p class="text-[12px] font-bold text-gray-500 mb-1">Total Harga</p>
+                        <p class="text-[28px] font-black text-[#189347]">
+                            @if($pesanan->menuAktif->is_gratis) GRATIS @else Rp {{ number_format($pesanan->total_harga ?? ($pesanan->jumlah_porsi * $pesanan->menuAktif->harga_jual), 0, ',', '.') }} @endif
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ulasan & Rating Card -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-[24px] p-8 shadow-sm border border-gray-50 h-full flex flex-col">
+                <h3 class="text-lg font-extrabold text-gray-800 mb-6">Ulasan & Rating</h3>
+                
+                @if($pesanan->rating || ($pesanan->buktiDonasis && $pesanan->buktiDonasis->count() > 0))
+                    <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar bg-[#F8FAFC] border border-gray-100 rounded-[20px] p-6">
+                        <!-- Rating -->
+                        @if($pesanan->rating)
+                            <div class="mb-5 text-center flex flex-col items-center">
+                                <div class="flex justify-center text-yellow-400 mb-3">
+                                    @for($i=1; $i<=5; $i++)
+                                        @if($i <= $pesanan->rating->nilai)
+                                            <svg class="w-6 h-6 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                        @else
+                                            <svg class="w-6 h-6 text-gray-200 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                        @endif
+                                    @endfor
+                                </div>
+                                <p class="text-[13px] font-bold text-gray-800 italic">"{{ $pesanan->rating->catatan_pengalaman ?? $pesanan->rating->komentar ?? 'Tidak ada komentar.' }}"</p>
+                            </div>
+                        @else
+                            <p class="text-[13px] text-gray-500 text-center italic mb-5">Belum ada rating & ulasan dari penerima.</p>
+                        @endif
+
+                        <!-- Bukti Donasi -->
+                        @if($pesanan->buktiDonasis && $pesanan->buktiDonasis->count() > 0)
+                            <div class="mt-6 pt-4 border-t border-gray-200 border-dashed">
+                                <h4 class="text-[11px] font-extrabold text-gray-400 uppercase tracking-widest text-center mb-3">Bukti Pesanan</h4>
+                                <div class="grid grid-cols-2 gap-2">
+                                    @foreach($pesanan->buktiDonasis as $bukti)
+                                        <div class="rounded-xl overflow-hidden border border-gray-100 aspect-square relative group">
+                                            <img src="{{ asset('storage/' . $bukti->foto) }}" alt="Bukti Donasi" class="w-full h-full object-cover">
+                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <a href="{{ asset('storage/' . $bukti->foto) }}" target="_blank" class="p-2 bg-white text-gray-900 rounded-lg shadow-sm hover:bg-gray-50">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @else
+                    <div class="bg-[#F8FAFC] border border-gray-100 border-dashed rounded-[20px] p-6 text-center flex-1 flex flex-col items-center justify-center">
+                        <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-300 shadow-sm mb-3">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        </div>
+                        <h4 class="text-[13px] font-extrabold text-gray-700 mb-2">Pengguna belum melakukan rating</h4>
+                        <p class="text-[11px] font-medium text-gray-400 leading-relaxed">
+                            Penerima manfaat dapat memberikan rating maksimal 3 hari setelah status dinyatakan selesai oleh relawan.
+                        </p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Row: Relawan -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-[24px] p-8 shadow-sm border border-gray-50 h-full flex flex-col">
+                <h3 class="text-[15px] font-extrabold text-gray-800 flex items-center gap-2 mb-6">
+                    <svg class="w-5 h-5 text-[#D97706]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    Relawan Pengambil & Distribusi
+                </h3>
+                
+                <div class="flex gap-4 items-center">
+                    <div class="w-14 h-14 rounded-full overflow-hidden bg-gray-100 shrink-0 shadow-sm">
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode($pesanan->user->name ?? 'Budi Santoso') }}&background=27272a&color=fff" class="w-full h-full object-cover">
                     </div>
                     <div>
-                        <p class="text-sm font-medium text-gray-900">{{ $penerimaName }}</p>
-                        <p class="text-xs text-gray-500">{{ $pesanan->rating->created_at->format('d M Y') }}</p>
+                        <h4 class="text-[15px] font-extrabold text-gray-800">{{ $pesanan->user->name ?? 'Budi Santoso' }}</h4>
+                        <p class="text-[12px] font-medium text-gray-500 mt-0.5 leading-relaxed">Relawan pengambil yang telah mendistribusikan pesanan ini kepada penerima manfaat.</p>
                     </div>
                 </div>
-            @else
-                <div class="border-2 border-dashed border-gray-200 rounded-3xl p-8 flex flex-col items-center justify-center text-center h-48 bg-gray-50/50">
-                    <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3 text-gray-400">
-                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                    </div>
-                    <p class="text-sm font-medium text-gray-900 mb-1">Belum Ada Ulasan</p>
-                    <p class="text-xs text-gray-500">Penerima/relawan belum memberikan rating untuk pesanan ini.</p>
-                </div>
-            @endif
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Custom scrollbar for Ulasan section if content is too long */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #E2E8F0;
+    border-radius: 10px;
+}
+</style>
 @endsection
