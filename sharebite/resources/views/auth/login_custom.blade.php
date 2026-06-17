@@ -389,7 +389,7 @@
         .btn-login {
             display: block;
             width: 100%;
-            margin-top: 32px;
+            margin-top: 28px;
             padding: 16px;
             background: #22c55e;
             color: #ffffff;
@@ -552,11 +552,6 @@
                         @error('password')
                             <p class="error-msg">{{ $message }}</p>
                         @enderror
-                    </div>
-
-                    {{-- INGAT SAYA + LUPA SANDI --}}
-                    <div class="remember-row">
-                        <a href="{{ route('password.request') }}" class="forgot-link">Lupa Sandi?</a>
                     </div>
 
                     {{-- TOMBOL LOGIN --}}

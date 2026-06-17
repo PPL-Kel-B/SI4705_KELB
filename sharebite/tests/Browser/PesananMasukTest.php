@@ -33,17 +33,18 @@ class PesananMasukTest extends DuskTestCase
         $unitUser = User::firstOrCreate(
             ['email' => 'unit@sharebite.com'],
             [
-                'name'     => 'Lestari Food',
+                'name'     => 'Ruang Duduk',
                 'password' => bcrypt('password'),
                 'role'     => 'unit_bisnis',
                 'no_hp'    => '+6282178830750',
             ]
         );
+        $unitUser->update(['name' => 'Ruang Duduk']);
 
         $unitProfile = UnitBisnisProfile::firstOrCreate(
             ['user_id' => $unitUser->id],
             [
-                'nama_usaha'           => 'Lestari Food',
+                'nama_usaha'           => 'Ruang Duduk',
                 'jenis_usaha'          => 'Restoran',
                 'foto_bisnis'          => 'images/placeholder-bisnis.jpg',
                 'lokasi_lat'           => '-6.9271',
@@ -56,31 +57,39 @@ class PesananMasukTest extends DuskTestCase
                 'tahun_bergabung'      => 2023,
             ]
         );
+        $unitProfile->update(['nama_usaha' => 'Ruang Duduk']);
 
-        // Ambil atau buat user volunteer
+        // Ambil atau buat user volunteer (komunitas berbagi)
         $volunteer = User::firstOrCreate(
-            ['email' => 'individu@sharebite.com'],
+            ['email' => 'komunitas@sharebite.com'],
             [
-                'name'     => 'Volunteer ShareBite',
+                'name'     => 'Komunitas Berbagi',
                 'password' => bcrypt('password'),
-                'role'     => 'individu',
-                'no_hp'    => '+628123456789',
+                'role'     => 'komunitas',
+                'no_hp'    => '+628123456781',
             ]
         );
+        $volunteer->update([
+            'name' => 'Komunitas Berbagi',
+            'role' => 'komunitas'
+        ]);
 
         // Ambil atau buat master makanan dan menu aktif
+        $existingMaster = \App\Models\MasterMakanan::where('nama_makanan', 'burgir')->first();
+
         $master = \App\Models\MasterMakanan::firstOrCreate(
             [
                 'unit_bisnis_id' => $unitProfile->id,
-                'nama_makanan'   => 'eskrim',
+                'nama_makanan'   => 'burgir',
             ],
             [
-                'kategori'  => 'Makanan Ringan',
-                'harga'     => 15000,
-                'berat'     => 0.2,
-                'deskripsi' => 'Eskrim lezat rasa vanilla.',
+                'kategori'  => $existingMaster ? $existingMaster->kategori : 'Makanan Berat',
+                'harga'     => 20000,
+                'berat'     => $existingMaster ? $existingMaster->berat : 0.3,
+                'deskripsi' => $existingMaster ? $existingMaster->deskripsi : 'Burger lezat.',
             ]
         );
+        $master->update(['harga' => 20000]);
 
         $menu = MenuAktif::firstOrCreate(
             [
@@ -89,15 +98,19 @@ class PesananMasukTest extends DuskTestCase
             ],
             [
                 'is_gratis'         => false,
-                'harga_jual'        => 10000,
+                'harga_jual'        => 20000,
                 'stok_porsi'        => 10,
                 'batas_pengambilan' => now()->addHours(5),
                 'status'            => 'aktif',
             ]
         );
 
-        // Pastikan batas pengambilan selalu di masa depan
-        $menu->update(['batas_pengambilan' => now()->addHours(5)]);
+        // Pastikan batas pengambilan selalu di masa depan dan harga ter-update
+        $menu->update([
+            'harga_jual'        => 20000,
+            'status'            => 'aktif',
+            'batas_pengambilan' => now()->addHours(5)
+        ]);
 
         // Hapus pesanan-pesanan lama unit bisnis ini agar pengujian tab filter bersih
         Pesanan::where('unit_bisnis_id', $unitProfile->id)->delete();
@@ -109,7 +122,7 @@ class PesananMasukTest extends DuskTestCase
             'unit_bisnis_id' => $unitProfile->id,
             'user_id'        => $volunteer->id,
             'jumlah_porsi'   => 1,
-            'total_harga'    => 10000,
+            'total_harga'    => 20000,
             'status'         => 'dibayar',
             'kode_unik'      => 'SB-111-AAA',
             'waktu_pesan'    => now(),
@@ -127,7 +140,7 @@ class PesananMasukTest extends DuskTestCase
             'unit_bisnis_id' => $unitProfile->id,
             'user_id'        => $volunteer->id,
             'jumlah_porsi'   => 2,
-            'total_harga'    => 20000,
+            'total_harga'    => 40000,
             'status'         => 'selesai',
             'kode_unik'      => 'SB-222-BBB',
             'waktu_pesan'    => now()->subHour(),
@@ -145,7 +158,7 @@ class PesananMasukTest extends DuskTestCase
             'unit_bisnis_id' => $unitProfile->id,
             'user_id'        => $volunteer->id,
             'jumlah_porsi'   => 3,
-            'total_harga'    => 30000,
+            'total_harga'    => 60000,
             'status'         => 'dibatalkan',
             'kode_unik'      => 'SB-333-CCC',
             'waktu_pesan'    => now()->subHours(2),
@@ -158,6 +171,25 @@ class PesananMasukTest extends DuskTestCase
         ]);
     }
 
+    private function closeExtraTabs(Browser $browser): void
+    {
+        $handles = $browser->driver->getWindowHandles();
+        if (count($handles) > 1) {
+            $mainHandle = $handles[0];
+            foreach ($handles as $index => $handle) {
+                if ($index > 0) {
+                    try {
+                        $browser->driver->switchTo()->window($handle);
+                        $browser->driver->close();
+                    } catch (\Exception $e) {
+                        // Abaikan jika sudah tertutup
+                    }
+                }
+            }
+            $browser->driver->switchTo()->window($mainHandle);
+        }
+    }
+
     // ═════════════════════════════════════════════════════════════
     // TEST 1 — Menu Sidebar 'Pesanan' menampilkan halaman pesanan
     // ═════════════════════════════════════════════════════════════
@@ -165,14 +197,20 @@ class PesananMasukTest extends DuskTestCase
     public function testSidebarPesananLink(): void
     {
         $this->browse(function (Browser $browser) {
+            $this->closeExtraTabs($browser);
             $user = User::where('email', 'unit@sharebite.com')->firstOrFail();
             $browser->loginAs($user)
                     ->visit('/unit/dashboard')
+                    ->pause(2000)
                     ->waitForText('Pesanan', 10)
+                    ->pause(2000)
                     ->clickLink('Pesanan')
+                    ->pause(2000)
                     ->waitForLocation('/unit/pesanan', 10)
+                    ->pause(2000)
                     ->assertPathIs('/unit/pesanan')
-                    ->assertSee('Pesanan Masuk');
+                    ->assertSee('Pesanan Masuk')
+                    ->pause(2000);
         });
     }
 
@@ -183,31 +221,37 @@ class PesananMasukTest extends DuskTestCase
     public function testFilterTabs(): void
     {
         $this->browse(function (Browser $browser) {
+            $this->closeExtraTabs($browser);
             $user = User::where('email', 'unit@sharebite.com')->firstOrFail();
             $browser->loginAs($user)
                     ->visit('/unit/pesanan')
-                    ->waitForText('Daftar Pesanan Aktif', 10);
+                    ->pause(2000)
+                    ->waitForText('Daftar Pesanan Aktif', 10)
+                    ->pause(2000);
 
             // 1. Klik Terbaru -> Harus ada teks "MENUNGGU DIAMBIL", "SELESAI", dan "TIDAK DIAMBIL"
             $browser->click('#tab-terbaru')
-                    ->pause(800)
+                    ->pause(2000)
                     ->assertSee('MENUNGGU DIAMBIL')
                     ->assertSee('SELESAI')
-                    ->assertSee('TIDAK DIAMBIL');
+                    ->assertSee('TIDAK DIAMBIL')
+                    ->pause(2000);
 
             // 2. Klik Menunggu -> Harus ada "MENUNGGU DIAMBIL", tapi tidak ada "SELESAI" dan "TIDAK DIAMBIL"
             $browser->click('#tab-menunggu')
-                    ->pause(800)
+                    ->pause(2000)
                     ->assertSee('MENUNGGU DIAMBIL')
                     ->assertDontSee('SELESAI')
-                    ->assertDontSee('TIDAK DIAMBIL');
+                    ->assertDontSee('TIDAK DIAMBIL')
+                    ->pause(2000);
 
             // 3. Klik Selesai -> Harus ada "SELESAI" dan "TIDAK DIAMBIL", tapi tidak ada "MENUNGGU DIAMBIL"
             $browser->click('#tab-selesai')
-                    ->pause(800)
+                    ->pause(2000)
                     ->assertSee('SELESAI')
                     ->assertSee('TIDAK DIAMBIL')
-                    ->assertDontSee('MENUNGGU DIAMBIL');
+                    ->assertDontSee('MENUNGGU DIAMBIL')
+                    ->pause(2000);
         });
     }
 
@@ -218,21 +262,28 @@ class PesananMasukTest extends DuskTestCase
     public function testDetailPesananAndBackButton(): void
     {
         $this->browse(function (Browser $browser) {
+            $this->closeExtraTabs($browser);
             $user = User::where('email', 'unit@sharebite.com')->firstOrFail();
             $browser->loginAs($user)
                     ->visit('/unit/pesanan')
-                    ->waitForText('Daftar Pesanan Aktif', 10);
+                    ->pause(2000)
+                    ->waitForText('Daftar Pesanan Aktif', 10)
+                    ->pause(2000);
 
             // Klik Detail Pesanan pada kartu pesanan yang menunggu diambil
             $browser->clickLink('Detail Pesanan')
-                    ->pause(1500)
+                    ->pause(2500)
                     ->assertPathContains('/unit/pesanan/')
-                    ->assertSee('INFORMASI PEMBELI / RELAWAN');
+                    ->assertSee('INFORMASI PEMBELI / RELAWAN')
+                    ->pause(2000);
 
             // Klik tombol Back (ikon panah kiri)
             $browser->click('a[href*="unit/pesanan"]')
+                    ->pause(2000)
                     ->waitForLocation('/unit/pesanan', 10)
-                    ->assertPathIs('/unit/pesanan');
+                    ->pause(2000)
+                    ->assertPathIs('/unit/pesanan')
+                    ->pause(2000);
         });
     }
 
@@ -243,17 +294,26 @@ class PesananMasukTest extends DuskTestCase
     public function testPanduanPengambilanAndBackButton(): void
     {
         $this->browse(function (Browser $browser) {
+            $this->closeExtraTabs($browser);
             $user = User::where('email', 'unit@sharebite.com')->firstOrFail();
             $browser->loginAs($user)
                     ->visit('/unit/pesanan')
+                    ->pause(2000)
                     ->waitForText('Panduan Pengambilan', 10)
+                    ->pause(2000)
                     ->clickLink('BACA SELENGKAPNYA')
+                    ->pause(2000)
                     ->waitForLocation('/unit/pesanan/panduan', 10)
+                    ->pause(2000)
                     ->assertPathIs('/unit/pesanan/panduan')
                     ->assertSee('Aturan Utama')
+                    ->pause(2000)
                     ->clickLink('Selesai Membaca')
+                    ->pause(2000)
                     ->waitForLocation('/unit/pesanan', 10)
-                    ->assertPathIs('/unit/pesanan');
+                    ->pause(2000)
+                    ->assertPathIs('/unit/pesanan')
+                    ->pause(2000);
         });
     }
 
@@ -264,13 +324,19 @@ class PesananMasukTest extends DuskTestCase
     public function testHubungiCsLink(): void
     {
         $this->browse(function (Browser $browser) {
+            $this->closeExtraTabs($browser);
             $user = User::where('email', 'unit@sharebite.com')->firstOrFail();
             $browser->loginAs($user)
                     ->visit('/unit/pesanan')
+                    ->pause(2000)
                     ->waitForText('Butuh Bantuan?', 10)
+                    ->pause(2000)
                     ->clickLink('Hubungi CS')
+                    ->pause(2000)
                     ->waitForLocation('/unit/chat', 10)
-                    ->assertPathIs('/unit/chat');
+                    ->pause(2000)
+                    ->assertPathIs('/unit/chat')
+                    ->pause(2000);
         });
     }
 
@@ -281,21 +347,26 @@ class PesananMasukTest extends DuskTestCase
     public function testSearchPesanan(): void
     {
         $this->browse(function (Browser $browser) {
+            $this->closeExtraTabs($browser);
             $user = User::where('email', 'unit@sharebite.com')->firstOrFail();
             $browser->loginAs($user)
                     ->visit('/unit/pesanan')
-                    ->waitForText('Daftar Pesanan Aktif', 10);
+                    ->pause(2000)
+                    ->waitForText('Daftar Pesanan Aktif', 10)
+                    ->pause(2000);
 
             // Cari kata kunci yang benar
-            $browser->type('#search-pesanan', 'eskrim')
-                    ->pause(800)
-                    ->assertSee('eskrim')
-                    ->assertDontSee('Pesanan Tidak Ditemukan');
+            $browser->type('#search-pesanan', 'burgir')
+                    ->pause(2000)
+                    ->assertSee('burgir')
+                    ->assertDontSee('Pesanan Tidak Ditemukan')
+                    ->pause(2000);
 
             // Cari kata kunci yang salah
             $browser->type('#search-pesanan', 'makanan_tidak_ada_123')
-                    ->pause(800)
-                    ->assertSee('Pesanan Tidak Ditemukan');
+                    ->pause(2000)
+                    ->assertSee('Pesanan Tidak Ditemukan')
+                    ->pause(2000);
         });
     }
 
@@ -306,13 +377,18 @@ class PesananMasukTest extends DuskTestCase
     public function testVerifikasiCodeButton(): void
     {
         $this->browse(function (Browser $browser) {
+            $this->closeExtraTabs($browser);
             $user = User::where('email', 'unit@sharebite.com')->firstOrFail();
             $browser->loginAs($user)
                     ->visit('/unit/pesanan')
+                    ->pause(2000)
                     ->clickLink('Verifikasi Code')
+                    ->pause(2000)
                     ->waitForLocation('/unit/pesanan/verifikasi', 10)
+                    ->pause(2000)
                     ->assertPathIs('/unit/pesanan/verifikasi')
-                    ->assertSee('INPUT 6-DIGIT KODE VERIFIKASI');
+                    ->assertSee('INPUT 6-DIGIT KODE VERIFIKASI')
+                    ->pause(2000);
         });
     }
 
@@ -323,10 +399,13 @@ class PesananMasukTest extends DuskTestCase
     public function testVerifikasiCodeInvalid(): void
     {
         $this->browse(function (Browser $browser) {
+            $this->closeExtraTabs($browser);
             $user = User::where('email', 'unit@sharebite.com')->firstOrFail();
             $browser->loginAs($user)
                     ->visit('/unit/pesanan/verifikasi')
-                    ->waitForText('INPUT 6-DIGIT KODE VERIFIKASI', 10);
+                    ->pause(2000)
+                    ->waitForText('INPUT 6-DIGIT KODE VERIFIKASI', 10)
+                    ->pause(2000);
 
             // Isi dengan kode salah
             $browser->script("
@@ -338,11 +417,16 @@ class PesananMasukTest extends DuskTestCase
                 boxes[4].value = 'Y';
                 boxes[5].value = 'Z';
             ");
+            $browser->pause(2000);
             
             $browser->click('button[onclick="submitCode()"]')
+                    ->pause(2000)
                     ->waitForText('Verifikasi Gagal', 10)
+                    ->pause(2000)
                     ->assertSee('Kode salah atau pesanan sudah diambil!')
-                    ->click('.swal2-confirm');
+                    ->pause(2000)
+                    ->click('.swal2-confirm')
+                    ->pause(2000);
         });
     }
 
@@ -353,12 +437,15 @@ class PesananMasukTest extends DuskTestCase
     public function testVerifikasiCodeValidAndComplete(): void
     {
         $this->browse(function (Browser $browser) {
+            $this->closeExtraTabs($browser);
             $user = User::where('email', 'unit@sharebite.com')->firstOrFail();
             $pesanan = Pesanan::where('kode_unik', 'SB-111-AAA')->firstOrFail();
 
             $browser->loginAs($user)
                     ->visit('/unit/pesanan/verifikasi')
-                    ->waitForText('INPUT 6-DIGIT KODE VERIFIKASI', 10);
+                    ->pause(2000)
+                    ->waitForText('INPUT 6-DIGIT KODE VERIFIKASI', 10)
+                    ->pause(2000);
 
             // Isi dengan kode benar '111-AAA' (dari SB-111-AAA)
             $browser->script("
@@ -370,16 +457,23 @@ class PesananMasukTest extends DuskTestCase
                 boxes[4].value = 'A';
                 boxes[5].value = 'A';
             ");
+            $browser->pause(2000);
 
             $browser->click('button[onclick="submitCode()"]')
+                    ->pause(2000)
                     ->waitForText('Pesanan Ditemukan', 10)
-                    ->assertSee('Verifikasi & Selesaikan Pesanan');
+                    ->pause(2000)
+                    ->assertSee('Verifikasi & Selesaikan Pesanan')
+                    ->pause(2000);
 
             // Klik tombol "Verifikasi & Selesaikan Pesanan"
             $browser->press('Verifikasi & Selesaikan Pesanan')
+                    ->pause(2000)
                     ->waitForLocation('/unit/riwayat/' . $pesanan->id, 10)
+                    ->pause(2000)
                     ->assertPathIs('/unit/riwayat/' . $pesanan->id)
-                    ->assertSee('Pesanan berhasil diserahkan!');
+                    ->assertSee('Pesanan berhasil diserahkan!')
+                    ->pause(2000);
         });
     }
 }
