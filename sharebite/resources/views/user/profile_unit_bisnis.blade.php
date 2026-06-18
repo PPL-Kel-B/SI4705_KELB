@@ -71,15 +71,7 @@
                     {{-- Jam Operasional & Kontak --}}
                     <div class="w-full border-t border-gray-100 my-4"></div>
                     <div class="w-full space-y-2.5">
-                        <div class="flex items-center justify-between text-xs font-semibold text-gray-400">
-                            <span class="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#1cb764] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                Jam Operasional
-                            </span>
-                            <span class="text-gray-800 font-extrabold">{{ $unitBisnis->jam_buka }} - {{ $unitBisnis->jam_tutup }} WIB</span>
-                        </div>
+
                         <div class="flex items-center justify-between text-xs font-semibold text-gray-400">
                             <span class="flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#1cb764] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -319,11 +311,7 @@
                                                 </p>
                                             </div>
                                         </div>
-                                        <button class="text-gray-400 hover:text-gray-600 p-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                                            </svg>
-                                        </button>
+
                                     </div>
                                     
                                     <div class="flex items-center gap-2 mb-2">
