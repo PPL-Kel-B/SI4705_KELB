@@ -17,6 +17,26 @@ class LokasiController extends Controller
     }
 
     /**
+     * Menyimpan lokasi GPS user ke database
+     */
+    public function simpanLokasi(Request $request)
+    {
+        $request->validate([
+            'latitude' => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
+
+        $user = auth()->user();
+        $user->update([
+            'latitude' => $request->latitude,
+            'longitude' => $request->longitude,
+        ]);
+
+        return redirect()->route('user.lokasi')->with('success', 'Lokasi berhasil disimpan!');
+    }
+
+
+    /**
      * API untuk mendapatkan unit bisnis terdekat (dalam radius tertentu)
      */
     public function getTerdekat(Request $request)

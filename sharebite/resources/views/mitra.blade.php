@@ -300,8 +300,8 @@
                 <div class="col-span-1 md:col-span-4">
                     <h4 class="text-[11px] font-black text-[#1cb764] uppercase tracking-widest mb-8">Hubungi Kami</h4>
                     <ul class="space-y-4 text-sm font-bold text-gray-500 mb-8">
-                        <li><a href="#" class="hover:text-dark-green transition-colors">Pusat Bantuan</a></li>
-                        <li><a href="mailto:hello@sharebite.id" class="hover:text-dark-green transition-colors">hello@sharebite.id</a></li>
+                        <li><a href="https://mail.google.com/mail/?view=cm&fs=1&to=hello@sharebite.id" class="hover:text-dark-green transition-colors" target="_blank">Pusat Bantuan</a></li>
+                        <li><a href="https://mail.google.com/mail/?view=cm&fs=1&to=hello@sharebite.id" class="hover:text-dark-green transition-colors" target="_blank">hello@sharebite.id</a></li>
                     </ul>
                 </div>
             </div>

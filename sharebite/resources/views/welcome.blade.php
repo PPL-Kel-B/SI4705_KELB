@@ -462,13 +462,13 @@
                                 <span
                                     class="text-xs font-black text-gold bg-gold/10 px-3 py-1.5 rounded-full">{{ $menu->stok_porsi }}
                                     Porsi Tersisa</span>
-                                <div
+                                <a href="/login"
                                     class="w-10 h-10 rounded-full bg-gray-50 border-2 border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-[#1cb764] group-hover:border-[#1cb764] group-hover:text-white transition-all cursor-pointer shadow-sm group-hover:shadow-[#1cb764]/30">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                             d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                                     </svg>
-                                </div>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -516,8 +516,8 @@
                 <div class="col-span-1 md:col-span-4">
                     <h4 class="text-[11px] font-black text-[#1cb764] uppercase tracking-widest mb-8">Hubungi Kami</h4>
                     <ul class="space-y-4 text-sm font-bold text-gray-500 mb-8">
-                        <li><a href="#" class="hover:text-dark-green transition-colors">Pusat Bantuan</a></li>
-                        <li><a href="mailto:hello@sharebite.id" class="hover:text-dark-green transition-colors">hello@sharebite.id</a></li>
+                        <li><a href="https://mail.google.com/mail/?view=cm&fs=1&to=hello@sharebite.id" class="hover:text-dark-green transition-colors" target="_blank">Pusat Bantuan</a></li>
+                        <li><a href="https://mail.google.com/mail/?view=cm&fs=1&to=hello@sharebite.id" class="hover:text-dark-green transition-colors" target="_blank">hello@sharebite.id</a></li>
                     </ul>
                 </div>
             </div>

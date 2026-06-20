@@ -29,7 +29,13 @@ Route::get('/', [\App\Http\Controllers\LandingController::class, 'index'])->name
 Route::get('/mitra', [\App\Http\Controllers\LandingController::class, 'mitra'])->name('mitra');
 Route::get('/komunitas', [\App\Http\Controllers\LandingController::class, 'komunitas'])->name('komunitas');
 Route::get('/tentang-kami', function () {
-    return view('tentang_kami');
+    $totalBeratKgVal = \Illuminate\Support\Facades\DB::table('pesanans')
+        ->join('menu_aktifs', 'pesanans.menu_aktif_id', '=', 'menu_aktifs.id')
+        ->join('master_makanans', 'menu_aktifs.master_makanan_id', '=', 'master_makanans.id')
+        ->whereIn('pesanans.status', ['selesai', 'siap_diambil', 'dibayar'])
+        ->sum(\Illuminate\Support\Facades\DB::raw('pesanans.jumlah_porsi * master_makanans.berat')) ?? 0;
+    $totalBeratKg = number_format($totalBeratKgVal, 1, ',', '.') . 'kg';
+    return view('tentang_kami', compact('totalBeratKg'));
 })->name('tentang-kami');
 
 // ==========================================
@@ -175,6 +181,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile');
 
         Route::get('/lokasi', [LokasiController::class, 'index'])->name('lokasi');
+        Route::post('/lokasi/simpan', [LokasiController::class, 'simpanLokasi'])->name('lokasi.simpan');
         Route::get('/api/lokasi/terdekat', [LokasiController::class, 'getTerdekat'])->name('api.lokasi.terdekat');
 
         Route::get('/pengaturan', [\App\Http\Controllers\SettingsController::class, 'index'])->name('pengaturan');

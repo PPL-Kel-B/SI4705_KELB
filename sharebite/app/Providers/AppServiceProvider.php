@@ -19,6 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if (app()->environment('testing') || env('APP_ENV') === 'testing') {
+            config(['database.connections.mysql.database' => 'sharebite_dusk']);
+            \Illuminate\Support\Facades\DB::purge('mysql');
+        }
     }
 }

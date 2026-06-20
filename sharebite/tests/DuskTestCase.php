@@ -40,6 +40,7 @@ abstract class DuskTestCase extends BaseTestCase
             '--disable-search-engine-choice-screen',
             '--disable-smooth-scrolling',
             '--force-device-scale-factor=0.95',
+            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36 ShareBiteDuskTest',
         ])->unless($this->hasHeadlessDisabled() || env('DUSK_HEADLESS', true) === false, function (Collection $items) {
             return $items->merge([
                 // '--disable-gpu',
@@ -47,12 +48,9 @@ abstract class DuskTestCase extends BaseTestCase
             ]);
         })->all());
 
-        if (env('DUSK_BROWSER') === 'edge') {
-            $edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-            if (file_exists($edgePath)) {
-                $options->setBinary($edgePath);
-            }
-        }
+        $options->setExperimentalOption('prefs', [
+            'profile.default_content_setting_values.geolocation' => 1
+        ]);
 
         return RemoteWebDriver::create(
             $_ENV['DUSK_DRIVER_URL'] ?? env('DUSK_DRIVER_URL') ?? 'http://localhost:9515',

@@ -74,10 +74,25 @@
 
     <!-- Status Banner -->
     <div id="status-banner" class="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-full shadow-lg border border-gray-100 flex items-center gap-3 transition-opacity duration-300">
-        <div class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+        <div id="status-indicator" class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
         <span class="text-sm font-bold text-gray-700" id="status-text">Mencari lokasi Anda...</span>
     </div>
+
+    <!-- Tombol Simpan Lokasi (muncul setelah GPS menangkap lokasi) -->
+    <form id="save-location-form" method="POST" action="{{ route('user.lokasi.simpan') }}" class="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-10 hidden">
+        @csrf
+        <input type="hidden" name="latitude" id="save-lat">
+        <input type="hidden" name="longitude" id="save-lng">
+        <button type="submit" id="btn-simpan-lokasi" class="bg-[#1cb764] hover:bg-[#19a55a] text-white font-bold px-6 py-3 rounded-full shadow-lg flex items-center gap-2 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            Simpan Lokasi Saya
+        </button>
+    </form>
 </div>
+
 
 <style>
     /* Custom Map Styles */
@@ -205,9 +220,18 @@
                     fetchNearbyBusinesses();
 
                     document.getElementById('status-text').innerText = 'Lokasi Ditemukan';
-                    document.getElementById('status-banner').querySelector('.bg-yellow-400').classList.replace('bg-yellow-400', 'bg-[#1cb764]');
+                    const indicator = document.getElementById('status-indicator');
+                    if (indicator) {
+                        indicator.classList.remove('bg-yellow-400');
+                        indicator.classList.add('bg-[#1cb764]');
+                    }
                     
-                    // Hide banner after 3 seconds
+                    // Tampilkan tombol Simpan Lokasi Saya dan isi koordinat
+                    document.getElementById('save-lat').value = latitude;
+                    document.getElementById('save-lng').value = longitude;
+                    document.getElementById('save-location-form').classList.remove('hidden');
+
+                    // Hide status banner after 3 seconds
                     setTimeout(() => {
                         document.getElementById('status-banner').style.opacity = '0';
                     }, 3000);
@@ -215,13 +239,19 @@
                 error => {
                     document.getElementById('status-text').innerText = 'Gagal mendapatkan lokasi. Pastikan GPS aktif.';
                     document.getElementById('status-text').classList.add('text-red-500');
-                    document.getElementById('status-banner').querySelector('div').classList.replace('bg-yellow-400', 'bg-red-500');
+                    const indicator = document.getElementById('status-indicator');
+                    if (indicator) {
+                        indicator.classList.remove('bg-yellow-400');
+                        indicator.classList.add('bg-red-500');
+                    }
                 },
                 { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
             );
         } else {
             document.getElementById('status-text').innerText = 'Browser tidak mendukung Geolocation';
         }
+
+
     });
 
     function updateUserLocationMarker(lat, lng, accuracy) {

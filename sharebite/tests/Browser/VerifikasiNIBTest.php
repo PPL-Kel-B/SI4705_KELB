@@ -25,7 +25,7 @@ class VerifikasiNIBTest extends DuskTestCase
             return;
         }
 
-        $browser->type('email', 'admin@sharebite.com')
+        $browser->type('email', 'faridzaridzaridzarid@gmail.com')
             ->pause(duskDelay())
             ->type('password', 'Admin@2024!')
             ->pause(duskDelay())

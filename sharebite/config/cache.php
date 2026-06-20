@@ -15,7 +15,18 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => (function() {
+        if (isset($_SERVER['HTTP_USER_AGENT']) && str_contains($_SERVER['HTTP_USER_AGENT'], 'ShareBiteDuskTest')) {
+            return 'database';
+        }
+        if (isset($_SERVER['argv'])) {
+            $args = implode(' ', $_SERVER['argv']);
+            if (str_contains($args, 'phpunit') || str_contains($args, 'dusk')) {
+                return 'database';
+            }
+        }
+        return env('CACHE_STORE', 'database');
+    })(),
 
     /*
     |--------------------------------------------------------------------------

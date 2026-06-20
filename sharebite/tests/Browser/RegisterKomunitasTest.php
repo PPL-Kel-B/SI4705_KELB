@@ -28,7 +28,10 @@ class RegisterKomunitasTest extends DuskTestCase
         $userExists = User::where('email', 'fiyola@gmail.com')->exists();
 
         $this->browse(function (Browser $browser) use ($userExists) {
-            $browser->visit('/register')
+            $browser->visit('/login')
+                ->assertSee('Selamat Datang')
+                ->clickLink('Buat Akun Baru')
+                ->waitForLocation('/registerkomunitas')
                 ->type('nama_komunitas', 'Komunitas Hijau Lestari')
                 ->type('penanggung_jawab', 'Fiyola Nur Alamanda')
                 ->type('jumlah_anggota', '50')

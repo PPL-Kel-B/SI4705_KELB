@@ -31,30 +31,37 @@ class RegisterUnitBisnisTest extends DuskTestCase
     public function testRegistUnitBisnis(): void
     {
         $this->browse(function (Browser $browser) {
-            $browser->visit('/register/unit-bisnis')
+            // 1. Mulai dari halaman login
+            $browser->visit('/login')
+                ->assertSee('Selamat Datang')
+                // 2. Klik link Buat Akun Baru
+                ->clickLink('Buat Akun Baru')
+                ->waitForLocation('/registerkomunitas')
+                // 3. Klik tab Unit Bisnis
+                ->click('a[href*="unit-bisnis"]')
+                ->waitForLocation('/register/unit-bisnis')
                 ->assertSee('Informasi Bisnis')
-                ->typeSlowly('Nama_Usaha', 'Jaki Munawaroh Bakery', 100)
+                // 4. Isi form pendaftaran
+                ->type('Nama_Usaha', 'Jaki Munawaroh Bakery')
                 ->select('Jenis_Usaha', 'Restoran')
-                ->typeSlowly('Alamat', 'Jl. Jenderal Sudirman No. 123, Bandung', 100)
+                ->type('Alamat', 'Jalan Rancawangi II, Tegalluar, Bojongsoang, Kabupaten Bandung, Jawa Barat, 40295, Indonesia')
                 ->attach('NIB_File', __DIR__ . '/stubs/Format Yang Sesuai.jpeg')
-                ->typeSlowly('Nomor_hp', '081234567899', 100)
-                ->typeSlowly('Email', 'jaki.munawaroh@bakery.com', 100)
-                ->typeSlowly('Password', 'Jaki123!', 100)
-                ->pause(duskDelay());
+                ->type('Nomor_hp', '081234567899')
+                ->type('Email', 'jaki.munawaroh@bakery.com')
+                ->type('Password', 'Jaki123!');
 
-            // Isi lokasi coordinates & centang persetujuan serta aktifkan tombol submit
-            $browser->script("
-                document.getElementById('Latitude').value = '-6.9271';
-                document.getElementById('Longitude').value = '107.6186';
-                document.getElementById('terms').checked = true;
-                document.getElementById('Latitude').dispatchEvent(new Event('input'));
-                document.getElementById('Longitude').dispatchEvent(new Event('input'));
-                document.getElementById('terms').dispatchEvent(new Event('change'));
-                const btn = document.getElementById('submitBtn');
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-            ");
+            // 5. Cari lokasi melalui search box (memanggil Nominatim API asli)
+            $browser->type('#location-search', 'Jalan Rancawangi II, Tegalluar, Bojongsoang, Kabupaten Bandung, Jawa Barat, 40295, Indonesia')
+                ->pause(500) // 0.5 detik jeda setelah mengetik
+                ->click('#btn-search-loc')
+                ->waitFor('#search-suggestions li', 10)
+                ->click('#search-suggestions li')
+                ->pause(1000);
 
+            // Centang terms checkbox
+            $browser->click('#terms');
+
+            // 6. Klik tombol submit
             $browser->pause(duskDelay())
                 ->click('#submitBtn')
                 ->waitForLocation('/login')
@@ -66,16 +73,22 @@ class RegisterUnitBisnisTest extends DuskTestCase
         $this->assertDatabaseHas('users', [
             'email' => 'jaki.munawaroh@bakery.com',
             'role' => 'unit_bisnis',
-            'latitude' => '-6.9271',
-            'longitude' => '107.6186',
         ]);
+
+        // Pastikan latitude dan longitude terisi (dari Nominatim API asli)
+        $user = User::where('email', 'jaki.munawaroh@bakery.com')->first();
+        $this->assertNotNull($user->latitude, 'Latitude harus terisi dari pencarian lokasi');
+        $this->assertNotNull($user->longitude, 'Longitude harus terisi dari pencarian lokasi');
 
         $this->assertDatabaseHas('unit_bisnis_profiles', [
             'nama_usaha' => 'Jaki Munawaroh Bakery',
             'jenis_usaha' => 'Restoran',
-            'lokasi_lat' => '-6.9271',
-            'lokasi_lng' => '107.6186',
             'status_verifikasi' => 'pending',
         ]);
+
+        // Pastikan lokasi_lat dan lokasi_lng terisi (dari Nominatim API asli)
+        $profile = UnitBisnisProfile::where('nama_usaha', 'Jaki Munawaroh Bakery')->first();
+        $this->assertNotNull($profile->lokasi_lat, 'Lokasi latitude harus terisi dari pencarian lokasi');
+        $this->assertNotNull($profile->lokasi_lng, 'Lokasi longitude harus terisi dari pencarian lokasi');
     }
 }

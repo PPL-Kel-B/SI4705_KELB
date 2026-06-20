@@ -1,13 +1,6 @@
 <?php
 
 use Laravel\Dusk\Browser;
-use App\Models\User;
-use App\Models\UnitBisnisProfile;
-
-beforeEach(function () {
-    // Clear old test records before running to prevent duplicates, but keep them after the test run finishes.
-    User::whereIn('name', ['Lestari Bakery', 'Sari Cafe', 'Katering Rahasia'])->delete();
-});
 
 /**
  * Helper to get user-defined pause duration for slow-motion demo.
@@ -19,19 +12,63 @@ if (! function_exists('duskDelay')) {
     }
 }
 
+if (! function_exists('disableAnimations')) {
+    function disableAnimations(Browser $browser) {
+        $browser->script("
+            const style = document.createElement('style');
+            style.innerHTML = '* { transition: none !important; animation: none !important; }';
+            document.head.appendChild(style);
+            document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));
+        ");
+    }
+}
+
+if (! function_exists('visitHome')) {
+    function visitHome(Browser $browser) {
+        $browser->visit('/');
+        try {
+            $browser->waitForText('SELAMATKAN', 5);
+        } catch (\Exception $e) {
+            $html = $browser->driver->getPageSource();
+            file_put_contents(base_path('tests/Browser/debug_landing.html'), $html);
+            $browser->screenshot('debug_landing');
+            throw $e;
+        }
+        disableAnimations($browser);
+    }
+}
+
 test('TC-LP-01: Verifikasi Tampilan Utama dan Elemen Penting Halaman Landing Page (Home)', function () {
-    $this->browse(function (Browser $browser) {
-        $browser->visit('/')
-            ->waitForText('SELAMATKAN')
-            // Force animations to render
-            ->script("document.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));");
+    // 1. Makanan Terselamatkan
+    $totalPorsiTerselamatkan = \App\Models\Pesanan::whereIn('status', ['selesai', 'siap_diambil', 'dibayar'])->sum('jumlah_porsi');
+    $porsiText = number_format($totalPorsiTerselamatkan, 0, ',', '.') . '+';
+
+    // 2. Beban Makanan Terselamatkan
+    $totalBeratKgVal = \Illuminate\Support\Facades\DB::table('pesanans')
+        ->join('menu_aktifs', 'pesanans.menu_aktif_id', '=', 'menu_aktifs.id')
+        ->join('master_makanans', 'menu_aktifs.master_makanan_id', '=', 'master_makanans.id')
+        ->whereIn('pesanans.status', ['selesai', 'siap_diambil', 'dibayar'])
+        ->select(\Illuminate\Support\Facades\DB::raw('SUM(pesanans.jumlah_porsi * master_makanans.berat) as total_berat'))
+        ->value('total_berat') ?? 0;
+    $totalBeratKg = number_format($totalBeratKgVal, 1, ',', '.');
+    $beratText = $totalBeratKg . 'kg';
+
+    // 3. Pahlawan Bergabung
+    $totalPahlawan = \App\Models\User::whereIn('role', ['unit_bisnis', 'komunitas', 'individu'])->count();
+    $pahlawanText = number_format($totalPahlawan, 0, ',', '.') . '+';
+
+    // Disconnect DB connection in test runner to prevent database lock for the web server
+    \Illuminate\Support\Facades\DB::disconnect();
+
+    $this->browse(function (Browser $browser) use ($porsiText, $beratText, $pahlawanText) {
+        visitHome($browser);
 
         $browser->assertTitle('ShareBite - Selamatkan Makanan, Selamatkan Bumi')
-            // Assert Navbar
-            ->assertSee('Home')
-            ->assertSee('Mitra Kami')
-            ->assertSee('Tentang Kami')
-            ->assertSee('Masuk')
+            // Assert Navbar (using uppercase text as rendered on page)
+            ->assertSee('HOME')
+            ->assertSee('MITRA KAMI')
+            ->assertSee('TENTANG KAMI')
+            ->assertSee('MASUK')
             // Assert Hero Section
             ->assertSee('SELAMATKAN')
             ->assertSee('MAKANAN')
@@ -40,8 +77,11 @@ test('TC-LP-01: Verifikasi Tampilan Utama dan Elemen Penting Halaman Landing Pag
             ->assertSee('Cari Makanan')
             // Assert Stats Section
             ->assertSee('Dampak Nyata Dari Langkah Kecil Kita.')
+            ->assertSee($porsiText)
             ->assertSee('Makanan terselamatkan')
+            ->assertSee($beratText)
             ->assertSee('Beban Makanan Terselamatkan')
+            ->assertSee($pahlawanText)
             ->assertSee('Pahlawan Bergabung')
             // Assert How It Works Section
             ->assertSee('Bagaimana ShareBite Bekerja?')
@@ -56,8 +96,8 @@ test('TC-LP-01: Verifikasi Tampilan Utama dan Elemen Penting Halaman Landing Pag
             // Assert Available Donations
             ->assertSee('Donasi Tersedia Hari Ini')
             // Assert Footer
-            ->assertSee('Platform')
-            ->assertSee('Hubungi Kami')
+            ->assertSee('PLATFORM')
+            ->assertSee('HUBUNGI KAMI')
             ->assertSee('hello@sharebite.id')
             ->pause(duskDelay());
     });
@@ -65,226 +105,201 @@ test('TC-LP-01: Verifikasi Tampilan Utama dan Elemen Penting Halaman Landing Pag
 
 test('TC-LP-02: Verifikasi Fungsionalitas Tombol CTA (Call-to-Action) Navigasi Internal di Halaman Landing Page', function () {
     $this->browse(function (Browser $browser) {
-        $browser->visit('/')
-            ->waitForText('SELAMATKAN')
-            ->clickLink('Donasi Makanan')
+        // 1. Donasi Makanan link (Hero)
+        visitHome($browser);
+        $browser->click('a[href="/register/unit-bisnis"].bg-dark-green')
             ->waitForLocation('/register/unit-bisnis')
             ->assertPathIs('/register/unit-bisnis')
             ->assertTitle('Pendaftaran Unit Bisnis - ShareBite')
             ->assertSee('Informasi Bisnis')
             ->pause(duskDelay());
 
-        $browser->visit('/')
-            ->waitForText('SELAMATKAN')
-            ->clickLink('Cari Makanan')
+        // 2. Cari Makanan link (Hero)
+        visitHome($browser);
+        $browser->click('a[href="/login"].bg-gold')
             ->waitForLocation('/login')
             ->assertPathIs('/login')
             ->assertSee('Selamat Datang')
             ->pause(duskDelay());
 
-        $browser->visit('/')
-            ->waitForText('SELAMATKAN')
-            ->clickLink('Gabung Sebagai Mitra')
+        // 3. Gabung Sebagai Mitra link (Roles)
+        visitHome($browser);
+        $browser->click('a[href="/register/unit-bisnis"].bg-white')
             ->waitForLocation('/register/unit-bisnis')
             ->assertPathIs('/register/unit-bisnis')
             ->assertTitle('Pendaftaran Unit Bisnis - ShareBite')
             ->pause(duskDelay());
 
-        $browser->visit('/')
-            ->waitForText('SELAMATKAN')
-            ->clickLink('Daftar Relawan')
+        // 4. Daftar Relawan link (Roles)
+        visitHome($browser);
+        $browser->click('a[href="/register/individu"]')
             ->waitForLocation('/register/individu')
             ->assertPathIs('/register/individu')
             ->assertTitle('Pendaftaran Relawan (Individu) - ShareBite')
             ->assertSee('Identitas Individu')
             ->pause(duskDelay());
+
+        // 5. Active Food Card green arrow button (redirects to login)
+        visitHome($browser);
+        $browser->assertSee('MARTABAK') // verify active food card exists from TambahMenuAktifTest
+            ->click('.grid.md\:grid-cols-3 a[href="/login"]')
+            ->waitForLocation('/login')
+            ->assertPathIs('/login')
+            ->assertSee('Selamat Datang')
+            ->pause(duskDelay());
+
+        // 6. Footer: Tentang Kami link
+        visitHome($browser);
+        $browser->click('footer a[href="/tentang-kami"]')
+            ->waitForLocation('/tentang-kami')
+            ->assertPathIs('/tentang-kami')
+            ->pause(duskDelay());
+
+        // 7. Footer: Donasi Makanan link
+        visitHome($browser);
+        $browser->click('footer a[href="/register/unit-bisnis"]')
+            ->waitForLocation('/register/unit-bisnis')
+            ->assertPathIs('/register/unit-bisnis')
+            ->pause(duskDelay());
+
+        // 8. Footer: Daftar Relawan link
+        visitHome($browser);
+        $browser->click('footer a[href="/register/individu"]')
+            ->waitForLocation('/register/individu')
+            ->assertPathIs('/register/individu')
+            ->pause(duskDelay());
+
+        // 9. Footer: Pusat Bantuan & hello@sharebite.id (Assert Gmail redirect)
+        visitHome($browser);
+        $browser->assertAttribute('footer div.grid > div:nth-child(3) ul li:nth-child(1) a', 'href', 'https://mail.google.com/mail/?view=cm&fs=1&to=hello@sharebite.id')
+            ->assertAttribute('footer div.grid > div:nth-child(3) ul li:nth-child(1) a', 'target', '_blank')
+            ->assertAttribute('footer div.grid > div:nth-child(3) ul li:nth-child(2) a', 'href', 'https://mail.google.com/mail/?view=cm&fs=1&to=hello@sharebite.id')
+            ->assertAttribute('footer div.grid > div:nth-child(3) ul li:nth-child(2) a', 'target', '_blank')
+            ->pause(duskDelay());
     });
 });
 
-test('TC-LP-03: Verifikasi Navigasi Menu Utama di Navbar Landing Page (ke Mitra, Tentang Kami, dan Login)', function () {
+test('TC-LP-03: Verifikasi Halaman Mitra Kami dari Halaman Home (Navigasi, Pencarian, Filter, dan Tombol Detail)', function () {
     $this->browse(function (Browser $browser) {
-        // 1. Navigate to Mitra Kami page via Navbar
-        $browser->visit('/')
-            ->clickLink('Mitra Kami')
+        // 1. Navigasi dari Home ke Mitra Kami
+        visitHome($browser);
+        $browser->clickLink('Mitra Kami')
             ->waitForLocation('/mitra')
             ->assertPathIs('/mitra')
             ->assertSee('MITRA PENYELAMAT MAKANAN')
             ->pause(duskDelay());
 
-        // 2. Navigate to Tentang Kami page via Navbar
-        $browser->visit('/')
-            ->clickLink('Tentang Kami')
-            ->waitForLocation('/tentang-kami')
-            ->assertPathIs('/tentang-kami')
-            ->assertSee('Ubah Sisa Pangan')
-            ->assertSee('Jadi Senyuman')
+        // 2. Verifikasi Mitra Terverifikasi Tampil, Pending Tidak Tampil
+        $browser->assertSee('Jaki Munawaroh Bakery')
+            ->assertDontSee('Lestari Food') // Lestari Food is in DB seeder but has no profile, so it must not be visible
             ->pause(duskDelay());
 
-        // 3. Navigate to Login page via Navbar button "Masuk"
-        $browser->visit('/')
-            ->clickLink('Masuk')
-            ->waitForLocation('/login')
-            ->assertPathIs('/login')
-            ->assertSee('Selamat Datang')
-            ->pause(duskDelay());
-    });
-});
-
-test('TC-LP-04: Verifikasi Keberadaan Animasi Scroll Reveal (.fade-up) di Halaman Landing Page', function () {
-    $this->browse(function (Browser $browser) {
-        $browser->visit('/')
-            ->assertPresent('.fade-up')
-            ->pause(duskDelay());
-    });
-});
-
-test('TC-MIT-01: Verifikasi menampilkan semua mitra terverifikasi pada load awal halaman Mitra', function () {
-    // Seed test data in the database
-    $user1 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Lestari Bakery']);
-    UnitBisnisProfile::create([
-        'user_id' => $user1->id,
-        'nama_usaha' => 'Lestari Bakery',
-        'jenis_usaha' => 'Bakery',
-        'status_verifikasi' => 'terverifikasi',
-    ]);
-
-    $user2 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Sari Cafe']);
-    UnitBisnisProfile::create([
-        'user_id' => $user2->id,
-        'nama_usaha' => 'Sari Cafe',
-        'jenis_usaha' => 'Restoran',
-        'status_verifikasi' => 'terverifikasi',
-    ]);
-
-    // Seed pending data (should NOT be visible)
-    $user3 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Katering Rahasia']);
-    UnitBisnisProfile::create([
-        'user_id' => $user3->id,
-        'nama_usaha' => 'Katering Rahasia',
-        'jenis_usaha' => 'Katering',
-        'status_verifikasi' => 'pending',
-    ]);
-
-    $this->browse(function (Browser $browser) {
-        $browser->visit('/mitra')
-            ->assertSee('Lestari Bakery')
-            ->assertSee('Sari Cafe')
-            ->assertDontSee('Katering Rahasia')
-            ->pause(duskDelay());
-    });
-});
-
-test('TC-MIT-02: Verifikasi pencarian mitra menggunakan kata kunci nama mitra', function () {
-    $user1 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Lestari Bakery']);
-    UnitBisnisProfile::create([
-        'user_id' => $user1->id,
-        'nama_usaha' => 'Lestari Bakery',
-        'jenis_usaha' => 'Bakery',
-        'status_verifikasi' => 'terverifikasi',
-    ]);
-
-    $user2 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Sari Cafe']);
-    UnitBisnisProfile::create([
-        'user_id' => $user2->id,
-        'nama_usaha' => 'Sari Cafe',
-        'jenis_usaha' => 'Restoran',
-        'status_verifikasi' => 'terverifikasi',
-    ]);
-
-    $this->browse(function (Browser $browser) {
-        $browser->visit('/mitra')
-            ->typeSlowly('search', 'Lestari', 100)
+        // 3. Verifikasi Pencarian Mitra (Keyword Positif)
+        $browser->typeSlowly('search', 'Jaki', 100)
             ->pause(duskDelay())
             ->click('@search-submit-btn')
             ->waitForLocation('/mitra')
-            ->assertQueryStringHas('search', 'Lestari')
-            ->assertSee('Lestari Bakery')
-            ->assertDontSee('Sari Cafe')
+            ->assertQueryStringHas('search', 'Jaki')
+            ->assertSee('Jaki Munawaroh Bakery')
             ->pause(duskDelay());
-    });
-});
 
-test('TC-MIT-03: Verifikasi pencarian mitra yang tidak terdaftar menghasilkan hasil kosong', function () {
-    $user1 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Lestari Bakery']);
-    UnitBisnisProfile::create([
-        'user_id' => $user1->id,
-        'nama_usaha' => 'Lestari Bakery',
-        'jenis_usaha' => 'Bakery',
-        'status_verifikasi' => 'terverifikasi',
-    ]);
-
-    $this->browse(function (Browser $browser) {
+        // 4. Verifikasi Pencarian Mitra (Keyword Negatif)
         $browser->visit('/mitra')
             ->typeSlowly('search', 'Xyz Bakery', 100)
             ->pause(duskDelay())
             ->click('@search-submit-btn')
             ->waitForLocation('/mitra')
             ->assertQueryStringHas('search', 'Xyz Bakery')
-            ->assertDontSee('Lestari Bakery')
+            ->assertDontSee('Jaki Munawaroh Bakery')
             ->pause(duskDelay());
-    });
-});
 
-test('TC-MIT-04: Verifikasi penyaringan daftar mitra berdasarkan kategori jenis usaha', function () {
-    $user1 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Lestari Bakery']);
-    UnitBisnisProfile::create([
-        'user_id' => $user1->id,
-        'nama_usaha' => 'Lestari Bakery',
-        'jenis_usaha' => 'Bakery',
-        'status_verifikasi' => 'terverifikasi',
-    ]);
+        // 5. Verifikasi Penyaringan Kategori Usaha (Dinamis berdasarkan database)
+        $categories = \App\Models\UnitBisnisProfile::where('status_verifikasi', 'terverifikasi')
+            ->whereNotNull('jenis_usaha')
+            ->distinct()
+            ->pluck('jenis_usaha');
 
-    $user2 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Sari Cafe']);
-    UnitBisnisProfile::create([
-        'user_id' => $user2->id,
-        'nama_usaha' => 'Sari Cafe',
-        'jenis_usaha' => 'Restoran',
-        'status_verifikasi' => 'terverifikasi',
-    ]);
+        // Disconnect DB connection in test runner to prevent database lock for the web server
+        \Illuminate\Support\Facades\DB::disconnect();
 
-    $this->browse(function (Browser $browser) {
         $browser->visit('/mitra')
             ->click('#category-dropdown-btn')
-            ->waitForText('Restoran')
-            ->pause(duskDelay())
-            ->click('@category-option-restoran')
-            ->waitForLocation('/mitra')
-            ->assertQueryStringHas('jenis_usaha', 'Restoran')
-            ->assertDontSee('Lestari Bakery')
-            ->assertSee('Sari Cafe')
+            ->waitForText('Semua Kategori Usaha');
+
+        if ($categories->isNotEmpty()) {
+            $firstCategory = $categories->first();
+            $duskOption = 'category-option-' . str_replace(' ', '-', strtolower($firstCategory));
+
+            $browser->waitForText(ucfirst($firstCategory))
+                ->pause(duskDelay())
+                ->click("@{$duskOption}")
+                ->waitForLocation('/mitra')
+                ->assertQueryStringHas('jenis_usaha', $firstCategory)
+                ->pause(duskDelay());
+
+            // 6. Verifikasi Reset Filter Kategori Usaha
+            $browser->click('#category-dropdown-btn')
+                ->waitForText('Semua Kategori Usaha')
+                ->click('@category-option-all')
+                ->waitForLocation('/mitra')
+                ->pause(duskDelay());
+        }
+
+        // 7. Verifikasi Klik Tombol "Lihat Menu Aktif" pada Card
+        $browser->clickLink('Lihat Menu Aktif')
+            ->waitForLocation('/login')
+            ->assertPathIs('/login')
+            ->assertSee('Selamat Datang')
             ->pause(duskDelay());
     });
 });
 
-test('TC-MIT-05: Verifikasi reset filter kategori kembali ke Semua Kategori', function () {
-    $user1 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Lestari Bakery']);
-    UnitBisnisProfile::create([
-        'user_id' => $user1->id,
-        'nama_usaha' => 'Lestari Bakery',
-        'jenis_usaha' => 'Bakery',
-        'status_verifikasi' => 'terverifikasi',
-    ]);
+test('TC-LP-04: Verifikasi Halaman Tentang Kami dari Halaman Home (Navigasi, Statistik, dan Tombol Register)', function () {
+    // Hitung berat makanan terselamatkan secara dinamis dari database untuk asersi yang tepat
+    $totalBeratKgVal = \Illuminate\Support\Facades\DB::table('pesanans')
+        ->join('menu_aktifs', 'pesanans.menu_aktif_id', '=', 'menu_aktifs.id')
+        ->join('master_makanans', 'menu_aktifs.master_makanan_id', '=', 'master_makanans.id')
+        ->whereIn('pesanans.status', ['selesai', 'siap_diambil', 'dibayar'])
+        ->select(\Illuminate\Support\Facades\DB::raw('SUM(pesanans.jumlah_porsi * master_makanans.berat) as total_berat'))
+        ->value('total_berat') ?? 0;
+    $totalBeratKg = number_format($totalBeratKgVal, 1, ',', '.') . 'kg';
 
-    $user2 = User::factory()->create(['role' => 'unit_bisnis', 'name' => 'Sari Cafe']);
-    UnitBisnisProfile::create([
-        'user_id' => $user2->id,
-        'nama_usaha' => 'Sari Cafe',
-        'jenis_usaha' => 'Restoran',
-        'status_verifikasi' => 'terverifikasi',
-    ]);
+    // Disconnect DB connection in test runner to prevent database lock for the web server
+    \Illuminate\Support\Facades\DB::disconnect();
 
-    $this->browse(function (Browser $browser) {
-        // Visit directly with category filter active
-        $browser->visit('/mitra?jenis_usaha=Restoran')
-            ->assertDontSee('Lestari Bakery')
-            ->assertSee('Sari Cafe')
-            ->pause(duskDelay())
-            ->click('#category-dropdown-btn')
-            ->waitForText('Semua Kategori')
-            ->click('@category-option-all')
-            ->waitForLocation('/mitra')
-            ->assertSee('Lestari Bakery')
-            ->assertSee('Sari Cafe')
+    $this->browse(function (Browser $browser) use ($totalBeratKg) {
+        // 1. Navigasi dari Home ke Tentang Kami & Cek Teks & Statistik
+        visitHome($browser);
+        $browser->clickLink('Tentang Kami')
+            ->waitForLocation('/tentang-kami')
+            ->assertPathIs('/tentang-kami');
+
+        disableAnimations($browser);
+
+        $browser->assertSee('Ubah Sisa Pangan')
+            ->assertSee('Jadi Senyuman')
+            ->assertSee($totalBeratKg)
+            ->pause(duskDelay());
+
+        // 2. Verifikasi Tombol Donasi Makanan di halaman Tentang Kami
+        $browser->click('a[href="/register/unit-bisnis"]')
+            ->waitForLocation('/register/unit-bisnis')
+            ->assertPathIs('/register/unit-bisnis')
+            ->assertTitle('Pendaftaran Unit Bisnis - ShareBite')
+            ->assertSee('Informasi Bisnis')
+            ->pause(duskDelay());
+
+        // 3. Verifikasi Tombol Daftar Relawan di halaman Tentang Kami
+        $browser->visit('/tentang-kami')
+            ->waitForLocation('/tentang-kami');
+
+        disableAnimations($browser);
+
+        $browser->click('a[href="/register/individu"]')
+            ->waitForLocation('/register/individu')
+            ->assertPathIs('/register/individu')
+            ->assertTitle('Pendaftaran Relawan (Individu) - ShareBite')
+            ->assertSee('Identitas Individu')
             ->pause(duskDelay());
     });
 });

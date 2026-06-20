@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         // Create Admin Account
         User::updateOrCreate(
-            ['email' => 'admin@sharebite.com'],
+            ['email' => 'faridzaridzaridzarid@gmail.com'],
             [
                 'name' => 'Admin ShareBite',
                 'password' => bcrypt('Admin@2024!'),

@@ -15,27 +15,48 @@ if (! function_exists('duskDelay')) {
     }
 }
 
-beforeEach(function () {
-    // =========================================================================
-    // CATATAN UNTUK PENGUJI / DOSEN:
-    // Sebelum menjalankan pengujian Dashboard (TC-DASH-01 s.d TC-DASH-17),
-    // sangat direkomendasikan dan diwajibkan untuk menjalankan:
-    // 1. Pengujian Registrasi Unit Bisnis (TC-REG-01) atau Database Seeder
-    //    (php artisan db:seed dan php artisan db:seed --class=UnitBisnisSeeder)
-    //    untuk memastikan akun relawan dan mitra bisnis pangan beserta profil terdaftar.
-    // 2. Unit Bisnis yang terdaftar harus memiliki minimal satu Menu Makanan Aktif
-    //    (dapat ditambahkan melalui test kelola makanan atau diinput manual lewat web).
-    //
-    // File pengujian ini bersifat read-only (query-only) tanpa melakukan
-    // insert/create/delete data secara langsung di database demi kepatuhan aturan pengujian.
-    // =========================================================================
+if (! function_exists('loginUser')) {
+    function loginUser(Browser $browser, User $user, string $password = 'Password123!') {
+        $browser->visit('/login');
+        $browser->driver->manage()->deleteAllCookies();
+        $browser->visit('/login')
+            ->assertSee('Selamat Datang')
+            ->type('email', $user->email)
+            ->type('password', $password)
+            ->click('#loginBtn')
+            ->waitForLocation('/user/dashboard')
+            ->pause(duskDelay());
+    }
+}
 
-    // 1. Retrieve User Relawan (Individu)
-    $this->user = User::where('email', 'individu@sharebite.com')->first();
+beforeEach(function () {
+    // Force database connection to sharebite_dusk for the Dusk testing process
+    \Illuminate\Support\Facades\Config::set('database.connections.mysql.database', 'sharebite_dusk');
+    \Illuminate\Support\Facades\Config::set('database.connections.mysql.username', 'root');
+    \Illuminate\Support\Facades\Config::set('database.connections.mysql.password', '');
+    \Illuminate\Support\Facades\Config::set('database.default', 'mysql');
+    \Illuminate\Support\Facades\DB::purge('mysql');
+    \Illuminate\Support\Facades\DB::reconnect('mysql');
+
+    \App\Models\MenuAktif::query()->update([
+        'batas_pengambilan' => now()->addHours(24)
+    ]);
+
+
+    // 1. php artisan dusk tests/Browser/RegisterIndividuTest.php
+    // 2. php artisan dusk tests/Browser/RegisterKomunitasTest.php
+    // 3. php artisan dusk tests/Browser/RegisterUnitBisnisTest.php
+    // 4. php artisan dusk tests/Browser/TambahMasterMakananTest.php
+    // 5. php artisan dusk tests/Browser/TambahMenuAktifTest.php
+    // 6. php artisan dusk tests/Browser/LokasiFTest.php
+    // 7. php artisan dusk tests/Browser/PemesananFTest.php
+
+
+    $this->user = User::where('email', 'farid@gmail.com')->first();
     if (!$this->user) {
         throw new \Exception(
-            "Pengujian Dibatalkan: User dengan email 'individu@sharebite.com' tidak ditemukan di database. " .
-            "Harap jalankan seeder terlebih dahulu (php artisan db:seed) untuk menginisialisasi akun pengguna."
+            "Pengujian Dibatalkan: User dengan email 'farid@gmail.com' tidak ditemukan di database. " .
+            "Harap jalankan test case RegisterIndividuTest terlebih dahulu."
         );
     }
 
@@ -53,7 +74,18 @@ beforeEach(function () {
         ->where('is_gratis', false)
         ->where('stok_porsi', '>', 0)
         ->where('batas_pengambilan', '>', now())
-        ->first();
+        ->get()
+        ->first(function ($menu) {
+            $kategori = $menu->masterMakanan->kategori;
+            return MenuAktif::where('status', 'aktif')
+                ->where('id', '!=', $menu->id)
+                ->where('stok_porsi', '>', 0)
+                ->where('batas_pengambilan', '>', now())
+                ->whereHas('masterMakanan', function($query) use ($kategori) {
+                    $query->where('kategori', $kategori);
+                })
+                ->exists();
+        });
 
     if (!$this->menuA) {
         throw new \Exception(
@@ -85,18 +117,11 @@ beforeEach(function () {
     $this->unitUserB = $this->unitProfileB?->user;
 
     // 3. Retrieve User Tanpa Lokasi
-    $this->userNoLoc = User::where('email', 'noloc@sharebite.com')->first();
-    if (!$this->userNoLoc) {
-        // Fallback ke user komunitas@sharebite.com yang diseed tanpa lokasi
-        $this->userNoLoc = User::where('email', 'komunitas@sharebite.com')->first();
-    }
-    if (!$this->userNoLoc) {
-        // Fallback kedua: Cari user lain yang tidak memiliki koordinat
-        $this->userNoLoc = User::whereNull('latitude')->whereNull('longitude')->first();
-    }
+    $this->userNoLoc = User::where('email', 'fiyola@gmail.com')->first();
     if (!$this->userNoLoc) {
         throw new \Exception(
-            "Pengujian Dibatalkan: Tidak ditemukan akun pengguna tanpa koordinat lokasi (noloc/komunitas) untuk pengujian."
+            "Pengujian Dibatalkan: User dengan email 'fiyola@gmail.com' tidak ditemukan di database. " .
+            "Harap jalankan test case RegisterKomunitasTest terlebih dahulu."
         );
     }
 });
@@ -104,9 +129,8 @@ beforeEach(function () {
 test('TC-DASH-01: Verifikasi Banner Sapaan User Relawan pada Halaman Dashboard', function () {
     $this->browse(function (Browser $browser) {
         $first_name = explode(' ', $this->user->name)[0];
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText("Halo, {$first_name}!")
+        loginUser($browser, $this->user);
+        $browser->waitForText("Halo, {$first_name}!")
             ->assertSee("Halo, {$first_name}!")
             ->pause(duskDelay());
     });
@@ -119,9 +143,8 @@ test('TC-DASH-02: Verifikasi Kalkulasi Statistik Personal Porsi Diambil pada Das
             ->whereIn('status', ['dibayar', 'siap_diambil', 'selesai'])
             ->sum('jumlah_porsi');
 
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText('Porsi Diambil')
+        loginUser($browser, $this->user);
+        $browser->waitForText('Porsi Diambil')
             ->assertSee((string) $porsi_diambil)
             ->pause(duskDelay());
     });
@@ -142,9 +165,8 @@ test('TC-DASH-03: Verifikasi Kalkulasi Statistik Personal Makanan Terselamatkan 
         $formattedBerat = number_format($makanan_terselamatkan, 1, ',', '.');
         $formattedCO2 = number_format($co2_dihemat, 1, ',', '.');
 
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText('Makanan Terselamatkan')
+        loginUser($browser, $this->user);
+        $browser->waitForText('Makanan Terselamatkan')
             ->assertSee($formattedBerat)
             ->assertSee($formattedCO2)
             ->pause(duskDelay());
@@ -153,9 +175,8 @@ test('TC-DASH-03: Verifikasi Kalkulasi Statistik Personal Makanan Terselamatkan 
 
 test('TC-DASH-04: Verifikasi Tampilan List Donasi Terdekat dengan Lokasi', function () {
     $this->browse(function (Browser $browser) {
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText('Donasi Terdekat')
+        loginUser($browser, $this->user);
+        $browser->waitForText('Donasi Terdekat')
             ->assertSee($this->masterA->nama_makanan)
             ->assertSee($this->unitProfileA->nama_usaha)
             ->pause(duskDelay());
@@ -169,9 +190,8 @@ test('TC-DASH-05: Verifikasi Menampilkan Daftar Aktivitas Terakhir di Dashboard'
             ->orderBy('created_at', 'desc')
             ->first();
 
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText('Aktivitas Terakhir');
+        loginUser($browser, $this->user);
+        $browser->waitForText('Aktivitas Terakhir');
 
         if ($latestActivity) {
             $browser->assertSee($latestActivity->judul)
@@ -192,9 +212,8 @@ test('TC-DASH-06: Verifikasi Halaman Riwayat Aktivitas Lengkap', function () {
             ->take(2)
             ->get();
 
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText('Aktivitas Terakhir')
+        loginUser($browser, $this->user);
+        $browser->waitForText('Aktivitas Terakhir')
             ->clickLink('Lihat Semua Aktivitas')
             ->waitForLocation('/user/aktivitas')
             ->assertPathIs('/user/aktivitas')
@@ -215,9 +234,8 @@ test('TC-DASH-06: Verifikasi Halaman Riwayat Aktivitas Lengkap', function () {
 test('TC-DASH-07: Eksplorasi Donasi Terdekat - Pencarian Real-time berdasarkan Nama Makanan dan Nama Unit Bisnis', function () {
     $this->browse(function (Browser $browser) {
         $first_name = explode(' ', $this->user->name)[0];
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText("Halo, {$first_name}!")
+        loginUser($browser, $this->user);
+        $browser->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink('Lihat Semua')
             ->waitForLocation('/user/donasi-terdekat')
@@ -236,18 +254,23 @@ test('TC-DASH-07: Eksplorasi Donasi Terdekat - Pencarian Real-time berdasarkan N
         $browser->pause(500)
             ->typeSlowly('input[placeholder="Cari makanan atau toko..."]', $this->unitProfileB->nama_usaha, 100)
             ->pause(duskDelay())
-            ->assertSee($this->masterB->nama_makanan)
-            ->assertDontSee($this->masterA->nama_makanan)
-            ->pause(duskDelay());
+            ->assertSee($this->masterB->nama_makanan);
+        
+        if ($this->unitProfileA->id !== $this->unitProfileB->id) {
+            $browser->assertDontSee($this->masterA->nama_makanan);
+        } else {
+            $browser->assertSee($this->masterA->nama_makanan);
+        }
+        
+        $browser->pause(duskDelay());
     });
 });
 
 test('TC-DASH-08: Eksplorasi Donasi Terdekat - Penanganan Pencarian Tidak Ditemukan dan Reset Filter', function () {
     $this->browse(function (Browser $browser) {
         $first_name = explode(' ', $this->user->name)[0];
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText("Halo, {$first_name}!")
+        loginUser($browser, $this->user);
+        $browser->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink('Lihat Semua')
             ->waitForLocation('/user/donasi-terdekat')
@@ -271,28 +294,33 @@ test('TC-DASH-08: Eksplorasi Donasi Terdekat - Penanganan Pencarian Tidak Ditemu
 
 test('TC-DASH-09: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Kategori (Category Pills)', function () {
     $category = $this->masterB->kategori;
-    $this->browse(function (Browser $browser) use ($category) {
+    $differentCategory = ($category === 'Makanan Berat') ? 'Makanan Ringan' : 'Makanan Berat';
+    
+    $this->browse(function (Browser $browser) use ($category, $differentCategory) {
         $first_name = explode(' ', $this->user->name)[0];
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText("Halo, {$first_name}!")
+        loginUser($browser, $this->user);
+        $browser->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink('Lihat Semua')
             ->waitForLocation('/user/donasi-terdekat')
             ->waitForText('Semua Donasi Terdekat')
+            // Click matching category pill
             ->script("
                 const btn = Array.from(document.querySelectorAll('button'))
                     .find(el => el.textContent.trim() === '" . addslashes($category) . "');
                 btn?.click();
             ");
         $browser->pause(duskDelay())
-            ->assertSee($this->masterB->nama_makanan);
-
-        if ($this->masterA->kategori !== $category) {
-            $browser->assertDontSee($this->masterA->nama_makanan);
-        }
-
-        $browser->pause(duskDelay());
+            ->assertSee($this->masterB->nama_makanan)
+            // Click non-matching category pill
+            ->script("
+                const btn = Array.from(document.querySelectorAll('button'))
+                    .find(el => el.textContent.trim() === '" . addslashes($differentCategory) . "');
+                btn?.click();
+            ");
+        $browser->pause(duskDelay())
+            ->assertDontSee($this->masterB->nama_makanan)
+            ->pause(duskDelay());
     });
 });
 
@@ -312,9 +340,8 @@ test('TC-DASH-10: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Ra
 
     $this->browse(function (Browser $browser) use ($distA, $distB) {
         $first_name = explode(' ', $this->user->name)[0];
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText("Halo, {$first_name}!")
+        loginUser($browser, $this->user);
+        $browser->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink('Lihat Semua')
             ->waitForLocation('/user/donasi-terdekat')
@@ -359,9 +386,8 @@ test('TC-DASH-10: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Ra
 test('TC-DASH-11: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan Status Harga dan Range Harga', function () {
     $this->browse(function (Browser $browser) {
         $first_name = explode(' ', $this->user->name)[0];
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText("Halo, {$first_name}!")
+        loginUser($browser, $this->user);
+        $browser->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink('Lihat Semua')
             ->waitForLocation('/user/donasi-terdekat')
@@ -465,9 +491,8 @@ test('TC-DASH-11: Eksplorasi Donasi Terdekat - Penyaringan Daftar berdasarkan St
 test('TC-DASH-12: Dashboard menyembunyikan makanan dan menampilkan warning jika lokasi null', function () {
     $this->browse(function (Browser $browser) {
         $first_name = explode(' ', $this->userNoLoc->name)[0];
-        $browser->loginAs($this->userNoLoc)
-            ->visit('/user/dashboard')
-            ->waitForText("Halo, {$first_name}!")
+        loginUser($browser, $this->userNoLoc);
+        $browser->waitForText("Halo, {$first_name}!")
             ->assertSee('Tentukan lokasi untuk melihat makanan terdekat anda.')
             ->assertDontSee('Ambil')
             ->pause(duskDelay());
@@ -477,9 +502,8 @@ test('TC-DASH-12: Dashboard menyembunyikan makanan dan menampilkan warning jika 
 test('TC-DASH-13: Dashboard Radius Anda menampilkan tombol Atur Lokasi jika lokasi null', function () {
     $this->browse(function (Browser $browser) {
         $first_name = explode(' ', $this->userNoLoc->name)[0];
-        $browser->loginAs($this->userNoLoc)
-            ->visit('/user/dashboard')
-            ->waitForText("Halo, {$first_name}!")
+        loginUser($browser, $this->userNoLoc);
+        $browser->waitForText("Halo, {$first_name}!")
             ->assertSee('Titik Lokasi Belum Ditentukan')
             ->assertSee('Atur Lokasi Sekarang')
             ->clickLink('Atur Lokasi Sekarang')
@@ -492,9 +516,8 @@ test('TC-DASH-13: Dashboard Radius Anda menampilkan tombol Atur Lokasi jika loka
 test('TC-DASH-14: Eksplorasi terdekat menampilkan warning dan tombol Atur Lokasi jika lokasi null', function () {
     $this->browse(function (Browser $browser) {
         $first_name = explode(' ', $this->userNoLoc->name)[0];
-        $browser->loginAs($this->userNoLoc)
-            ->visit('/user/dashboard')
-            ->waitForText("Halo, {$first_name}!")
+        loginUser($browser, $this->userNoLoc);
+        $browser->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink('Lihat Semua')
             ->waitForLocation('/user/donasi-terdekat')
@@ -522,9 +545,8 @@ test('TC-DASH-15: Detail Makanan - Verifikasi Informasi Lengkap, Lokasi, Konten 
 
     $this->browse(function (Browser $browser) use ($formattedDistanceA, $formattedHargaA, $formattedStokA) {
         $first_name = explode(' ', $this->user->name)[0];
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText("Halo, {$first_name}!")
+        loginUser($browser, $this->user);
+        $browser->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink($this->masterA->nama_makanan)
             ->waitForLocation('/user/makanan/' . $this->menuA->id)
@@ -567,9 +589,8 @@ test('TC-DASH-16: Detail Makanan - Verifikasi Counter Portion Adjuster, Limit Ba
 
     $this->browse(function (Browser $browser) use ($formattedHargaA, $formattedMaxPrice) {
         $first_name = explode(' ', $this->user->name)[0];
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText("Halo, {$first_name}!")
+        loginUser($browser, $this->user);
+        $browser->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink($this->masterA->nama_makanan)
             ->waitForLocation('/user/makanan/' . $this->menuA->id)
@@ -622,9 +643,8 @@ test('TC-DASH-17: Detail Makanan - Verifikasi Rekomendasi Daftar Makanan Serupa 
 
     $this->browse(function (Browser $browser) use ($similarMenu, $formattedSimilarHarga) {
         $first_name = explode(' ', $this->user->name)[0];
-        $browser->loginAs($this->user)
-            ->visit('/user/dashboard')
-            ->waitForText("Halo, {$first_name}!")
+        loginUser($browser, $this->user);
+        $browser->waitForText("Halo, {$first_name}!")
             ->pause(duskDelay())
             ->clickLink($this->masterA->nama_makanan)
             ->waitForLocation('/user/makanan/' . $this->menuA->id)

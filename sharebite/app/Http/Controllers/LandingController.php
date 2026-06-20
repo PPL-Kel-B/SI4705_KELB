@@ -15,15 +15,13 @@ class LandingController extends Controller
         // 1. Total Porsi Terselamatkan
         $totalPorsiTerselamatkan = Pesanan::whereIn('status', ['selesai', 'siap_diambil', 'dibayar'])->sum('jumlah_porsi');
 
-        // 2. Total Berat Terselamatkan (asumsi berat di database dalam satuan gram, jadi dibagi 1000 untuk kg)
-        $totalBeratGram = DB::table('pesanans')
+        $totalBeratKgVal = DB::table('pesanans')
             ->join('menu_aktifs', 'pesanans.menu_aktif_id', '=', 'menu_aktifs.id')
             ->join('master_makanans', 'menu_aktifs.master_makanan_id', '=', 'master_makanans.id')
             ->whereIn('pesanans.status', ['selesai', 'siap_diambil', 'dibayar'])
-            ->select(DB::raw('SUM(pesanans.jumlah_porsi * master_makanans.berat) as total_berat'))
-            ->value('total_berat') ?? 0;
+            ->sum(DB::raw('pesanans.jumlah_porsi * master_makanans.berat')) ?? 0;
             
-        $totalBeratKg = number_format($totalBeratGram / 1000, 1, ',', '.'); // ubah ke kg
+        $totalBeratKg = number_format($totalBeratKgVal, 1, ',', '.');
 
         // 3. Pahlawan Bergabung (Jumlah User Unit Bisnis dan Komunitas)
         $totalPahlawan = User::whereIn('role', ['unit_bisnis', 'komunitas', 'individu'])->count();

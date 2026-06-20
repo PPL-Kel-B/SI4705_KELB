@@ -252,7 +252,7 @@
                     <p class="text-sm font-bold text-gray-500">Platform Aktif</p>
                 </div>
                 <div class="fade-up bg-white rounded-[1.5rem] p-8 text-center shadow-sm border border-gray-100 group hover:-translate-y-2 hover:shadow-xl hover:border-[#9b621e]/30 transition-all duration-500">
-                    <h3 class="text-4xl font-black text-gold mb-3 group-hover:scale-110 transition-transform duration-300">0kg</h3>
+                    <h3 class="text-4xl font-black text-gold mb-3 group-hover:scale-110 transition-transform duration-300">{{ $totalBeratKg }}</h3>
                     <p class="text-sm font-bold text-gray-500">Target Limbah</p>
                 </div>
                 <div class="fade-up bg-white rounded-[1.5rem] p-8 text-center shadow-sm border border-gray-100 group hover:-translate-y-2 hover:shadow-xl hover:border-[#1cb764]/30 transition-all duration-500">
@@ -325,8 +325,8 @@
                 <div class="col-span-1 md:col-span-4">
                     <h4 class="text-[11px] font-black text-primary-green uppercase tracking-widest mb-8">Hubungi Kami</h4>
                     <ul class="space-y-4 text-sm font-bold text-gray-500">
-                        <li><a href="#" class="hover:text-dark-green transition-colors">Pusat Bantuan</a></li>
-                        <li><a href="mailto:hello@sharebite.id" class="hover:text-dark-green transition-colors">hello@sharebite.id</a></li>
+                        <li><a href="https://mail.google.com/mail/?view=cm&fs=1&to=hello@sharebite.id" class="hover:text-dark-green transition-colors" target="_blank">Pusat Bantuan</a></li>
+                        <li><a href="https://mail.google.com/mail/?view=cm&fs=1&to=hello@sharebite.id" class="hover:text-dark-green transition-colors" target="_blank">hello@sharebite.id</a></li>
                     </ul>
                 </div>
             </div>

@@ -118,7 +118,7 @@ class LoginTest extends DuskTestCase
 
         // 1. Admin
         User::updateOrCreate(
-            ['email' => 'admin@sharebite.com'],
+            ['email' => 'faridzaridzaridzarid@gmail.com'],
             [
                 'name' => 'Admin ShareBite',
                 'password' => bcrypt('Admin@2024!'),
