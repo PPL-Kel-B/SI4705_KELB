@@ -73,10 +73,13 @@
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center space-x-12">
                     <a href="/"
+                        dusk="nav-home-link"
                         class="text-[13px] font-black text-[#0a5c36] border-b-2 border-[#0a5c36] pb-1 uppercase tracking-widest">Home</a>
                     <a href="/mitra"
+                        dusk="nav-mitra-link"
                         class="text-[13px] font-black text-gray-400 hover:text-[#0a5c36] transition-colors uppercase tracking-widest">Mitra Kami</a>
                     <a href="/tentang-kami"
+                        dusk="nav-about-link"
                         class="text-[13px] font-black text-gray-400 hover:text-[#0a5c36] transition-colors uppercase tracking-widest">Tentang
                         Kami</a>
                 </div>
@@ -463,6 +466,7 @@
                                     class="text-xs font-black text-gold bg-gold/10 px-3 py-1.5 rounded-full">{{ $menu->stok_porsi }}
                                     Porsi Tersisa</span>
                                 <a href="/login"
+                                    dusk="active-food-card-arrow"
                                     class="w-10 h-10 rounded-full bg-gray-50 border-2 border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-[#1cb764] group-hover:border-[#1cb764] group-hover:text-white transition-all cursor-pointer shadow-sm group-hover:shadow-[#1cb764]/30">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
@@ -506,9 +510,9 @@
                 <div class="col-span-1 md:col-span-3">
                     <h4 class="text-[11px] font-black text-[#1cb764] uppercase tracking-widest mb-8">Platform</h4>
                     <ul class="space-y-4 text-sm font-bold text-gray-500">
-                        <li><a href="/tentang-kami" class="hover:text-dark-green transition-colors">Tentang Kami</a></li>
-                        <li><a href="/register/unit-bisnis" class="hover:text-dark-green transition-colors">Donasi Makanan</a></li>
-                        <li><a href="/register/individu" class="hover:text-dark-green transition-colors">Daftar Relawan</a></li>
+                        <li><a href="/tentang-kami" dusk="footer-about-link" class="hover:text-dark-green transition-colors">Tentang Kami</a></li>
+                        <li><a href="/register/unit-bisnis" dusk="footer-donate-link" class="hover:text-dark-green transition-colors">Donasi Makanan</a></li>
+                        <li><a href="/register/individu" dusk="footer-volunteer-link" class="hover:text-dark-green transition-colors">Daftar Relawan</a></li>
                     </ul>
                 </div>
 

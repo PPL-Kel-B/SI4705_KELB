@@ -50,16 +50,17 @@ return [
             'host' => env('DB_HOST', '127.0.0.1'),
             'port' => env('DB_PORT', '3306'),
             'database' => (function() {
-                $db = env('DB_DATABASE', 'sharebite');
-                if (isset($_SERVER['HTTP_USER_AGENT']) && str_contains($_SERVER['HTTP_USER_AGENT'], 'ShareBiteDuskTest')) {
-                    $db = 'sharebite_dusk';
-                } elseif (app()->runningInConsole()) {
-                    $args = implode(' ', $_SERVER['argv'] ?? []);
-                    if (str_contains($args, 'phpunit') || str_contains($args, 'dusk')) {
-                        $db = 'sharebite_dusk';
+                $db = 'sharebite';
+                $envPath = base_path('.env');
+                if (file_exists($envPath)) {
+                    $content = file_get_contents($envPath);
+                    if (preg_match('/^DB_DATABASE=(.+)$/m', $content, $matches)) {
+                        $db = trim($matches[1]);
                     }
+                } else {
+                    $db = env('DB_DATABASE', 'sharebite');
                 }
-                return $db;
+                return trim($db, '"\'');
             })(),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),

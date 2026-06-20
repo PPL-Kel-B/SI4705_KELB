@@ -71,10 +71,13 @@
                 <!-- Desktop Menu -->
                 <div class="hidden md:flex items-center space-x-12">
                     <a href="/"
+                        dusk="nav-home-link"
                         class="text-[13px] font-black text-gray-400 hover:text-[#0a5c36] transition-colors uppercase tracking-widest">Home</a>
                     <a href="/mitra"
+                        dusk="nav-mitra-link"
                         class="text-[13px] font-black text-gray-400 hover:text-[#0a5c36] transition-colors uppercase tracking-widest">Mitra Kami</a>
                     <a href="/tentang-kami"
+                        dusk="nav-about-link"
                         class="text-[13px] font-black text-[#0a5c36] border-b-2 border-[#0a5c36] pb-1 uppercase tracking-widest">Tentang
                         Kami</a>
                 </div>
@@ -315,9 +318,9 @@
                 <div class="col-span-1 md:col-span-3">
                     <h4 class="text-[11px] font-black text-primary-green uppercase tracking-widest mb-8">Platform</h4>
                     <ul class="space-y-4 text-sm font-bold text-gray-500">
-                        <li><a href="/tentang-kami" class="hover:text-dark-green transition-colors">Tentang Kami</a></li>
-                        <li><a href="/register/unit-bisnis" class="hover:text-dark-green transition-colors">Donasi Makanan</a></li>
-                        <li><a href="/register/individu" class="hover:text-dark-green transition-colors">Daftar Relawan</a></li>
+                        <li><a href="/tentang-kami" dusk="footer-about-link" class="hover:text-dark-green transition-colors">Tentang Kami</a></li>
+                        <li><a href="/register/unit-bisnis" dusk="footer-donate-link" class="hover:text-dark-green transition-colors">Donasi Makanan</a></li>
+                        <li><a href="/register/individu" dusk="footer-volunteer-link" class="hover:text-dark-green transition-colors">Daftar Relawan</a></li>
                     </ul>
                 </div>
 
